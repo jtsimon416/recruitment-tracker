@@ -1,8 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import { useData } from '../contexts/DataContext';
 import '../styles/Sidebar.css';
 
 function Sidebar() {
+  const { newCommentCandidateIds } = useData();
+  const notificationCount = newCommentCandidateIds.length;
+
+  // No onClick handler is needed here anymore, as the notification is cleared
+  // when the user opens the comments modal on the ActiveTracker page.
+
   return (
     <div className="sidebar">
       <div className="sidebar-header">
@@ -12,28 +19,37 @@ function Sidebar() {
       <nav className="sidebar-nav">
         <div className="nav-section">
           <h3>Overview</h3>
-          <Link to="/" className="nav-link">Dashboard</Link>
+          <NavLink to="/" className="nav-link">Dashboard</NavLink>
         </div>
 
         <div className="nav-section">
           <h3>Data Management</h3>
-          <Link to="/clients" className="nav-link">Clients</Link>
-          <Link to="/positions" className="nav-link">Positions</Link>
-          <Link to="/recruiters" className="nav-link">Recruiters</Link>
-          <Link to="/talent-pool" className="nav-link">Talent Pool</Link>
+          <NavLink to="/clients" className="nav-link">Clients</NavLink>
+          <NavLink to="/positions" className="nav-link">Positions</NavLink>
+          <NavLink to="/recruiters" className="nav-link">Recruiters</NavLink>
+          <NavLink to="/talent-pool" className="nav-link">Talent Pool</NavLink>
         </div>
 
         <div className="nav-section">
           <h3>Workflow</h3>
-          <Link to="/active-tracker" className="nav-link">Active Tracker</Link>
-          <Link to="/interview-hub" className="nav-link">Interview Hub</Link>
-          <Link to="/commissions" className="nav-link">Commissions</Link>
-          <Link to="/role-history" className="nav-link">Role History</Link>
+          <div className="nav-link-wrapper">
+            <NavLink to="/active-tracker" className="nav-link">
+              Active Tracker
+            </NavLink>
+            {notificationCount > 0 && (
+              <div className="indicator-badge">
+                {notificationCount}
+              </div>
+            )}
+          </div>
+          <NavLink to="/interview-hub" className="nav-link">Interview Hub</NavLink>
+          <NavLink to="/commissions" className="nav-link">Commissions</NavLink>
+          <NavLink to="/role-history" className="nav-link">Role History</NavLink>
         </div>
 
         <div className="nav-section">
           <h3>AI Tools</h3>
-          <Link to="/rubric-generator" className="nav-link">Rubric Generator</Link>
+          <NavLink to="/rubric-generator" className="nav-link">Rubric Generator</NavLink>
         </div>
       </nav>
     </div>
@@ -41,3 +57,4 @@ function Sidebar() {
 }
 
 export default Sidebar;
+

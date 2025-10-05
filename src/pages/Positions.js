@@ -214,22 +214,42 @@ function Positions() {
       return;
     }
 
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('positions')
       .update({
-        status: 'Closed',
-        updated_at: new Date().toISOString()
+        status: 'Closed'
       })
       .eq('id', closingPosition.id);
 
-    if (error) {
-      alert('Error closing position: ' + error.message);
-    } else {
-      alert('Position closed successfully!');
-      setShowCloseModal(false);
-      setClosingPosition(null);
-      fetchPositions();
+    if (updateError) {
+      alert('Error closing position: ' + updateError.message);
+      return;
     }
+
+    const positionId = closingPosition.id;
+
+    const { error: pipelineError } = await supabase
+      .from('pipeline')
+      .delete()
+      .eq('position_id', positionId);
+
+    if (pipelineError) {
+      console.error('Error removing candidates from pipeline:', pipelineError);
+    }
+
+    const { error: interviewsError } = await supabase
+      .from('interviews')
+      .delete()
+      .eq('position_id', positionId);
+
+    if (interviewsError) {
+      console.error('Error removing candidates from interviews:', interviewsError);
+    }
+
+    alert('Position closed successfully! All associated candidates have been returned to the Talent Pool.');
+    setShowCloseModal(false);
+    setClosingPosition(null);
+    fetchPositions();
   }
 
   const filteredPositions = statusFilter === 'all' 

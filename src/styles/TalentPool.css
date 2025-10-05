@@ -141,7 +141,8 @@
 
 .candidates-header {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 1.5fr;
+  /* --- THIS IS THE CORRECTED LINE --- */
+  grid-template-columns: 1.5fr 2fr 1fr 1fr 0.5fr 1.2fr;
   gap: 15px;
   padding: 15px 20px;
   background: var(--secondary-bg);
@@ -155,7 +156,8 @@
 
 .candidate-row {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 1.5fr;
+  /* --- THIS IS THE CORRECTED LINE --- */
+  grid-template-columns: 1.5fr 2fr 1fr 1fr 0.5fr 1.2fr;
   gap: 15px;
   padding: 20px;
   border-bottom: 1px solid var(--border-color);
@@ -205,6 +207,7 @@
 .skills-cell {
   font-size: 14px;
   color: var(--text-secondary);
+  word-break: break-word;
 }
 
 .btn-link {

@@ -12,22 +12,19 @@ function RoleHistory() {
   }, []);
 
   async function fetchClosedPositions() {
-    // Fetch closed positions with related data
     const { data: positions, error } = await supabase
       .from('positions')
       .select('*, clients(company_name)')
       .eq('status', 'Closed')
-      .order('updated_at', { ascending: false });
-    
+      .order('created_at', { ascending: false });
+
     if (error) {
       console.error('Error fetching closed positions:', error);
       return;
     }
 
-    // Enrich each position with pipeline stats
     const enrichedPositions = await Promise.all(
       (positions || []).map(async (position) => {
-        // Get all pipeline entries for this position
         const { data: pipelineData } = await supabase
           .from('pipeline')
           .select('*, candidates(name), recruiters(name)')
@@ -35,52 +32,95 @@ function RoleHistory() {
 
         const totalCandidates = pipelineData?.length || 0;
         const hiredCandidate = pipelineData?.find(p => p.stage === 'Hired');
-        
-        // Build recruiter breakdown
+        const hiringRecruiterId = hiredCandidate ? hiredCandidate.recruiter_id : null;
+
         const recruiterBreakdown = {};
+
+        // Initialize all recruiters who worked on this role
         pipelineData?.forEach(entry => {
-          const recruiterName = entry.recruiters?.name || 'Unknown Recruiter';
-          const candidateName = entry.candidates?.name || 'Unknown Candidate';
-          
-          if (!recruiterBreakdown[recruiterName]) {
-            recruiterBreakdown[recruiterName] = {
+          if (entry.recruiter_id && !recruiterBreakdown[entry.recruiter_id]) {
+            recruiterBreakdown[entry.recruiter_id] = {
+              recruiterName: entry.recruiters?.name || 'Unknown Recruiter',
               totalCandidates: 0,
               candidates: [],
+              highestStage: 'None',
+              commission: 0,
+              commissionReason: 'Not Eligible',
+              // Keep interview counts for stats
               interview1Count: 0,
               interview2Count: 0,
               interview3Count: 0,
-              commissionEligible: 0
             };
-          }
-          
-          recruiterBreakdown[recruiterName].totalCandidates++;
-          recruiterBreakdown[recruiterName].candidates.push({
-            name: candidateName,
-            stage: entry.stage,
-            isCommissionEligible: ['Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired'].includes(entry.stage)
-          });
-          
-          // Count interview stages
-          if (entry.stage === 'Interview 1' || entry.stage === 'Interview 2' || entry.stage === 'Interview 3' || entry.stage === 'Offer' || entry.stage === 'Hired') {
-            recruiterBreakdown[recruiterName].interview1Count++;
-          }
-          if (entry.stage === 'Interview 2' || entry.stage === 'Interview 3' || entry.stage === 'Offer' || entry.stage === 'Hired') {
-            recruiterBreakdown[recruiterName].interview2Count++;
-          }
-          if (entry.stage === 'Interview 3' || entry.stage === 'Offer' || entry.stage === 'Hired') {
-            recruiterBreakdown[recruiterName].interview3Count++;
-          }
-          if (['Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired'].includes(entry.stage)) {
-            recruiterBreakdown[recruiterName].commissionEligible++;
           }
         });
 
+        // If a candidate was hired, calculate commissions
+        if (hiredCandidate && hiringRecruiterId && recruiterBreakdown[hiringRecruiterId]) {
+          recruiterBreakdown[hiringRecruiterId].commission = 15;
+          recruiterBreakdown[hiringRecruiterId].commissionReason = `Hired Candidate (${hiredCandidate.candidates?.name})`;
+        }
+
+        // Process all pipeline entries to gather stats and find highest interview stage
+        pipelineData?.forEach(entry => {
+          if (!entry.recruiter_id) return;
+
+          const stats = recruiterBreakdown[entry.recruiter_id];
+          stats.totalCandidates++;
+          stats.candidates.push({ name: entry.candidates?.name || 'Unknown', stage: entry.stage });
+          
+          const stageMap = { 'Interview 1': 1, 'Interview 2': 2, 'Interview 3': 3, 'Offer': 3, 'Hired': 3 };
+          const highestStageValue = stageMap[stats.highestStage] || 0;
+          const currentStageValue = stageMap[entry.stage] || 0;
+
+          if (currentStageValue > highestStageValue) {
+            stats.highestStage = entry.stage;
+          }
+
+          // Aggregate interview counts
+          if (['Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired'].includes(entry.stage)) {
+            stats.interview1Count++;
+          }
+          if (['Interview 2', 'Interview 3', 'Offer', 'Hired'].includes(entry.stage)) {
+            stats.interview2Count++;
+          }
+          if (['Interview 3', 'Offer', 'Hired'].includes(entry.stage)) {
+            stats.interview3Count++;
+          }
+        });
+
+        // Assign commission percentages to other recruiters if a hire was made
+        if (hiredCandidate) {
+          for (const recruiterId in recruiterBreakdown) {
+            if (recruiterId !== hiringRecruiterId) {
+              const stats = recruiterBreakdown[recruiterId];
+              switch (stats.highestStage) {
+                case 'Interview 1':
+                  stats.commission = 1;
+                  stats.commissionReason = 'Candidate reached Interview 1';
+                  break;
+                case 'Interview 2':
+                  stats.commission = 2;
+                  stats.commissionReason = 'Candidate reached Interview 2';
+                  break;
+                case 'Interview 3':
+                case 'Offer':
+                case 'Hired': // This case handles if another candidate was also hired, but the logic takes the highest stage.
+                  stats.commission = 3;
+                  stats.commissionReason = 'Candidate reached Interview 3+';
+                  break;
+                default:
+                  break;
+              }
+            }
+          }
+        }
+        
         return {
           ...position,
           totalCandidates,
           hiredCandidate,
           recruiterBreakdown,
-          pipelineData: pipelineData || []
+          pipelineData: pipelineData || [],
         };
       })
     );
@@ -98,7 +138,6 @@ function RoleHistory() {
     setSelectedPosition(null);
   }
 
-  // Calculate summary stats
   const totalClosedRoles = closedPositions.length;
   const totalHired = closedPositions.filter(p => p.hiredCandidate).length;
   const totalCandidatesProcessed = closedPositions.reduce((sum, p) => sum + p.totalCandidates, 0);
@@ -145,7 +184,7 @@ function RoleHistory() {
               
               <div className="position-info">
                 <p><strong>Client:</strong> {position.clients?.company_name || 'N/A'}</p>
-                <p><strong>Closed:</strong> {new Date(position.updated_at).toLocaleDateString()}</p>
+                <p><strong>Closed:</strong> {new Date(position.created_at).toLocaleDateString()}</p>
                 <p><strong>Total Candidates:</strong> {position.totalCandidates}</p>
                 {position.hiredCandidate && (
                   <p className="hired-info">
@@ -162,7 +201,6 @@ function RoleHistory() {
         )}
       </div>
 
-      {/* Detail Modal */}
       {showDetailModal && selectedPosition && (
         <div className="modal-overlay" onClick={closeDetailModal}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
@@ -172,67 +210,52 @@ function RoleHistory() {
               <h3>Outcome Summary</h3>
               {selectedPosition.hiredCandidate ? (
                 <div className="outcome-success">
-                  <p><strong>Commission Earned By:</strong> <span className="success-text">{selectedPosition.hiredCandidate.recruiters?.name}</span></p>
                   <p><strong>Hired Candidate:</strong> {selectedPosition.hiredCandidate.candidates?.name}</p>
-                  <p><strong>Final Stage:</strong> {selectedPosition.hiredCandidate.stage}</p>
+                   <p>This role was successfully filled. Commissions are now eligible.</p>
                 </div>
               ) : (
-                <p><strong>Commission Earned By:</strong> None (Role was not filled)</p>
+                <p>This role was closed without a hire. No commissions are eligible.</p>
               )}
             </div>
 
             <div className="report-section">
-              <h3>Recruiter Breakdown</h3>
-              {Object.entries(selectedPosition.recruiterBreakdown).map(([recruiterName, data]) => (
-                <div key={recruiterName} className="recruiter-breakdown-card">
-                  <h4>{recruiterName}</h4>
-                  <div className="recruiter-stats">
-                    <div className="stat-item-small">
-                      <span className="stat-label-small">Total Candidates</span>
-                      <span className="stat-value-small">{data.totalCandidates}</span>
-                    </div>
-                    <div className="stat-item-small">
-                      <span className="stat-label-small">Interview 1+</span>
-                      <span className="stat-value-small">{data.interview1Count}</span>
-                    </div>
-                    <div className="stat-item-small">
-                      <span className="stat-label-small">Interview 2+</span>
-                      <span className="stat-value-small">{data.interview2Count}</span>
-                    </div>
-                    <div className="stat-item-small">
-                      <span className="stat-label-small">Interview 3+</span>
-                      <span className="stat-value-small">{data.interview3Count}</span>
-                    </div>
-                    <div className="stat-item-small">
-                      <span className="stat-label-small">Commission Eligible</span>
-                      <span className="stat-value-small">{data.commissionEligible}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="candidates-list-small">
-                    <strong>Candidates:</strong>
-                    {data.candidates.map((candidate, idx) => (
-                      <div key={idx} className="candidate-item-small">
-                        <span>{candidate.name}</span>
-                        <span className={`stage-badge-small ${candidate.isCommissionEligible ? 'eligible' : ''}`}>
-                          {candidate.stage}
-                        </span>
+              <h3>Recruiter Breakdown & Commission</h3>
+              {Object.values(selectedPosition.recruiterBreakdown).length > 0 ? (
+                Object.values(selectedPosition.recruiterBreakdown).map(data => (
+                  <div key={data.recruiterName} className="recruiter-breakdown-card">
+                    <h4>{data.recruiterName}</h4>
+                    <div className="recruiter-stats">
+                      <div className="stat-item-small">
+                        <span className="stat-label-small">Total Candidates</span>
+                        <span className="stat-value-small">{data.totalCandidates}</span>
                       </div>
-                    ))}
+                      <div className="stat-item-small">
+                        <span className="stat-label-small">Interview 1+</span>
+                        <span className="stat-value-small">{data.interview1Count}</span>
+                      </div>
+                      <div className="stat-item-small">
+                        <span className="stat-label-small">Interview 2+</span>
+                        <span className="stat-value-small">{data.interview2Count}</span>
+                      </div>
+                      <div className="stat-item-small">
+                        <span className="stat-label-small">Interview 3+</span>
+                        <span className="stat-value-small">{data.interview3Count}</span>
+                      </div>
+                      <div className="stat-item-small">
+                        <span className="stat-label-small">Commission</span>
+                        <span className="stat-value-small">{data.commission}%</span>
+                      </div>
+                    </div>
+                     {data.commission > 0 && (
+                        <p className="commission-reason">
+                            <strong>Reason:</strong> {data.commissionReason}
+                        </p>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="report-section">
-              <h3>Full Candidate Activity</h3>
-              {selectedPosition.pipelineData.map((entry, idx) => (
-                <div key={idx} className="activity-item">
-                  <p><strong>Candidate:</strong> {entry.candidates?.name || 'Unknown'}</p>
-                  <p><strong>Recruiter:</strong> {entry.recruiters?.name || 'Unknown'}</p>
-                  <p><strong>Final Stage:</strong> {entry.stage}</p>
-                </div>
-              ))}
+                ))
+              ) : (
+                 <p>No recruiter activity recorded for this role.</p>
+              )}
             </div>
 
             <div className="modal-actions">

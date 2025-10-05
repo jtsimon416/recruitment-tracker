@@ -40,6 +40,12 @@
   font-weight: 600;
 }
 
+.nav-link-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .nav-link {
   display: block;
   padding: 12px 20px;
@@ -47,6 +53,7 @@
   text-decoration: none;
   transition: all 0.2s ease;
   font-size: 15px;
+  width: 100%; /* Ensure link takes full width */
 }
 
 .nav-link:hover {
@@ -55,9 +62,38 @@
   padding-left: 30px;
 }
 
+.nav-link-wrapper:hover .nav-link {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  padding-left: 30px;
+}
+.nav-link-wrapper .nav-link.active {
+   padding-left: 16px;
+}
+
+
 .nav-link.active {
   background: rgba(52, 152, 219, 0.3);
   color: white;
   border-left: 4px solid #3498db;
   padding-left: 16px;
 }
+
+/* --- Notification Badge with Number --- */
+.indicator-badge {
+  position: absolute;
+  right: 15px;
+  background-color: var(--accent-pink);
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  border: 2px solid #34495e;
+}
+

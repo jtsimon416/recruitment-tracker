@@ -374,7 +374,7 @@ function TalentPool() {
             >
               <div className="candidate-name-cell">
                 <div className="candidate-name">{candidate.name}</div>
-                {candidate.linkedin_url ? (
+                {candidate.linkedin_url && (
                   <a 
                     href={candidate.linkedin_url} 
                     target="_blank" 
@@ -384,8 +384,6 @@ function TalentPool() {
                   >
                     LinkedIn
                   </a>
-                ) : (
-                  <span className="candidate-email">{candidate.email}</span>
                 )}
               </div>
               <div className="skills-cell">{candidate.skills || 'N/A'}</div>

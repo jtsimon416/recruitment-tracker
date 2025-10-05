@@ -11,15 +11,42 @@ export function DataProvider({ children }) {
   const [pipeline, setPipeline] = useState([]);
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // --- New state to track candidate IDs with new comments ---
+  const [newCommentCandidateIds, setNewCommentCandidateIds] = useState([]);
 
   useEffect(() => {
     loadAllData();
+
+    // --- Supabase Real-time Subscription ---
+    // Listen for new rows being inserted into the 'comments' table
+    const commentsSubscription = supabase
+      .channel('public:comments')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'comments' },
+        (payload) => {
+          const newComment = payload.new;
+          // Add the candidate ID to our notification list
+          setNewCommentCandidateIds(prevIds => {
+            if (prevIds.includes(newComment.candidate_id)) {
+              return prevIds;
+            }
+            return [...prevIds, newComment.candidate_id];
+          });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on component unmount
+    return () => {
+      supabase.removeChannel(commentsSubscription);
+    };
   }, []);
 
   async function loadAllData() {
     setLoading(true);
     
-    // Fetch all data in parallel
     const [clientsRes, positionsRes, candidatesRes, recruitersRes, pipelineRes, interviewsRes] = await Promise.all([
       supabase.from('clients').select('*').order('company_name'),
       supabase.from('positions').select('*, clients(company_name)').order('created_at', { ascending: false }),
@@ -37,6 +64,11 @@ export function DataProvider({ children }) {
     setInterviews(interviewsRes.data || []);
     setLoading(false);
   }
+  
+  // Function to clear notifications for a specific candidate
+  const clearCommentNotifications = (candidateId) => {
+    setNewCommentCandidateIds(prevIds => prevIds.filter(id => id !== candidateId));
+  };
 
   async function refreshData() {
     await loadAllData();
@@ -56,7 +88,9 @@ export function DataProvider({ children }) {
     setCandidates,
     setRecruiters,
     setPipeline,
-    setInterviews
+    setInterviews,
+    newCommentCandidateIds,    // <-- Expose the array of IDs
+    clearCommentNotifications  // <-- Expose the clearing function
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
@@ -69,3 +103,4 @@ export function useData() {
   }
   return context;
 }
+
