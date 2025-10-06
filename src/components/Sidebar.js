@@ -7,10 +7,9 @@ function Sidebar() {
   const { newCommentCandidateIds, user, handleLogout } = useData();
   const notificationCount = newCommentCandidateIds.length;
   
-  // Determine if the logged-in user is the Director (using email as a simple identifier)
-  // *** IMPORTANT: REPLACE 'director@example.com' with the Director's actual email ***
-  // This helps assign the 'Director' role visibility in the sidebar.
-  const isDirector = user?.email === 'director@example.com'; 
+  // --- ACTION REQUIRED ---
+  // On the next line, replace 'brian.griffiths@brydongama.com' with your Director's actual email address.
+  const isDirector = user?.email === 'brian.griffiths@brydongama.com'; 
 
   return (
     <div className="sidebar">
@@ -19,12 +18,10 @@ function Sidebar() {
             <h2>Recruitment Tracker</h2>
         </div>
         
-        {/* --- ADDED USER INFO DISPLAY --- */}
         <div className="user-info">
           <p>Logged in as: <strong>{user?.email || 'N/A'}</strong></p>
           <p className="user-role">{isDirector ? 'DIRECTOR' : 'RECRUITER'}</p>
         </div>
-        {/* --- END USER INFO DISPLAY --- */}
       </div>
       
       <nav className="sidebar-nav">
@@ -64,7 +61,6 @@ function Sidebar() {
         </div>
       </nav>
 
-      {/* --- LOGOUT BUTTON --- */}
       <div className="sidebar-footer">
         <button className="btn-logout" onClick={handleLogout}>
           Log Out

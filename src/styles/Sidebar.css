@@ -1,41 +1,72 @@
 .sidebar {
   width: 250px;
   height: 100vh;
-  background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+  background: var(--secondary-bg);
   color: white;
   position: fixed;
   left: 0;
   top: 0;
   overflow-y: auto;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid var(--border-color);
+  /* This makes the footer stick to the bottom */
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {
   padding: 25px 20px;
   background: rgba(0, 0, 0, 0.2);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .sidebar-header h2 {
   font-size: 20px;
-  font-weight: 600;
-  color: white;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin: 0;
+  text-align: center;
+}
+
+.user-info {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.user-info p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  word-break: break-all; /* Ensures long emails wrap */
+}
+
+.user-info strong {
+    word-break: break-all;
+}
+
+.user-info .user-role {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--accent-green);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .sidebar-nav {
   padding: 20px 0;
+  flex-grow: 1; /* Allows the footer to be pushed down */
 }
 
 .nav-section {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .nav-section h3 {
   padding: 0 20px;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   margin-bottom: 10px;
   font-weight: 600;
 }
@@ -47,39 +78,31 @@
 }
 
 .nav-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
   padding: 12px 20px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   text-decoration: none;
   transition: all 0.2s ease;
   font-size: 15px;
-  width: 100%; /* Ensure link takes full width */
+  border-left: 4px solid transparent;
 }
 
 .nav-link:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--hover-bg);
   color: white;
-  padding-left: 30px;
+  border-left-color: var(--accent-blue);
 }
-
-.nav-link-wrapper:hover .nav-link {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  padding-left: 30px;
-}
-.nav-link-wrapper .nav-link.active {
-   padding-left: 16px;
-}
-
 
 .nav-link.active {
-  background: rgba(52, 152, 219, 0.3);
-  color: white;
-  border-left: 4px solid #3498db;
-  padding-left: 16px;
+  background: var(--hover-bg);
+  color: var(--accent-cyan);
+  font-weight: 600;
+  border-left-color: var(--accent-cyan);
 }
 
-/* --- Notification Badge with Number --- */
 .indicator-badge {
   position: absolute;
   right: 15px;
@@ -94,6 +117,31 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  border: 2px solid #34495e;
+  border: 2px solid var(--secondary-bg);
 }
 
+/* --- STYLES FOR THE LOGOUT BUTTON --- */
+.sidebar-footer {
+  margin-top: auto; /* Pushes this section to the bottom */
+  padding: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-logout {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--accent-pink);
+  background: transparent;
+  color: var(--accent-pink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+  background: var(--accent-pink);
+  color: white;
+  box-shadow: 0 0 15px rgba(247, 162, 198, 0.4);
+}

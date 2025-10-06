@@ -263,6 +263,23 @@
   box-shadow: 0 4px 12px rgba(187, 154, 247, 0.4);
 }
 
+.btn-secondary {
+  background: var(--secondary-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--hover-bg);
+  border-color: var(--accent-blue);
+}
+
 .btn-delete {
   background: linear-gradient(135deg, var(--accent-pink), var(--accent-orange));
   color: white;
@@ -299,7 +316,6 @@
   font-size: 20px;
 }
 
-/* New Outcome Badge Styles */
 .outcome-badge {
   padding: 8px 16px;
   border-radius: 6px;
@@ -308,72 +324,95 @@
   color: white;
   text-transform: uppercase;
 }
+.outcome-badge.passed { background: linear-gradient(135deg, var(--accent-green), #7dcfff); }
+.outcome-badge.failed { background: linear-gradient(135deg, var(--accent-pink), var(--accent-orange)); }
+.outcome-badge.hold { background: linear-gradient(135deg, var(--accent-orange), #ffcc80); }
 
-.outcome-badge.passed {
-  background: linear-gradient(135deg, var(--accent-green), #7dcfff);
-}
-
-.outcome-badge.failed {
-  background: linear-gradient(135deg, var(--accent-pink), var(--accent-orange));
-}
-
-
-/* New Modal Styles */
+/* --- NEW MODAL STYLES --- */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   backdrop-filter: blur(4px);
+  padding: 20px;
 }
 
 .modal-content {
   background: var(--card-bg);
   padding: 30px;
   border-radius: 12px;
-  max-width: 600px;
   width: 90%;
+  max-width: 600px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   border: 1px solid var(--border-color);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
-.modal-content h2 {
-  margin: 0 0 10px 0;
-  color: var(--accent-cyan);
-}
+.modal-content h2 { margin: 0 0 10px 0; color: var(--accent-cyan); }
+.modal-candidate-info { color: var(--text-secondary); font-weight: 600; margin-bottom: 25px; }
 
-.modal-candidate-info {
-  color: var(--text-secondary);
-  font-weight: 600;
-  margin-bottom: 25px;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 10px;
+.decision-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
   margin-top: 25px;
-  justify-content: flex-end;
+  border-top: 1px solid var(--border-color);
+  padding-top: 25px;
 }
 
-.btn-secondary {
+.decision-btn {
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
   background: var(--secondary-bg);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  padding: 12px 24px;
-  border-radius: 8px;
-  cursor: pointer;
   font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
 }
+.decision-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 
-.btn-secondary:hover {
-  background: var(--hover-bg);
-  border-color: var(--accent-blue);
+.btn-advance { border-color: var(--accent-green); color: var(--accent-green); }
+.btn-advance:hover { background: var(--accent-green); color: white; }
+
+.btn-hold { border-color: var(--accent-orange); color: var(--accent-orange); }
+.btn-hold:hover { background: var(--accent-orange); color: white; }
+
+.btn-reject { border-color: var(--accent-pink); color: var(--accent-pink); }
+.btn-reject:hover { background: var(--accent-pink); color: white; }
+
+.btn-save-feedback { border-color: var(--text-muted); color: var(--text-muted); grid-column: 1 / -1; }
+.btn-save-feedback:hover { background: var(--text-muted); color: white; }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 25px; justify-content: flex-end; }
+.modal-actions-centered { justify-content: center; }
+
+/* History Modal */
+.history-modal-content {
+  max-width: 700px;
 }
+.history-item {
+  background: var(--secondary-bg);
+  padding: 18px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border-left: 4px solid var(--accent-purple);
+}
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.history-item-header h3 { color: var(--accent-cyan); margin: 0; font-size: 18px; }
+.history-item-date { font-size: 12px; color: var(--text-muted); }
+.history-item p { margin: 5px 0; color: var(--text-secondary); }
+.history-item strong { color: var(--text-primary); font-weight: 600; }
+.history-item .feedback-box { margin-top: 10px; padding: 12px; border-left-width: 3px; }

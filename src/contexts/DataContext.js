@@ -13,15 +13,11 @@ export function DataProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [newCommentCandidateIds, setNewCommentCandidateIds] = useState([]);
   
-  // --- NEW AUTH STATE ---
   const [session, setSession] = useState(null);
   const [loadingSession, setLoadingSession] = useState(true);
-  // -----------------------
 
   useEffect(() => {
-    // 1. Handle Auth Session
     const getSession = async () => {
-      // Get initial session state
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setLoadingSession(false);
@@ -29,25 +25,20 @@ export function DataProvider({ children }) {
 
     getSession();
     
-    // Auth Listener: Update session state whenever auth status changes (login/logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (loadingSession) setLoadingSession(false);
     });
 
-    // Cleanup subscription on component unmount
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
-  // Use a separate effect to load application data *only* after session is confirmed
   useEffect(() => {
     if (session) {
       loadAllData();
       
-      // --- Supabase Real-time Subscription (Now inside session check) ---
-      // This listener handles new comments to update the sidebar badge
       const commentsSubscription = supabase
         .channel('public:comments')
         .on(
@@ -55,7 +46,6 @@ export function DataProvider({ children }) {
           { event: 'INSERT', schema: 'public', table: 'comments' },
           (payload) => {
             const newComment = payload.new;
-            // Add the candidate ID to our notification list
             setNewCommentCandidateIds(prevIds => {
               if (prevIds.includes(newComment.candidate_id)) {
                 return prevIds;
@@ -70,7 +60,6 @@ export function DataProvider({ children }) {
         supabase.removeChannel(commentsSubscription);
       };
     } else {
-        // Clear data when logged out
         setClients([]);
         setPositions([]);
         setCandidates([]);
@@ -81,7 +70,6 @@ export function DataProvider({ children }) {
     }
   }, [session]);
   
-  // Existing loadAllData function
   async function loadAllData() {
     setLoading(true);
     
@@ -111,11 +99,21 @@ export function DataProvider({ children }) {
     await loadAllData();
   }
   
-  // --- NEW LOGOUT FUNCTION ---
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
-  // ---------------------------
+
+  // --- NEW NOTIFICATION FUNCTION ---
+  // This function will be called by other components to create a notification
+  const createNotification = async (payload) => {
+    const { error } = await supabase.from('notification_outbox').insert([{ payload }]);
+    if (error) {
+      console.error('Error creating notification:', error);
+      // Optionally, you could add more robust error handling here
+      // For now, we'll just log it.
+    }
+  };
+  // ------------------------------------
 
   const value = {
     clients,
@@ -134,11 +132,12 @@ export function DataProvider({ children }) {
     setInterviews,
     newCommentCandidateIds,
     clearCommentNotifications,
-    // --- NEW EXPOSED AUTH VALUES ---
     session,
     loadingSession,
     handleLogout,
-    user: session?.user, // Expose the current user object
+    user: session?.user,
+    // --- EXPOSE THE NEW FUNCTION ---
+    createNotification,
     // -------------------------------
   };
 
