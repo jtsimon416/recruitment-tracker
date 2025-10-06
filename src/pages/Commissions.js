@@ -8,6 +8,7 @@ function Commissions() {
   const [recruiters, setRecruiters] = useState([]);
   const [positions, setPositions] = useState([]);
   const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     pending: 0,
     readyToInvoice: 0,
@@ -28,10 +29,16 @@ function Commissions() {
   });
 
   useEffect(() => {
-    fetchCommissions();
-    fetchRecruiters();
-    fetchPositions();
-    fetchCandidates();
+    const loadData = async () => {
+      await Promise.all([
+        fetchCommissions(),
+        fetchRecruiters(),
+        fetchPositions(),
+        fetchCandidates()
+      ]);
+      setLoading(false);
+    };
+    loadData();
   }, []);
 
   async function fetchCommissions() {
@@ -128,6 +135,7 @@ function Commissions() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setLoading(true);
     const { error } = await supabase
       .from('commissions')
       .insert([formData]);
@@ -146,13 +154,14 @@ function Commissions() {
         notes: ''
       });
       setShowForm(false);
-      fetchCommissions();
+      await fetchCommissions();
     }
+    setLoading(false);
   }
 
   async function handleDelete(id) {
     if (!window.confirm('Are you sure you want to delete this commission?')) return;
-    
+    setLoading(true);
     const { error } = await supabase
       .from('commissions')
       .delete()
@@ -162,8 +171,13 @@ function Commissions() {
       alert('Error deleting commission: ' + error.message);
     } else {
       alert('Commission deleted successfully!');
-      fetchCommissions();
+      await fetchCommissions();
     }
+    setLoading(false);
+  }
+
+  if (loading) {
+    return <div className="loading-state">Loading Commissions...</div>;
   }
 
   return (

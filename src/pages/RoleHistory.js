@@ -6,6 +6,7 @@ function RoleHistory() {
   const [closedPositions, setClosedPositions] = useState([]);
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchClosedPositions();
@@ -20,6 +21,7 @@ function RoleHistory() {
 
     if (error) {
       console.error('Error fetching closed positions:', error);
+      setLoading(false);
       return;
     }
 
@@ -126,6 +128,7 @@ function RoleHistory() {
     );
 
     setClosedPositions(enrichedPositions);
+    setLoading(false);
   }
 
   function viewDetails(position) {
@@ -136,6 +139,10 @@ function RoleHistory() {
   function closeDetailModal() {
     setShowDetailModal(false);
     setSelectedPosition(null);
+  }
+
+  if (loading) {
+    return <div className="loading-state">Loading Role History...</div>;
   }
 
   const totalClosedRoles = closedPositions.length;

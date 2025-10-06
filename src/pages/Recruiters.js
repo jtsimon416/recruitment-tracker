@@ -6,6 +6,7 @@ function Recruiters() {
   const [recruiters, setRecruiters] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingRecruiter, setEditingRecruiter] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -27,11 +28,12 @@ function Recruiters() {
     } else {
       setRecruiters(data || []);
     }
+    setLoading(false);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    
+    setLoading(true);
     if (editingRecruiter) {
       const { error } = await supabase
         .from('recruiters')
@@ -43,7 +45,7 @@ function Recruiters() {
       } else {
         alert('Recruiter updated successfully!');
         resetForm();
-        fetchRecruiters();
+        await fetchRecruiters();
       }
     } else {
       const { error } = await supabase
@@ -55,14 +57,15 @@ function Recruiters() {
       } else {
         alert('Recruiter added successfully!');
         resetForm();
-        fetchRecruiters();
+        await fetchRecruiters();
       }
     }
+    setLoading(false);
   }
 
   async function handleDelete(id) {
     if (!window.confirm('Are you sure you want to delete this recruiter?')) return;
-    
+    setLoading(true);
     const { error } = await supabase
       .from('recruiters')
       .delete()
@@ -72,8 +75,9 @@ function Recruiters() {
       alert('Error deleting recruiter: ' + error.message);
     } else {
       alert('Recruiter deleted successfully!');
-      fetchRecruiters();
+      await fetchRecruiters();
     }
+    setLoading(false);
   }
 
   function handleEdit(recruiter) {
@@ -94,6 +98,10 @@ function Recruiters() {
     });
     setEditingRecruiter(null);
     setShowForm(false);
+  }
+
+  if (loading) {
+    return <div className="loading-state">Loading Recruiters...</div>;
   }
 
   return (

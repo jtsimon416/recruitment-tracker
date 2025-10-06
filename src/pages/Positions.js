@@ -27,21 +27,20 @@ function Positions() {
   });
 
   useEffect(() => {
-    fetchPositions();
-    fetchClients();
+    const loadData = async () => {
+      await Promise.all([fetchPositions(), fetchClients()]);
+      setLoading(false);
+    };
+    loadData();
   }, []);
 
   useEffect(() => {
-    if (positions.length > 0) {
+    if (!loading) {
       calculatePositionStats();
-    } else {
-      setLoading(false);
     }
-  }, [positions]);
+  }, [positions, loading]);
 
   async function fetchPositions() {
-    setLoading(true);
-    
     const { data, error } = await supabase
       .from('positions')
       .select('*, clients(company_name)')
@@ -49,7 +48,6 @@ function Positions() {
     
     if (error) {
       console.error('Error fetching positions:', error);
-      setLoading(false);
     } else {
       setPositions(data || []);
     }
@@ -116,12 +114,11 @@ function Positions() {
     );
 
     setPositionsWithStats(enrichedPositions);
-    setLoading(false);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    
+    setLoading(true);
     if (editingPosition) {
       const { error } = await supabase
         .from('positions')
@@ -133,7 +130,7 @@ function Positions() {
       } else {
         alert('Position updated successfully!');
         resetForm();
-        fetchPositions();
+        await fetchPositions();
       }
     } else {
       const { error } = await supabase
@@ -145,14 +142,15 @@ function Positions() {
       } else {
         alert('Position added successfully!');
         resetForm();
-        fetchPositions();
+        await fetchPositions();
       }
     }
+    setLoading(false);
   }
 
   async function handleDelete(id) {
     if (!window.confirm('Are you sure you want to delete this position?')) return;
-    
+    setLoading(true);
     const { error } = await supabase
       .from('positions')
       .delete()
@@ -162,8 +160,9 @@ function Positions() {
       alert('Error deleting position: ' + error.message);
     } else {
       alert('Position deleted successfully!');
-      fetchPositions();
+      await fetchPositions();
     }
+    setLoading(false);
   }
 
   function handleEdit(position) {
@@ -213,7 +212,7 @@ function Positions() {
       alert('Please provide a reason for closing this role');
       return;
     }
-
+    setLoading(true);
     const { error: updateError } = await supabase
       .from('positions')
       .update({
@@ -223,6 +222,7 @@ function Positions() {
 
     if (updateError) {
       alert('Error closing position: ' + updateError.message);
+      setLoading(false);
       return;
     }
 
@@ -249,12 +249,17 @@ function Positions() {
     alert('Position closed successfully! All associated candidates have been returned to the Talent Pool.');
     setShowCloseModal(false);
     setClosingPosition(null);
-    fetchPositions();
+    await fetchPositions();
+    setLoading(false);
   }
 
   const filteredPositions = statusFilter === 'all' 
     ? positionsWithStats 
     : positionsWithStats.filter(p => p.status === statusFilter);
+
+  if (loading) {
+    return <div className="loading-state">Loading Positions...</div>;
+  }
 
   return (
     <div className="page-container page-transition">
