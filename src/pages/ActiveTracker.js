@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
 import { useLocation } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import '../styles/ActiveTracker.css';
 
 function ActiveTracker() {
@@ -25,9 +26,11 @@ function ActiveTracker() {
   const [selectedPosition, setSelectedPosition] = useState('all');
   const [selectedRecruiter, setSelectedRecruiter] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
-
+  const [selectedStage, setSelectedStage] = useState('all'); 
+  
   // Sorting
   const [sortConfig, setSortConfig] = useState({ key: 'candidates.name', direction: 'ascending' });
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null); 
 
   const stages = ['Screening', 'Submit to Client', 'Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired'];
   const statuses = ['Active', 'Hold', 'Reject'];
@@ -41,7 +44,6 @@ function ActiveTracker() {
   }, []);
 
   useEffect(() => {
-    // This effect handles the navigation from the dashboard
     if (location.state?.view) {
       setView(location.state.view);
     }
@@ -57,7 +59,6 @@ function ActiveTracker() {
   }, [loading, location.state, pipeline]);
 
 
-  // ... (all other functions remain the same)
   async function fetchPipeline() {
     const { data: pipelineData, error: pipelineError } = await supabase
       .from('pipeline')
@@ -116,6 +117,9 @@ function ActiveTracker() {
     if (selectedStatus !== 'all') {
       filtered = filtered.filter(p => (p.status || 'Active') === selectedStatus);
     }
+    if (selectedStage !== 'all') {
+        filtered = filtered.filter(p => p.stage === selectedStage);
+    }
 
     if (sortConfig.key) {
       filtered.sort((a, b) => {
@@ -139,7 +143,7 @@ function ActiveTracker() {
     }
 
     return filtered;
-  }, [pipeline, selectedPosition, selectedRecruiter, selectedStatus, sortConfig]);
+  }, [pipeline, selectedPosition, selectedRecruiter, selectedStatus, selectedStage, sortConfig]);
 
   const requestSort = (key) => {
     let direction = 'ascending';
@@ -155,13 +159,45 @@ function ActiveTracker() {
   };
 
   async function handleStageChange(pipelineId, newStage) {
+    // This function is correctly used only by the List View dropdown
     const { error } = await supabase
       .from('pipeline')
       .update({ stage: newStage, updated_at: new Date().toISOString() })
       .eq('id', pipelineId);
     
-    if (error) alert('Error updating stage: ' + error.message);
+    if (error) console.error('Error updating stage:', error.message);
     else fetchPipeline();
+  }
+  
+  async function handleOnDragEnd(result) {
+    const { destination, draggableId } = result;
+
+    if (!destination || destination.droppableId === result.source.droppableId) {
+      return;
+    }
+
+    const newStage = destination.droppableId;
+    const pipelineId = draggableId;
+
+    // Optimistically update UI
+    const updatedPipeline = pipeline.map(p => 
+      p.id.toString() === draggableId ? { ...p, stage: newStage } : p
+    );
+    setPipeline(updatedPipeline); 
+    
+    // Persist change to database
+    const { error } = await supabase
+      .from('pipeline')
+      .update({ 
+          stage: newStage,
+          updated_at: new Date().toISOString() 
+      })
+      .eq('id', pipelineId); 
+
+    if (error) {
+      console.error('Error updating stage via drag-and-drop:', error);
+      fetchPipeline(); // Revert state on failure
+    }
   }
 
   async function handleStatusChange(pipelineId, newStatus) {
@@ -175,10 +211,19 @@ function ActiveTracker() {
   }
 
   async function handleRemove(pipelineId) {
-    if (!window.confirm('Remove this candidate from the pipeline?')) return;
+    if (confirmDeleteId !== pipelineId) {
+        setConfirmDeleteId(pipelineId);
+        setTimeout(() => setConfirmDeleteId(null), 3000);
+        return;
+    }
+
     const { error } = await supabase.from('pipeline').delete().eq('id', pipelineId);
-    if (error) alert('Error removing from pipeline: ' + error.message);
-    else fetchPipeline();
+    if (error) {
+        alert('Error removing from pipeline: ' + error.message);
+    } else {
+        fetchPipeline();
+    }
+    setConfirmDeleteId(null);
   }
 
   async function openCommentsModal(pipelineEntry) {
@@ -272,20 +317,28 @@ function ActiveTracker() {
                           {statuses.map(status => <option key={status} value={status}>{status}</option>)}
                         </select>
                       </div>
+                      
+                      {/* --- STAGE DROPDOWN RESTORED FOR LIST VIEW --- */}
                       <div>
                         <select
                           className="stage-select"
                           value={item.stage}
-                          onChange={(e) => { e.stopPropagation(); handleStageChange(item.id, e.target.value); }}
+                          onChange={(e) => { e.stopPropagation(); handleStageChange(item.id, e.target.value); }} 
                           onClick={(e) => e.stopPropagation()}
                         >
                           {stages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
                         </select>
                       </div>
+                      {/* --- END RESTORED --- */}
+                      
                       <div className="actions-cell" onClick={(e) => e.stopPropagation()}>
-                        {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small"></div>}
-                        <button className="btn-comments" onClick={() => openCommentsModal(item)}>Comments</button>
-                        <button className="btn-remove" onClick={() => handleRemove(item.id)}>Remove</button>
+                         <div className="comments-button-wrapper">
+                            {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small"></div>}
+                            <button className="btn-comments" onClick={() => openCommentsModal(item)}>Comments</button>
+                         </div>
+                         <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={() => handleRemove(item.id)}>
+                            {confirmDeleteId === item.id ? 'Confirm Delete' : 'Remove'} 
+                         </button>
                       </div>
                     </div>
                     {expandedCard === item.id && item.candidates?.notes && (
@@ -304,48 +357,84 @@ function ActiveTracker() {
   function renderPipelineView() {
     return (
       <div className="pipeline-view">
-        {filteredAndSortedPipeline.length === 0 ? (
+        {filteredAndSortedPipeline.length === 0 && selectedStage !== 'all' ? (
           <div className="empty-state"><h3>No matching pipeline entries</h3><p>Adjust your filters to see results.</p></div>
         ) : (
-          <div className="kanban-board">
-            {stages.map(stage => {
-              const stageItems = filteredAndSortedPipeline.filter(p => p.stage === stage);
-              return (
-                <div key={stage} className="kanban-column">
-                  <div className="column-header"><h3>{stage}</h3><span className="count">{stageItems.length}</span></div>
-                  <div className="column-content">
-                    {stageItems.map(item => (
+          <DragDropContext onDragEnd={handleOnDragEnd}> 
+            <div className="kanban-board">
+              {stages.map((stage) => {
+                const stageItems = filteredAndSortedPipeline.filter(p => p.stage === stage);
+                
+                if (selectedStage !== 'all' && selectedStage !== stage) {
+                  return null; 
+                }
+
+                return (
+                  <Droppable droppableId={stage} key={stage}>
+                    {(provided, snapshot) => (
                       <div 
-                        key={item.id} 
-                        className={`pipeline-card status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`}
-                        onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)}
+                        className="kanban-column"
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        style={{
+                            background: snapshot.isDraggingOver ? 'var(--hover-bg)' : 'var(--card-bg)'
+                        }}
                       >
-                        <div className="card-header">
-                          <strong>{item.candidates?.name || 'Unknown'}</strong>
-                          <span className={`kanban-status-badge status-badge-${(item.status || 'active').toLowerCase()}`}>{item.status || 'Active'}</span>
-                        </div>
-                        <div className="card-body">
-                          <p className="card-position-title">{item.positions?.title}</p>
-                          <p className="client-name">{item.positions?.clients?.company_name}</p>
-                          {expandedCard === item.id && (<div className="card-expanded-section"><strong>Notes:</strong><p>{item.candidates?.notes || 'N/A'}</p></div>)}
-                        </div>
-                        <div className="card-actions" onClick={(e) => e.stopPropagation()}>
-                          <select className="stage-select" value={item.stage} onChange={(e) => handleStageChange(item.id, e.target.value)}>
-                            {stages.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                          <div className="comments-button-wrapper">
-                             {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small"></div>}
-                             <button className="btn-comments" onClick={() => openCommentsModal(item)}>Comments</button>
-                          </div>
-                          <button className="btn-remove" onClick={() => handleRemove(item.id)}>Remove</button>
+                        <div className="column-header"><h3>{stage}</h3><span className="count">{stageItems.length}</span></div>
+                        <div className="column-content">
+                          {stageItems.map((item, index) => (
+                            <Draggable draggableId={item.id.toString()} index={index} key={item.id}>
+                              {(provided, snapshot) => (
+                                <div 
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps} 
+                                  className={`pipeline-card status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`}
+                                  onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)}
+                                  style={{
+                                      ...provided.draggableProps.style,
+                                      opacity: snapshot.isDragging ? 0.8 : 1,
+                                  }}
+                                >
+                                  <div className="card-header">
+                                    <strong>{item.candidates?.name || 'Unknown'}</strong>
+                                    <span className={`kanban-status-badge status-badge-${(item.status || 'active').toLowerCase()}`}>{item.status || 'Active'}</span>
+                                  </div>
+                                  <div className="card-body">
+                                    <p className="card-position-title">{item.positions?.title}</p>
+                                    <p className="client-name">{item.positions?.clients?.company_name}</p>
+                                    {expandedCard === item.id && (<div className="card-expanded-section"><strong>Notes:</strong><p>{item.candidates?.notes || 'N/A'}</p></div>)}
+                                  </div>
+                                  <div className="card-actions" onClick={(e) => e.stopPropagation()}>
+                                    
+                                    {/* --- NEW CONTAINER FOR TOP ROW ACTIONS (Status + Comments) --- */}
+                                    <div className="card-actions-horizontal">
+                                      <select className="status-select" value={item.status || 'Active'} onChange={(e) => handleStatusChange(item.id, e.target.value)} onClick={(e) => e.stopPropagation()}>
+                                        {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                                      </select>
+                                      <div className="comments-button-wrapper">
+                                        {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small"></div>}
+                                        <button className="btn-comments" onClick={() => openCommentsModal(item)}>Comments</button>
+                                      </div>
+                                    </div>
+                                    {/* --- REMOVE BUTTON MOVED TO ITS OWN LINE (BOTTOM ROW) --- */}
+                                    <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={() => handleRemove(item.id)}>
+                                       {confirmDeleteId === item.id ? 'Confirm Delete' : 'Remove'}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                    )}
+                  </Droppable>
+                );
+              })}
+            </div>
+          </DragDropContext>
         )}
       </div>
     );
@@ -361,6 +450,11 @@ function ActiveTracker() {
       <div className="page-header">
         <h1>Active Tracker</h1>
         <div className="header-controls">
+          <select className="position-filter" value={selectedStage} onChange={(e) => setSelectedStage(e.target.value)}>
+            <option value="all">All Stages</option>
+            {stages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+          </select>
+          
           <select className="position-filter" value={selectedPosition} onChange={(e) => setSelectedPosition(e.target.value)}>
             <option value="all">All Positions</option>
             {positions.map(pos => <option key={pos.id} value={pos.id}>{pos.title}</option>)}

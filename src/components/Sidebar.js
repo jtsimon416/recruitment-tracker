@@ -4,16 +4,27 @@ import { useData } from '../contexts/DataContext';
 import '../styles/Sidebar.css';
 
 function Sidebar() {
-  const { newCommentCandidateIds } = useData();
+  const { newCommentCandidateIds, user, handleLogout } = useData();
   const notificationCount = newCommentCandidateIds.length;
-
-  // No onClick handler is needed here anymore, as the notification is cleared
-  // when the user opens the comments modal on the ActiveTracker page.
+  
+  // Determine if the logged-in user is the Director (using email as a simple identifier)
+  // *** IMPORTANT: REPLACE 'director@example.com' with the Director's actual email ***
+  // This helps assign the 'Director' role visibility in the sidebar.
+  const isDirector = user?.email === 'director@example.com'; 
 
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h2>Recruitment Tracker</h2>
+        <div className="sidebar-logo-wrapper">
+            <h2>Recruitment Tracker</h2>
+        </div>
+        
+        {/* --- ADDED USER INFO DISPLAY --- */}
+        <div className="user-info">
+          <p>Logged in as: <strong>{user?.email || 'N/A'}</strong></p>
+          <p className="user-role">{isDirector ? 'DIRECTOR' : 'RECRUITER'}</p>
+        </div>
+        {/* --- END USER INFO DISPLAY --- */}
       </div>
       
       <nav className="sidebar-nav">
@@ -52,9 +63,15 @@ function Sidebar() {
           <NavLink to="/rubric-generator" className="nav-link">Rubric Generator</NavLink>
         </div>
       </nav>
+
+      {/* --- LOGOUT BUTTON --- */}
+      <div className="sidebar-footer">
+        <button className="btn-logout" onClick={handleLogout}>
+          Log Out
+        </button>
+      </div>
     </div>
   );
 }
 
 export default Sidebar;
-

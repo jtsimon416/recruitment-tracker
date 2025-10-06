@@ -11,39 +11,77 @@ export function DataProvider({ children }) {
   const [pipeline, setPipeline] = useState([]);
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // --- New state to track candidate IDs with new comments ---
   const [newCommentCandidateIds, setNewCommentCandidateIds] = useState([]);
+  
+  // --- NEW AUTH STATE ---
+  const [session, setSession] = useState(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+  // -----------------------
 
   useEffect(() => {
-    loadAllData();
+    // 1. Handle Auth Session
+    const getSession = async () => {
+      // Get initial session state
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setLoadingSession(false);
+    };
 
-    // --- Supabase Real-time Subscription ---
-    // Listen for new rows being inserted into the 'comments' table
-    const commentsSubscription = supabase
-      .channel('public:comments')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'comments' },
-        (payload) => {
-          const newComment = payload.new;
-          // Add the candidate ID to our notification list
-          setNewCommentCandidateIds(prevIds => {
-            if (prevIds.includes(newComment.candidate_id)) {
-              return prevIds;
-            }
-            return [...prevIds, newComment.candidate_id];
-          });
-        }
-      )
-      .subscribe();
+    getSession();
+    
+    // Auth Listener: Update session state whenever auth status changes (login/logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (loadingSession) setLoadingSession(false);
+    });
 
     // Cleanup subscription on component unmount
     return () => {
-      supabase.removeChannel(commentsSubscription);
+      subscription.unsubscribe();
     };
   }, []);
 
+  // Use a separate effect to load application data *only* after session is confirmed
+  useEffect(() => {
+    if (session) {
+      loadAllData();
+      
+      // --- Supabase Real-time Subscription (Now inside session check) ---
+      // This listener handles new comments to update the sidebar badge
+      const commentsSubscription = supabase
+        .channel('public:comments')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'comments' },
+          (payload) => {
+            const newComment = payload.new;
+            // Add the candidate ID to our notification list
+            setNewCommentCandidateIds(prevIds => {
+              if (prevIds.includes(newComment.candidate_id)) {
+                return prevIds;
+              }
+              return [...prevIds, newComment.candidate_id];
+            });
+          }
+        )
+        .subscribe();
+        
+      return () => {
+        supabase.removeChannel(commentsSubscription);
+      };
+    } else {
+        // Clear data when logged out
+        setClients([]);
+        setPositions([]);
+        setCandidates([]);
+        setRecruiters([]);
+        setPipeline([]);
+        setInterviews([]);
+        setLoading(false);
+    }
+  }, [session]);
+  
+  // Existing loadAllData function
   async function loadAllData() {
     setLoading(true);
     
@@ -65,7 +103,6 @@ export function DataProvider({ children }) {
     setLoading(false);
   }
   
-  // Function to clear notifications for a specific candidate
   const clearCommentNotifications = (candidateId) => {
     setNewCommentCandidateIds(prevIds => prevIds.filter(id => id !== candidateId));
   };
@@ -73,6 +110,12 @@ export function DataProvider({ children }) {
   async function refreshData() {
     await loadAllData();
   }
+  
+  // --- NEW LOGOUT FUNCTION ---
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+  // ---------------------------
 
   const value = {
     clients,
@@ -89,8 +132,14 @@ export function DataProvider({ children }) {
     setRecruiters,
     setPipeline,
     setInterviews,
-    newCommentCandidateIds,    // <-- Expose the array of IDs
-    clearCommentNotifications  // <-- Expose the clearing function
+    newCommentCandidateIds,
+    clearCommentNotifications,
+    // --- NEW EXPOSED AUTH VALUES ---
+    session,
+    loadingSession,
+    handleLogout,
+    user: session?.user, // Expose the current user object
+    // -------------------------------
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
@@ -103,4 +152,3 @@ export function useData() {
   }
   return context;
 }
-

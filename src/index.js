@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+// Fix 1: LoginPage.css is in src/styles, so the path is relative from src/index.js
+import './index.css'; 
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 

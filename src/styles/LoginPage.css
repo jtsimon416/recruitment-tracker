@@ -1,0 +1,154 @@
+/* Import theme variables from App.css for consistency */
+@import './App.css';
+
+/* --- NEW ONE-TIME PULSE ANIMATION --- */
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 5px var(--accent-cyan), 0 0 10px var(--accent-blue);
+        border-color: var(--accent-blue);
+    }
+    50% {
+        box-shadow: 0 0 15px var(--accent-cyan), 0 0 30px var(--accent-purple);
+        border-color: var(--accent-purple);
+    }
+    100% {
+        box-shadow: 0 0 5px var(--accent-cyan), 0 0 10px var(--accent-blue);
+        border-color: var(--accent-blue);
+    }
+}
+/* --- END NEW ANIMATION --- */
+
+/* --- LOGIN PAGE STYLES --- */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--primary-bg);
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  border-radius: 16px;
+  background: var(--secondary-bg);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 450px;
+  overflow: visible; 
+}
+
+/* New container for the branding elements */
+.branding-area {
+    text-align: center;
+    margin-bottom: 35px;
+    width: 100%;
+}
+
+/* Styles for the Animated Logo Container (HIRE LOGIC 2 box) */
+.logo-container {
+    padding: 15px 30px;
+    border: 2px solid var(--accent-blue);
+    border-radius: 12px;
+    width: 100%;
+    /* Apply one-time pulse, running once after the H1 animation completes */
+    animation: pulse-glow 0.8s ease-out 1.5s 1 forwards;
+    animation-fill-mode: forwards; /* Keep the final state of the animation */
+    overflow: visible; 
+}
+
+.logo-container h1 {
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--accent-cyan);
+    margin: 0;
+    letter-spacing: 2px;
+    position: relative; 
+    display: block; 
+    
+    /* --- SUBTLE GLOW/SHADOW --- */
+    text-shadow: 0 0 3px var(--accent-blue);
+    
+    /* --- REFLECTION EFFECT (Subtler) --- */
+    -webkit-box-reflect: below -15px linear-gradient(transparent, rgba(0, 0, 0, 0.15));
+    box-shadow: none !important;
+}
+
+/* Styles for the tagline outside the box */
+.tagline-p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 15px; /* Added spacing from the box */
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    display: block; /* Essential for motion to work */
+}
+
+/* Form Styles */
+.form-card {
+    background: none;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 15px;
+    transition: background 0.3s;
+    box-shadow: 0 4px 12px rgba(122, 162, 247, 0.3);
+}
+
+.message-box {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+}
+.message-success {
+    background: rgba(158, 206, 106, 0.2);
+    color: var(--accent-green);
+}
+.message-error {
+    background: rgba(247, 162, 198, 0.2);
+    color: var(--accent-pink);
+}
