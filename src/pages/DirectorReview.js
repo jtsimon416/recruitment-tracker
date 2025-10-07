@@ -11,12 +11,23 @@ const SUPER_URGENT_THRESHOLD_DAYS = 7;
 // Email of the Director (used for access control and comment author)
 const DIRECTOR_EMAIL = 'brian.griffiths@brydongama.com'; 
 
-// Quick Reply Templates for the Director
-const quickReplies = [
-    "Good fit, move to submission. Follow up on references.",
-    "Place on hold, need to discuss compensation expectations.",
-    "Not a fit for this role, excellent for Talent Pool."
-];
+// Specialized Quick Reply Templates
+const quickReplySets = {
+    HOLD: [
+        "Need clarification on salary expectations; please check in with the candidate.",
+        "Put on hold. Pending feedback from key stakeholders (HR/Hiring Manager).",
+        "Market check required; candidate profile is excellent but compensation is a concern.",
+        "Candidate is strong, but another priority search requires our full attention for now.",
+        "Pause the process. I need to sync with the recruiter before advancing."
+    ],
+    REJECT: [
+        "Not a fit for this role, but excellent for our Talent Pool/future roles.",
+        "Experience gap is too wide; candidate does not meet minimum technical requirements.",
+        "Feedback from the initial screening was a clear pass, moving to reject status.",
+        "Candidate is a poor cultural fit for the client's team. Hard pass.",
+        "Lack of clarity on career trajectory and commitment; moving to reject."
+    ]
+};
 
 // --- Component: Urgency Badge ---
 const UrgencyBadge = ({ dateString }) => {
@@ -43,75 +54,144 @@ const UrgencyBadge = ({ dateString }) => {
 };
 
 // --- Component: Comment Modal ---
-const CommentModal = ({ pipelineEntry, onClose, onCommentSubmit }) => {
+const CommentModal = ({ pipelineEntry, comments, onClose, onCommentSubmit, onEdit, onDelete }) => {
+    const { user } = useData();
     const [comment, setComment] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { user } = useData();
+    const [editingComment, setEditingComment] = useState(null);
+    const [editingText, setEditingText] = useState('');
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         if (!comment.trim()) return;
         setIsSubmitting(true);
         
         await onCommentSubmit(pipelineEntry, comment);
         
         setIsSubmitting(false);
-        onClose();
+        setComment(''); // Clear the main comment box after submission
+        // onClose(); // Do not close after comment, allowing for rapid feedback
     };
 
     const applyQuickReply = (reply) => {
         setComment(reply);
     };
+    
+    const handleSelectQuickReply = (e, replySet) => {
+        const value = e.target.value;
+        if (value) {
+            applyQuickReply(value);
+            e.target.value = ""; // Reset dropdown
+        }
+    };
+    
+    // Handlers for editing
+    const handleEditComment = (comment) => { setEditingComment(comment); setEditingText(comment.comment_text); };
+    
+    const handleUpdateComment = async (e) => {
+        e.preventDefault();
+        if (!editingText.trim()) return;
+        await onEdit(editingComment.id, editingText, pipelineEntry.candidate_id);
+        setEditingComment(null); 
+        setEditingText('');
+    };
+    
+    const handleDeleteComment = (commentId) => {
+        if (window.confirm('Are you sure you want to delete this comment?')) {
+            onDelete(commentId, pipelineEntry.candidate_id);
+        }
+    };
 
+    const currentRecruiterName = pipelineEntry.recruiters?.name || 'Recruiter';
+    
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
                 <h2>Add Feedback for {pipelineEntry.candidates?.name}</h2>
-                
-                <div className="form-card mb-4" style={{borderLeft: '4px solid var(--accent-purple)'}}>
-                    <label className="block text-gray-400 mb-2">Quick Replies:</label>
-                    <div className="quick-replies-container">
-                        {quickReplies.map((reply, index) => (
-                            <button
-                                key={index}
-                                type="button"
-                                onClick={() => applyQuickReply(reply)}
-                                className="btn-quick-reply"
-                            >
-                                {reply.substring(0, 30)}...
-                            </button>
-                        ))}
+                <p className="modal-candidate-info">Recruiter: <strong>{currentRecruiterName}</strong></p>
+
+                <div className="comments-section">
+                    
+                    <div className="form-card" style={{borderLeft: '4px solid var(--accent-purple)'}}>
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Quick Reply: Hold</label>
+                                    <select onChange={(e) => handleSelectQuickReply(e, 'HOLD')} defaultValue="">
+                                        <option value="" disabled>Select a Hold reason...</option>
+                                        {quickReplySets.HOLD.map((reply, index) => (
+                                            <option key={index} value={reply}>{reply.substring(0, 50)}...</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Quick Reply: Reject</label>
+                                    <select onChange={(e) => handleSelectQuickReply(e, 'REJECT')} defaultValue="">
+                                        <option value="" disabled>Select a Reject reason...</option>
+                                        {quickReplySets.REJECT.map((reply, index) => (
+                                            <option key={index} value={reply}>{reply.substring(0, 50)}...</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Comment *</label>
+                                <textarea
+                                    rows="5"
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    placeholder="Enter your specific feedback here..."
+                                    required
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+
+                            <div className="modal-actions">
+                                <button type="button" className="btn-secondary" onClick={onClose} disabled={isSubmitting}>
+                                    Close
+                                </button>
+                                <button type="submit" className="btn-primary" disabled={isSubmitting || !comment.trim()}>
+                                    {isSubmitting ? 'Sending...' : 'Send Comment & Notify'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </div>
 
-                <div className="form-group">
-                    <label>Comment *</label>
-                    <textarea
-                        rows="5"
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        placeholder="Enter your specific feedback here..."
-                        required
-                        disabled={isSubmitting}
-                    />
-                </div>
-
-                <div className="modal-actions">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="btn-secondary"
-                        disabled={isSubmitting}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleSubmit}
-                        className="btn-primary"
-                        disabled={isSubmitting || !comment.trim()}
-                    >
-                        {isSubmitting ? 'Sending...' : 'Send Comment & Notify'}
-                    </button>
+                    <div className="comments-list">
+                        <h3>Comment History ({comments.length})</h3>
+                        {comments.length === 0 ? (<p className="empty-comments">No comments yet.</p>) : (
+                            comments.map(comment => (
+                                <div key={comment.id} className="comment-item">
+                                    {editingComment?.id === comment.id ? (
+                                        <form onSubmit={handleUpdateComment} className="comment-edit-form">
+                                            <textarea value={editingText} onChange={(e) => setEditingText(e.target.value)} rows="3" />
+                                            <div className="comment-edit-actions">
+                                                <button type="submit" className="btn-save">Save</button>
+                                                <button type="button" className="btn-cancel" onClick={() => setEditingComment(null)}>Cancel</button>
+                                            </div>
+                                        </form>
+                                    ) : (
+                                        <>
+                                            <div className="comment-header">
+                                                <strong>{comment.author_name}</strong>
+                                                <span className="comment-date">{new Date(comment.created_at).toLocaleString()}</span>
+                                            </div>
+                                            <p className="comment-text">{comment.comment_text}</p>
+                                            
+                                            {/* Only show edit/delete if the current user is the Director (for simplicity) */}
+                                            {user?.email.toLowerCase().trim() === DIRECTOR_EMAIL.toLowerCase().trim() && (
+                                                <div className="comment-actions">
+                                                    <button className="btn-edit" onClick={() => handleEditComment(comment)}>Edit</button>
+                                                    <button className="btn-delete" onClick={() => handleDeleteComment(comment.id)}>Delete</button>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
@@ -184,28 +264,29 @@ function DirectorReview() {
     const { user, refreshData, createNotification } = useData();
     const [pipelineData, setPipelineData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [modalOpen, setModalOpen] = useState(false);
+    const [commentModalOpen, setCommentModalOpen] = useState(false); 
     const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [alertMessage, setAlertMessage] = useState(null);
+    const [comments, setComments] = useState([]); // New state for fetching comments
     
+    // New state for Main Action confirmation
+    const [actionModal, setActionModal] = useState({ isOpen: false, candidate: null, action: null });
+
     // Robust Email Check for component logic
     const directorEmailClean = DIRECTOR_EMAIL.toLowerCase().trim();
     const userEmailClean = user?.email ? user.email.toLowerCase().trim() : null;
     const isDirector = userEmailClean === directorEmailClean; 
 
     useEffect(() => {
-        if (isDirector) { // Only fetch if user is correctly identified as Director
+        if (isDirector) { 
             fetchCandidatesForReview();
         } else {
-            setLoading(false); // Stop loading if not director to prevent infinite spinner
+            setLoading(false); 
         }
     }, [isDirector]);
 
-    // Fetch pipeline entries that require Director action
     async function fetchCandidatesForReview() {
         setLoading(true);
-        // Filter: Fetch candidates in 'Screening' stage OR on 'Hold' status.
-        // Sort: Oldest first for urgency
         const { data, error } = await supabase
             .from('pipeline')
             .select('*, candidates(id, name, notes), positions(id, title, clients(company_name)), recruiters(id, name, email)')
@@ -214,7 +295,6 @@ function DirectorReview() {
 
         if (error) {
             console.error('Error fetching director review data:', error);
-            // Show a user-friendly error message if data retrieval fails
             showAlert(`Error loading candidates: ${error.message}`);
         } else {
             setPipelineData(data || []);
@@ -225,6 +305,20 @@ function DirectorReview() {
     const candidatesForReview = useMemo(() => {
         return pipelineData;
     }, [pipelineData]);
+    
+    async function fetchComments(candidateId) {
+        const { data, error } = await supabase
+            .from('comments')
+            .select('*')
+            .eq('candidate_id', candidateId)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error fetching comments:', error);
+        } else {
+            setComments(data || []);
+        }
+    }
 
     const showAlert = (message) => {
         setAlertMessage(message);
@@ -232,7 +326,14 @@ function DirectorReview() {
     };
 
     // Handler for the main action buttons (Submit, Hold, Reject)
-    const handleMainAction = async (candidate, action) => {
+    const handleOpenActionModal = (candidate, action) => {
+        setSelectedCandidate(candidate); 
+        setActionModal({ isOpen: true, candidate, action });
+    };
+
+    // Handler to process the DB update and conditionally send email
+    const processAction = async (candidate, action, sendNotification) => {
+        setActionModal({ isOpen: false, candidate: null, action: null }); 
         let newStage = candidate.stage;
         let newStatus = candidate.status;
         let notificationType;
@@ -253,19 +354,14 @@ function DirectorReview() {
         } else if (isRejection) {
             newStatus = "Reject";
             notificationType = 'status_change';
-            // Also move out of Screening stage upon rejection
             if (candidate.stage === 'Screening') newStage = 'Reject';
             notificationMessage = `Director **Rejected** **${candidate.candidates.name}** for ${candidate.positions.title}. Candidate status updated to Reject.`;
+        } else {
+            return;
         }
-
-        // IMPORTANT: Using window.confirm as per established project practice
-        const confirmation = window.confirm(`Are you sure you want to change ${candidate.candidates.name}'s status to: ${action}? This will notify the Recruiter.`);
-        
-        if (!confirmation) return;
 
         setLoading(true);
         
-        // 1. Update pipeline in DB
         const { error: updateError } = await supabase
             .from('pipeline')
             .update({ 
@@ -278,25 +374,28 @@ function DirectorReview() {
         if (updateError) {
             showAlert(`Error updating status: ${updateError.message}`);
         } else {
-            // 2. Send notification email
-            await createNotification({ 
-                type: notificationType, 
-                message: notificationMessage, 
-                recipient: candidate.recruiters.email 
-            });
+            if (sendNotification) {
+                await createNotification({ 
+                    type: notificationType, 
+                    message: notificationMessage, 
+                    recipient: candidate.recruiters.email 
+                });
+                showAlert(`${candidate.candidates.name} updated to ${action}. Recruiter notified.`);
+            } else {
+                showAlert(`${candidate.candidates.name} updated to ${action} without email notification.`);
+            }
 
-            showAlert(`${candidate.candidates.name} updated to ${action}. Recruiter notified.`);
             refreshData(); 
             fetchCandidatesForReview(); 
         }
         setLoading(false);
     };
 
+
     // Handler for the comment submission
-    const handleCommentSubmit = async (pipelineEntry, comment) => {
+    const handleAddComment = async (pipelineEntry, comment) => {
         const authorName = user?.email || 'Director';
         
-        // 1. Insert comment
         const { error: commentError } = await supabase.from('comments').insert([{
             candidate_id: pipelineEntry.candidates.id,
             author_name: authorName,
@@ -308,7 +407,8 @@ function DirectorReview() {
             return;
         }
 
-        // 2. Send notification
+        await fetchComments(pipelineEntry.candidate_id);
+
         const notificationMessage = `${authorName} left a comment for ${pipelineEntry.candidates.name} (Role: ${pipelineEntry.positions.title}): "${comment.substring(0, 50)}..."`;
         await createNotification({ 
             type: 'new_comment', 
@@ -317,15 +417,82 @@ function DirectorReview() {
         });
 
         showAlert(`Comment added for ${pipelineEntry.candidates.name}. Recruiter notified.`);
-        refreshData(); 
-        fetchCandidatesForReview(); 
+    };
+    
+    // Handler for comment editing
+    const handleUpdateComment = async (commentId, newText, candidateId) => {
+        const { error } = await supabase.from('comments').update({ comment_text: newText }).eq('id', commentId);
+        if (error) {
+            showAlert('Error updating comment: ' + error.message);
+        } else {
+            await fetchComments(candidateId);
+            showAlert('Comment updated successfully.');
+        }
+    };
+    
+    // Handler for comment deletion
+    const handleDeleteComment = async (commentId, candidateId) => {
+        const { error } = await supabase.from('comments').delete().eq('id', commentId);
+        if (error) {
+            showAlert('Error deleting comment: ' + error.message);
+        } else {
+            await fetchComments(candidateId);
+            showAlert('Comment deleted successfully.');
+        }
     };
 
+
     // Handler to open the comment modal
-    const handleOpenCommentModal = (candidate) => {
+    const handleOpenCommentModal = async (candidate) => {
         setSelectedCandidate(candidate);
-        setModalOpen(true);
+        await fetchComments(candidate.candidates.id); // Fetch comments specific to this candidate
+        setCommentModalOpen(true);
     };
+
+    // --- Nested Component: Action Confirmation Modal (UNCHANGED) ---
+    const ActionModal = ({ isOpen, candidate, action }) => {
+        if (!isOpen || !candidate) return null;
+        
+        const candidateName = candidate.candidates?.name;
+        const recruiterName = candidate.recruiters?.name || 'N/A';
+        const positionTitle = candidate.positions?.title || 'N/A';
+        
+        let messageHTML = '';
+        
+        if (action === "Submit to Client") {
+            messageHTML = `You are about to move <strong>${candidateName}</strong> to the <strong>Submit to Client</strong> stage for the ${positionTitle} role.`;
+        } else if (action === "Hold") {
+            messageHTML = `You are about to put <strong>${candidateName}</strong> <strong>On Hold</strong> for the ${positionTitle} role.`;
+        } else if (action === "Reject") {
+            messageHTML = `You are about to <strong>Reject</strong> <strong>${candidateName}</strong> for the ${positionTitle} role.`;
+        }
+
+        return (
+            <div className="modal-overlay" onClick={() => setActionModal({ isOpen: false, candidate: null, action: null })}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <h2>Confirm Action</h2>
+                    <p className="modal-candidate-info" dangerouslySetInnerHTML={{ __html: messageHTML }} />
+                    <p className="modal-candidate-info">Would you like to send an email notification to the Recruiter: <strong>{recruiterName}</strong>?</p>
+                    
+                    <div className="modal-actions decision-buttons-grid" style={{ justifyContent: 'center' }}>
+                        <button 
+                            className="btn-secondary" 
+                            onClick={() => processAction(candidate, action, false)}
+                        >
+                            No Email, Just Update
+                        </button>
+                        <button 
+                            className="btn-primary" 
+                            onClick={() => processAction(candidate, action, true)}
+                        >
+                            Yes, Send Email & Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     
     if (loading) {
         return <div className="loading-state">Loading Director Review...</div>;
@@ -342,9 +509,8 @@ function DirectorReview() {
                 <h1>Director Review Portal</h1>
             </div>
 
-            {/* This is the descriptive paragraph, now correctly structured in JSX, NOT extraneous text */}
             <p className="sub-header-text">
-                
+                This portal surfaces candidates in the <strong>Screening</strong> stage or on <strong>Hold</strong> status for your review. Please use the actions below to move candidates forward or provide feedback.
                 <span className="font-semibold text-yellow-500 block sm:inline-block sm:ml-2">
                     
                 </span>
@@ -367,18 +533,31 @@ function DirectorReview() {
                         <CandidateReviewCard
                             key={candidate.id}
                             candidate={candidate}
-                            onAction={handleMainAction}
+                            onAction={handleOpenActionModal}
                             onComment={handleOpenCommentModal}
                         />
                     ))}
                 </div>
             )}
 
-            {modalOpen && selectedCandidate && (
+            {/* ACTION CONFIRMATION MODAL */}
+            {actionModal.isOpen && (
+                <ActionModal
+                    isOpen={actionModal.isOpen}
+                    candidate={actionModal.candidate}
+                    action={actionModal.action}
+                />
+            )}
+
+            {/* Comment Modal - Updated to pass comments and new handlers */}
+            {commentModalOpen && selectedCandidate && (
                 <CommentModal
                     pipelineEntry={selectedCandidate}
-                    onClose={() => setModalOpen(false)}
-                    onCommentSubmit={handleCommentSubmit}
+                    comments={comments}
+                    onClose={() => setCommentModalOpen(false)}
+                    onCommentSubmit={handleAddComment}
+                    onEdit={handleUpdateComment}
+                    onDelete={handleDeleteComment}
                 />
             )}
         </div>
