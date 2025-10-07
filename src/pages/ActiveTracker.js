@@ -6,12 +6,13 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import '../styles/ActiveTracker.css';
 
 function ActiveTracker() {
-  const { newCommentCandidateIds, clearCommentNotifications, user, createNotification } = useData();
+  const { newCommentCandidateIds, clearCommentNotifications, user, createNotification, recruiters } = useData(); // Added recruiters
   const location = useLocation();
   
   const [pipeline, setPipeline] = useState([]);
   const [positions, setPositions] = useState([]);
-  const [recruiters, setRecruiters] = useState([]);
+  // We get recruiters from context now
+  // const [recruiters, setRecruiters] = useState([]); 
   const [view, setView] = useState('list');
   const [expandedCard, setExpandedCard] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
@@ -39,7 +40,7 @@ function ActiveTracker() {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchPipeline(), fetchPositions(), fetchRecruiters()]);
+      await Promise.all([fetchPipeline(), fetchPositions()]); // Removed fetchRecruiters
       setLoading(false);
     };
     loadData();
@@ -54,7 +55,15 @@ function ActiveTracker() {
         setNotificationModal({
           isOpen: true,
           type: 'stage_change',
-          data: { pipelineId, newStage, oldStage, candidateName: pipelineItem.candidates?.name, recruiterName: pipelineItem.recruiters?.name, positionTitle: pipelineItem.positions?.title }
+          data: { 
+            pipelineId, 
+            newStage, 
+            oldStage, 
+            candidateName: pipelineItem.candidates?.name, 
+            recruiterName: pipelineItem.recruiters?.name, 
+            recruiterEmail: pipelineItem.recruiters?.email,
+            positionTitle: pipelineItem.positions?.title 
+          }
         });
       } else {
         const updateAndHandle = async () => {
@@ -82,12 +91,6 @@ function ActiveTracker() {
     const { data, error } = await supabase.from('positions').select('*').eq('status', 'Open').order('title');
     if (error) console.error('Error fetching positions:', error);
     else setPositions(data || []);
-  }
-
-  async function fetchRecruiters() {
-    const { data, error } = await supabase.from('recruiters').select('*').order('name');
-    if (error) console.error('Error fetching recruiters:', error);
-    else setRecruiters(data || []);
   }
 
   async function fetchComments(candidateId) {
@@ -157,8 +160,6 @@ function ActiveTracker() {
     setPendingMove({ pipelineId, newStage, oldStage: pipelineItem.stage, pipelineItem });
   };
   
-  // --- BUG FIX START ---
-  // This function now handles ID type mismatches, which was the root cause of the error.
   const handleOnDragEnd = (result) => {
     const { destination, source, draggableId } = result;
 
@@ -166,41 +167,34 @@ function ActiveTracker() {
       return;
     }
 
-    // Keep draggableId as a string to ensure consistent comparison
     const pipelineIdAsString = draggableId; 
     
-    // Find the item by comparing its ID (converted to a string) with the draggableId
     const pipelineItem = pipeline.find(p => p.id.toString() === pipelineIdAsString);
 
-    // If the item isn't found for any reason, abort to prevent a crash.
     if (!pipelineItem) {
         console.error(`[DRAG END] Could not find pipeline item with ID: ${pipelineIdAsString}. Aborting.`);
         return;
     }
 
     const newStage = destination.droppableId;
-    const oldStage = pipelineItem.stage; // Get the original stage directly from the data
+    const oldStage = pipelineItem.stage;
 
-    // Abort if there's no actual stage change
     if (newStage === oldStage) {
       return;
     }
 
-    // Optimistically update the UI to make the drag feel instantaneous
     const updatedPipeline = pipeline.map(p => 
       p.id.toString() === pipelineIdAsString ? { ...p, stage: newStage } : p
     );
     setPipeline(updatedPipeline);
     
-    // Set pending move to trigger the database update and notification logic
     setPendingMove({ 
-      pipelineId: pipelineItem.id, // Use the original ID (number) for database operations
+      pipelineId: pipelineItem.id, 
       newStage, 
       oldStage, 
       pipelineItem 
     });
   };
-  // --- BUG FIX END ---
 
   const handleStatusChange = async (pipelineId, newStatus) => {
     const { error } = await supabase.from('pipeline').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', pipelineId);
@@ -232,7 +226,9 @@ function ActiveTracker() {
     e.preventDefault();
     if (!commentData.comment_text) return;
     
-    const authorName = user?.email;
+    const currentUser = recruiters.find(r => r.email === user?.email);
+    const authorName = currentUser ? currentUser.name : user?.email;
+
     if (!authorName) {
         alert('Could not identify user. Please log in again.');
         return;
@@ -257,6 +253,7 @@ function ActiveTracker() {
           comment: data,
           candidateName: selectedPipelineEntry.candidates?.name,
           recruiterName: selectedPipelineEntry.recruiters?.name,
+          recruiterEmail: selectedPipelineEntry.recruiters?.email,
           positionTitle: selectedPipelineEntry.positions?.title
         }
       });
@@ -270,7 +267,7 @@ function ActiveTracker() {
     if (type === 'stage_change') {
       const success = await updateCandidateStage(data.pipelineId, data.newStage);
       if (success) {
-        await createNotification({ type: 'stage_change', message: `Candidate ${data.candidateName} was moved from '${data.oldStage}' to '${data.newStage}' for the ${data.positionTitle} role.`, recipient: data.recruiterName });
+        await createNotification({ type: 'stage_change', message: `Candidate ${data.candidateName} was moved from '${data.oldStage}' to '${data.newStage}' for the ${data.positionTitle} role.`, recipient: data.recruiterEmail });
         alert(`Recruiter has been notified of the stage change.`);
       } else {
         setPipeline(prevPipeline =>
@@ -278,7 +275,7 @@ function ActiveTracker() {
         );
       }
     } else if (type === 'comment') {
-      await createNotification({ type: 'new_comment', message: `${data.comment.author_name} left a comment for ${data.candidateName} (${data.positionTitle}): "${data.comment.comment_text}"`, recipient: data.recruiterName });
+      await createNotification({ type: 'new_comment', message: `${data.comment.author_name} left a comment for ${data.candidateName} (${data.positionTitle}): "${data.comment.comment_text}"`, recipient: data.recruiterEmail });
       alert('Recruiter has been notified of the new comment.');
     }
   };

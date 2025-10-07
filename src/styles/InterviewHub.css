@@ -151,7 +151,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   gap: 20px;
 }
 
@@ -185,14 +185,12 @@
   background: linear-gradient(135deg, var(--text-muted), #666);
 }
 
-/* --- REVISED: COMPACT SINGLE-ROW DETAILS --- */
 .interview-details {
-  /* Use flex for single-line wrapping layout */
-  display: flex; 
-  flex-wrap: wrap; /* Allow wrapping if space is tight */
-  gap: 10px 30px; /* Vertical (10px) and Horizontal (30px) gap between items */
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 30px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
   border-bottom: 1px dashed var(--border-color);
   line-height: 1.2;
 }
@@ -200,40 +198,21 @@
 .interview-details p {
   margin: 0;
   font-size: 14px;
-  /* Make the p tag act as the flex item for horizontal wrapping */
-}
-
-.interview-details strong {
-  /* Reconfigure strong to be a clear label on the same line as the value */
-  min-width: unset; 
-  display: inline; 
-  font-size: 14px; /* Default size for label */
-  text-transform: none; /* Do not force uppercase on labels */
-  letter-spacing: normal;
-  color: var(--accent-cyan); /* Highlight the label color */
-  font-weight: 700;
-  margin-right: 5px; /* Small space between label and value */
-}
-
-/* Ensure the value (plain text) uses the default color */
-.interview-details p {
   color: var(--text-secondary); 
 }
 
-/* Remove border on the last line of the details, which is now the .interview-actions border-top */
-.interview-actions {
-  margin-top: 0; 
-  padding-top: 0;
-  border-top: none; 
+.interview-details strong {
+  display: inline; 
+  color: var(--accent-cyan);
+  font-weight: 700;
+  margin-right: 8px;
 }
-/* --- END REVISED --- */
-
 
 .feedback-box {
   background: var(--secondary-bg);
   padding: 16px;
   border-radius: 8px;
-  margin-top: 16px;
+  margin-bottom: 16px;
   white-space: pre-wrap;
   line-height: 1.8;
   border-left: 4px solid var(--accent-purple);
@@ -261,11 +240,11 @@
 }
 
 .interview-actions {
-  margin-top: 20px;
-  display: flex;
-  gap: 10px;
+  margin-top: auto; /* Pushes buttons to the bottom of the card */
   padding-top: 16px;
   border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 10px;
 }
 
 .btn-update {
@@ -351,7 +330,6 @@
 .outcome-badge.failed { background: linear-gradient(135deg, var(--accent-pink), var(--accent-orange)); }
 .outcome-badge.hold { background: linear-gradient(135deg, var(--accent-orange), #ffcc80); }
 
-/* --- NEW MODAL STYLES --- */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;

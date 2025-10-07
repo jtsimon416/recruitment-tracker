@@ -7,8 +7,6 @@ function Sidebar() {
   const { newCommentCandidateIds, user, handleLogout } = useData();
   const notificationCount = newCommentCandidateIds.length;
   
-  // --- ACTION REQUIRED ---
-  // On the next line, replace 'brian.griffiths@brydongama.com' with your Director's actual email address.
   const isDirector = user?.email === 'brian.griffiths@brydongama.com'; 
 
   return (
@@ -26,20 +24,13 @@ function Sidebar() {
       
       <nav className="sidebar-nav">
         <div className="nav-section">
-          <h3>Overview</h3>
+          <h3 className="highlight-header">Overview</h3>
           <NavLink to="/" className="nav-link">Dashboard</NavLink>
         </div>
 
         <div className="nav-section">
-          <h3>Data Management</h3>
-          <NavLink to="/clients" className="nav-link">Clients</NavLink>
-          <NavLink to="/positions" className="nav-link">Positions</NavLink>
-          <NavLink to="/recruiters" className="nav-link">Recruiters</NavLink>
+          <h3 className="highlight-header">Workflow</h3>
           <NavLink to="/talent-pool" className="nav-link">Talent Pool</NavLink>
-        </div>
-
-        <div className="nav-section">
-          <h3>Workflow</h3>
           <div className="nav-link-wrapper">
             <NavLink to="/active-tracker" className="nav-link">
               Active Tracker
@@ -56,7 +47,14 @@ function Sidebar() {
         </div>
 
         <div className="nav-section">
-          <h3>AI Tools</h3>
+          <h3 className="highlight-header">Data Management</h3>
+          <NavLink to="/clients" className="nav-link">Clients</NavLink>
+          <NavLink to="/positions" className="nav-link">Positions</NavLink>
+          <NavLink to="/recruiters" className="nav-link">Recruiters</NavLink>
+        </div>
+
+        <div className="nav-section">
+          <h3 className="highlight-header">AI Tools</h3>
           <NavLink to="/rubric-generator" className="nav-link">Rubric Generator</NavLink>
         </div>
       </nav>

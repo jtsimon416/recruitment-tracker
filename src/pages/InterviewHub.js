@@ -253,7 +253,6 @@ function InterviewHub() {
         </form>
       )}
 
-      {/* Upcoming & Past Interviews Sections */}
       {[
         { title: 'Upcoming Interviews', list: upcomingInterviews, isPast: false },
         { title: 'Past Interviews', list: pastInterviews, isPast: true }
@@ -272,14 +271,20 @@ function InterviewHub() {
                     {interview.outcome && (<span className={`outcome-badge ${interview.outcome.toLowerCase()}`}>{interview.outcome}</span>)}
                     {!interview.outcome && section.isPast && <span className="outcome-badge hold">Pending</span>}
                   </div>
+                  
                   <div className="interview-details">
                     <p><strong>Date:</strong> {new Date(interview.interview_date).toLocaleString()}</p>
                     <p><strong>Type:</strong> {interview.interview_type || 'N/A'}</p>
                     {interview.interviewer_name && (<p><strong>Interviewer:</strong> {interview.interviewer_name}</p>)}
-                    {section.isPast && interview.feedback && (
-                      <div className="feedback-box"><strong>Feedback:</strong><p>{interview.feedback}</p></div>
-                    )}
                   </div>
+
+                  {section.isPast && interview.feedback && (
+                    <div className="feedback-box">
+                      <strong>Feedback:</strong>
+                      <p>{interview.feedback}</p>
+                    </div>
+                  )}
+
                   <div className="interview-actions">
                     <button className="btn-update" onClick={() => openUpdateModal(interview)}>Update & Decide</button>
                     <button className="btn-secondary" onClick={() => openHistoryModal(interview.candidates, interview.positions)}>View History</button>
@@ -291,12 +296,10 @@ function InterviewHub() {
         </div>
       ))}
       
-      {/* --- NEW UNIFIED MODAL --- */}
       {modalState.mode !== 'closed' && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className={`modal-content ${modalState.mode === 'history' ? 'history-modal-content' : ''}`} onClick={(e) => e.stopPropagation()}>
             
-            {/* --- UPDATE & DECIDE MODAL --- */}
             {modalState.mode === 'update' && (
               <>
                 <h2>Update & Decide</h2>
@@ -314,7 +317,6 @@ function InterviewHub() {
               </>
             )}
 
-            {/* --- SCHEDULE NEXT INTERVIEW MODAL --- */}
             {modalState.mode === 'scheduleNext' && (
               <form onSubmit={handleScheduleSubmit}>
                 <h2>Schedule Next Interview: {modalState.data.nextStage}</h2>
@@ -338,7 +340,6 @@ function InterviewHub() {
               </form>
             )}
 
-            {/* --- HISTORY MODAL --- */}
             {modalState.mode === 'history' && (
               <>
                 <h2>Interview History</h2>

@@ -71,6 +71,10 @@
   font-weight: 600;
 }
 
+.nav-section h3.highlight-header {
+  color: var(--accent-green);
+}
+
 .nav-link-wrapper {
   position: relative;
   display: flex;
