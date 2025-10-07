@@ -30,7 +30,6 @@ function ActiveTracker() {
   const [sortConfig, setSortConfig] = useState({ key: 'candidates.name', direction: 'ascending' });
   const [confirmDeleteId, setConfirmDeleteId] = useState(null); 
 
-  // --- NEW STATE TO HANDLE THE SEPARATED LOGIC ---
   const [pendingMove, setPendingMove] = useState(null);
 
   const DIRECTOR_EMAIL = 'brian.griffiths@brydongama.com';
@@ -46,7 +45,6 @@ function ActiveTracker() {
     loadData();
   }, []);
   
-  // --- NEW useEffect TO HANDLE MODAL AFTER DRAG IS COMPLETE ---
   useEffect(() => {
     if (pendingMove) {
       const { pipelineId, newStage, oldStage, pipelineItem } = pendingMove;
@@ -59,9 +57,17 @@ function ActiveTracker() {
           data: { pipelineId, newStage, oldStage, candidateName: pipelineItem.candidates?.name, recruiterName: pipelineItem.recruiters?.name, positionTitle: pipelineItem.positions?.title }
         });
       } else {
-        updateCandidateStage(pipelineId, newStage);
+        const updateAndHandle = async () => {
+          const success = await updateCandidateStage(pipelineId, newStage);
+          if (!success) {
+            setPipeline(prevPipeline =>
+              prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: oldStage } : p))
+            );
+          }
+        };
+        updateAndHandle();
       }
-      setPendingMove(null); // Reset after handling
+      setPendingMove(null); 
     }
   }, [pendingMove, user]);
 
@@ -128,17 +134,22 @@ function ActiveTracker() {
   };
   
   const updateCandidateStage = async (pipelineId, newStage) => {
-    const { error } = await supabase.from('pipeline').update({ stage: newStage, updated_at: new Date().toISOString() }).eq('id', pipelineId);
+    const { error } = await supabase
+      .from('pipeline')
+      .update({ stage: newStage, updated_at: new Date().toISOString() })
+      .eq('id', pipelineId);
+      
     if (error) {
-      console.error('Error updating stage:', error.message);
-      alert('Error updating stage, reverting UI.');
-      fetchPipeline();
+      console.error('[DB] Error updating stage:', error.message);
+      alert('Error updating stage. Reverting change.');
+      return false;
     }
+    return true;
   };
 
   const handleStageChange = (pipelineId, newStage) => {
     const pipelineItem = pipeline.find(p => p.id === pipelineId);
-    if (pipelineItem.stage === newStage) return;
+    if (!pipelineItem || pipelineItem.stage === newStage) return;
 
     const updatedPipeline = pipeline.map(p => p.id === pipelineId ? { ...p, stage: newStage } : p);
     setPipeline(updatedPipeline);
@@ -146,23 +157,50 @@ function ActiveTracker() {
     setPendingMove({ pipelineId, newStage, oldStage: pipelineItem.stage, pipelineItem });
   };
   
+  // --- BUG FIX START ---
+  // This function now handles ID type mismatches, which was the root cause of the error.
   const handleOnDragEnd = (result) => {
     const { destination, source, draggableId } = result;
+
     if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
       return;
     }
-  
-    const pipelineId = parseInt(draggableId);
+
+    // Keep draggableId as a string to ensure consistent comparison
+    const pipelineIdAsString = draggableId; 
+    
+    // Find the item by comparing its ID (converted to a string) with the draggableId
+    const pipelineItem = pipeline.find(p => p.id.toString() === pipelineIdAsString);
+
+    // If the item isn't found for any reason, abort to prevent a crash.
+    if (!pipelineItem) {
+        console.error(`[DRAG END] Could not find pipeline item with ID: ${pipelineIdAsString}. Aborting.`);
+        return;
+    }
+
     const newStage = destination.droppableId;
-    const pipelineItem = pipeline.find(p => p.id === pipelineId);
-  
-    if (!pipelineItem || pipelineItem.stage === newStage) return;
-  
-    const updatedPipeline = pipeline.map(p => p.id === pipelineId ? { ...p, stage: newStage } : p);
+    const oldStage = pipelineItem.stage; // Get the original stage directly from the data
+
+    // Abort if there's no actual stage change
+    if (newStage === oldStage) {
+      return;
+    }
+
+    // Optimistically update the UI to make the drag feel instantaneous
+    const updatedPipeline = pipeline.map(p => 
+      p.id.toString() === pipelineIdAsString ? { ...p, stage: newStage } : p
+    );
     setPipeline(updatedPipeline);
-  
-    setPendingMove({ pipelineId, newStage, oldStage: pipelineItem.stage, pipelineItem });
+    
+    // Set pending move to trigger the database update and notification logic
+    setPendingMove({ 
+      pipelineId: pipelineItem.id, // Use the original ID (number) for database operations
+      newStage, 
+      oldStage, 
+      pipelineItem 
+    });
   };
+  // --- BUG FIX END ---
 
   const handleStatusChange = async (pipelineId, newStatus) => {
     const { error } = await supabase.from('pipeline').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', pipelineId);
@@ -227,30 +265,48 @@ function ActiveTracker() {
 
   const handleNotificationConfirm = async () => {
     const { type, data } = notificationModal;
+    setNotificationModal({ isOpen: false, type: null, data: null });
+
     if (type === 'stage_change') {
-      await updateCandidateStage(data.pipelineId, data.newStage);
-      await createNotification({ type: 'stage_change', message: `Candidate ${data.candidateName} was moved from '${data.oldStage}' to '${data.newStage}' for the ${data.positionTitle} role.`, recipient: data.recruiterName, });
-      alert(`Recruiter has been notified of the stage change.`);
+      const success = await updateCandidateStage(data.pipelineId, data.newStage);
+      if (success) {
+        await createNotification({ type: 'stage_change', message: `Candidate ${data.candidateName} was moved from '${data.oldStage}' to '${data.newStage}' for the ${data.positionTitle} role.`, recipient: data.recruiterName });
+        alert(`Recruiter has been notified of the stage change.`);
+      } else {
+        setPipeline(prevPipeline =>
+          prevPipeline.map(p => (p.id === data.pipelineId ? { ...p, stage: data.oldStage } : p))
+        );
+      }
     } else if (type === 'comment') {
-      await createNotification({ type: 'new_comment', message: `${data.comment.author_name} left a comment for ${data.candidateName} (${data.positionTitle}): "${data.comment.comment_text}"`, recipient: data.recruiterName, });
+      await createNotification({ type: 'new_comment', message: `${data.comment.author_name} left a comment for ${data.candidateName} (${data.positionTitle}): "${data.comment.comment_text}"`, recipient: data.recruiterName });
       alert('Recruiter has been notified of the new comment.');
     }
-    setNotificationModal({ isOpen: false, type: null, data: null });
   };
 
   const handleNotificationDecline = async () => {
     const { type, data } = notificationModal;
-    if (type === 'stage_change') {
-      await updateCandidateStage(data.pipelineId, data.newStage);
-    }
     setNotificationModal({ isOpen: false, type: null, data: null });
+
+    if (type === 'stage_change') {
+      const success = await updateCandidateStage(data.pipelineId, data.newStage);
+      if (!success) {
+        setPipeline(prevPipeline =>
+          prevPipeline.map(p => (p.id === data.pipelineId ? { ...p, stage: data.oldStage } : p))
+        );
+      }
+    }
   };
 
   const closeNotificationModal = () => {
-    if (notificationModal.type === 'stage_change') {
-      fetchPipeline(); 
+    const { isOpen, type, data } = notificationModal;
+    if (isOpen) {
+      if (type === 'stage_change') {
+        setPipeline(prevPipeline =>
+          prevPipeline.map(p => (p.id === data.pipelineId ? { ...p, stage: data.oldStage } : p))
+        );
+      }
+      setNotificationModal({ isOpen: false, type: null, data: null });
     }
-    setNotificationModal({ isOpen: false, type: null, data: null });
   };
   
   const handleEditComment = (comment) => { setEditingComment(comment); setEditingText(comment.comment_text); };
