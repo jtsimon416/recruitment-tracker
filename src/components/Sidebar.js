@@ -7,7 +7,13 @@ function Sidebar() {
   const { newCommentCandidateIds, user, handleLogout } = useData();
   const notificationCount = newCommentCandidateIds.length;
   
-  const isDirector = user?.email === 'brian.griffiths@brydongama.com'; 
+  // ACTION REQUIRED: Confirm this email matches your Director's actual email address.
+  const DIRECTOR_EMAIL = 'brian.griffiths@brydongama.com';
+  
+  // Robust Comparison: Convert both to lower case and trim whitespace for reliable matching.
+  const directorEmailClean = DIRECTOR_EMAIL.toLowerCase().trim();
+  const userEmailClean = user?.email ? user.email.toLowerCase().trim() : null;
+  const isDirector = userEmailClean === directorEmailClean; 
 
   return (
     <div className="sidebar">
@@ -18,19 +24,36 @@ function Sidebar() {
         
         <div className="user-info">
           <p>Logged in as: <strong>{user?.email || 'N/A'}</strong></p>
+          {/* This display logic will now match the visibility logic */}
           <p className="user-role">{isDirector ? 'DIRECTOR' : 'RECRUITER'}</p>
         </div>
       </div>
       
       <nav className="sidebar-nav">
         <div className="nav-section">
-          <h3 className="highlight-header">Overview</h3>
+          <h3>Overview</h3>
           <NavLink to="/" className="nav-link">Dashboard</NavLink>
         </div>
 
+        {isDirector && ( // Show this section only if isDirector is true
+            <div className="nav-section">
+                <h3>Director Actions</h3>
+                <NavLink to="/director-review" className="nav-link">
+                    Director Review
+                </NavLink>
+            </div>
+        )}
+
         <div className="nav-section">
-          <h3 className="highlight-header">Workflow</h3>
+          <h3>Data Management</h3>
+          <NavLink to="/clients" className="nav-link">Clients</NavLink>
+          <NavLink to="/positions" className="nav-link">Positions</NavLink>
+          <NavLink to="/recruiters" className="nav-link">Recruiters</NavLink>
           <NavLink to="/talent-pool" className="nav-link">Talent Pool</NavLink>
+        </div>
+
+        <div className="nav-section">
+          <h3>Workflow</h3>
           <div className="nav-link-wrapper">
             <NavLink to="/active-tracker" className="nav-link">
               Active Tracker
@@ -47,14 +70,7 @@ function Sidebar() {
         </div>
 
         <div className="nav-section">
-          <h3 className="highlight-header">Data Management</h3>
-          <NavLink to="/clients" className="nav-link">Clients</NavLink>
-          <NavLink to="/positions" className="nav-link">Positions</NavLink>
-          <NavLink to="/recruiters" className="nav-link">Recruiters</NavLink>
-        </div>
-
-        <div className="nav-section">
-          <h3 className="highlight-header">AI Tools</h3>
+          <h3>AI Tools</h3>
           <NavLink to="/rubric-generator" className="nav-link">Rubric Generator</NavLink>
         </div>
       </nav>

@@ -12,7 +12,8 @@ import Commissions from './pages/Commissions';
 import RoleHistory from './pages/RoleHistory';
 import RubricGenerator from './pages/RubricGenerator';
 import Dashboard from './pages/Dashboard';
-import Login from './pages/Login'; // Correct import: Login is in the pages/ directory
+import Login from './pages/Login';
+import DirectorReview from './pages/DirectorReview'; // New Import
 import './styles/App.css';
 
 // Component to protect application routes
@@ -50,6 +51,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/director-review" element={<DirectorReview />} /> {/* New Route */}
                     <Route path="/clients" element={<Clients />} />
                     <Route path="/positions" element={<Positions />} />
                     <Route path="/recruiters" element={<Recruiters />} />

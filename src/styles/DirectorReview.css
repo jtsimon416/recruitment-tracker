@@ -1,0 +1,249 @@
+/* Inherits general styles from App.css (page-container, page-header, btn-primary, etc.) */
+
+.sub-header-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+.review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.candidate-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 350px; /* Ensure visual consistency */
+}
+
+.candidate-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(187, 154, 247, 0.4);
+    border-color: var(--accent-purple);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+}
+
+.urgency-badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.urgency-badge.urgent-warning {
+    background: var(--accent-orange);
+    color: var(--text-primary);
+    animation: pulse-orange 1.5s infinite alternate;
+}
+
+.urgency-badge.urgent-critical {
+    background: var(--accent-pink);
+    color: white;
+    animation: pulse-red 1s infinite alternate;
+}
+
+@keyframes pulse-red {
+    from { box-shadow: 0 0 0 0 rgba(247, 162, 198, 0.4); }
+    to { box-shadow: 0 0 0 8px rgba(247, 162, 198, 0); }
+}
+
+@keyframes pulse-orange {
+    from { box-shadow: 0 0 0 0 rgba(255, 158, 100, 0.3); }
+    to { box-shadow: 0 0 0 6px rgba(255, 158, 100, 0); }
+}
+
+.card-info p {
+    margin: 6px 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.card-info strong {
+    color: var(--text-primary);
+    font-weight: 600;
+    display: inline-block;
+    min-width: 70px;
+}
+
+.card-info .stage-name {
+    color: var(--accent-purple);
+    font-weight: 700;
+}
+
+.notes-box {
+    background: var(--secondary-bg);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border-left: 3px solid var(--accent-cyan);
+    height: 80px;
+    overflow-y: auto;
+}
+
+.notes-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    margin-bottom: 5px;
+}
+
+.notes-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 0;
+}
+
+.card-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.actions-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+.decision-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* Base button style for all actions */
+.card-actions button {
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none; /* Override base theme default */
+}
+
+/* Primary Action: Submit to Client */
+.btn-submit {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+    color: white;
+    box-shadow: 0 4px 12px rgba(158, 206, 106, 0.4);
+}
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(158, 206, 106, 0.6);
+}
+
+/* Secondary Action: Hold */
+.btn-hold {
+    background: var(--accent-orange);
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 158, 100, 0.4);
+}
+.btn-hold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 158, 100, 0.6);
+}
+
+/* Warning Action: Reject */
+.btn-reject {
+    background: var(--accent-pink);
+    color: white;
+    box-shadow: 0 4px 12px rgba(247, 162, 198, 0.4);
+}
+.btn-reject:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(247, 162, 198, 0.6);
+}
+
+/* Comment Action */
+.btn-comment {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+    color: white;
+    box-shadow: 0 4px 12px rgba(187, 154, 247, 0.4);
+    margin-top: 10px;
+}
+.btn-comment:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(187, 154, 247, 0.6);
+}
+
+/* Quick Reply Modal Specific Styles */
+.quick-replies-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.btn-quick-reply {
+    padding: 8px 15px;
+    background: var(--hover-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-quick-reply:hover {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+.notification-alert {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    font-weight: 600;
+}
