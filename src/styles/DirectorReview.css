@@ -6,11 +6,72 @@
     margin-bottom: 30px;
 }
 
+/* --- NEW SECTION STYLES --- */
+.review-section {
+    margin-bottom: 40px;
+    padding-top: 15px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.candidate-count {
+    padding: 4px 12px;
+    border-radius: 9999px; /* Pill shape */
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.count-hold {
+    background: var(--accent-orange);
+    color: var(--card-bg);
+}
+
+.count-screening {
+    background: var(--accent-purple);
+    color: var(--card-bg);
+}
+
+.icon-hold { color: var(--accent-orange); }
+.icon-screening { color: var(--accent-purple); }
+
+.empty-section-state {
+    padding: 30px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+.empty-section-state p {
+    margin: 0;
+    color: var(--text-muted);
+    font-style: italic;
+}
+/* --- END NEW SECTION STYLES --- */
+
+
 .review-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
     gap: 24px;
-    margin-top: 20px;
+    margin-top: 0; /* Adjusted due to new section structure */
 }
 
 .candidate-card {
@@ -23,7 +84,13 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 350px; /* Ensure visual consistency */
+    min-height: 350px;
+    border-left: 5px solid transparent; /* Added base border for color coding */
+}
+
+.candidate-card.card-on-hold {
+    border-left-color: var(--accent-orange);
+    background: #2a2f3f; /* Keep standard background for hold */
 }
 
 .candidate-card:hover {
@@ -61,9 +128,14 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+.urgency-badge.urgent-standard {
+    background: var(--secondary-bg);
+    color: var(--text-muted);
+}
+
 .urgency-badge.urgent-warning {
     background: var(--accent-orange);
-    color: var(--text-primary);
+    color: var(--card-bg); /* Brighter text on orange */
     animation: pulse-orange 1.5s infinite alternate;
 }
 
@@ -96,10 +168,16 @@
     min-width: 70px;
 }
 
-.card-info .stage-name {
-    color: var(--accent-purple);
+.card-info .status-name {
     font-weight: 700;
 }
+.card-info .status-screening {
+    color: var(--accent-purple);
+}
+.card-info .status-hold {
+    color: var(--accent-orange);
+}
+
 
 .notes-box {
     background: var(--secondary-bg);
@@ -162,12 +240,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none; /* Override base theme default */
+    gap: 8px;
+    border: none;
 }
 
-/* Primary Action: Submit to Client */
+/* Primary Action: Approve & Submit */
 .btn-submit {
-    grid-column: 1 / -1;
     background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
     color: white;
     box-shadow: 0 4px 12px rgba(158, 206, 106, 0.4);
@@ -177,29 +255,7 @@
     box-shadow: 0 6px 16px rgba(158, 206, 106, 0.6);
 }
 
-/* Secondary Action: Hold */
-.btn-hold {
-    background: var(--accent-orange);
-    color: white;
-    box-shadow: 0 4px 12px rgba(255, 158, 100, 0.4);
-}
-.btn-hold:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255, 158, 100, 0.6);
-}
-
-/* Warning Action: Reject */
-.btn-reject {
-    background: var(--accent-pink);
-    color: white;
-    box-shadow: 0 4px 12px rgba(247, 162, 198, 0.4);
-}
-.btn-reject:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(247, 162, 198, 0.6);
-}
-
-/* Comment Action */
+/* Comment & Decision Button (unified action) */
 .btn-comment {
     background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
     color: white;
@@ -211,28 +267,66 @@
     box-shadow: 0 6px 16px rgba(187, 154, 247, 0.6);
 }
 
-/* Quick Reply Modal Specific Styles */
-.quick-replies-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+/* Modal specific decision buttons */
+.decision-buttons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 25px;
+    padding-top: 25px;
+    border-top: 1px solid var(--border-color);
 }
-
-.btn-quick-reply {
-    padding: 8px 15px;
-    background: var(--hover-bg);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    border-radius: 6px;
-    font-size: 13px;
+.decision-btn {
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.btn-quick-reply:hover {
-    background: var(--accent-blue);
+.decision-btn.btn-hold { background: var(--accent-orange); color: white; }
+.decision-btn.btn-reject { background: var(--accent-pink); color: white; }
+.decision-btn.btn-comment-only { 
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
     color: white;
-    border-color: var(--accent-blue);
+    grid-column: 1 / -1;
+}
+
+
+/* General Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+}
+.modal-large {
+    max-width: 750px;
 }
 
 .notification-alert {
@@ -246,4 +340,60 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     z-index: 2000;
     font-weight: 600;
+}
+
+/* Comment History Section Styling */
+.comments-list {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+.comments-list h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--accent-purple);
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.comment-item {
+    background: var(--secondary-bg);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--accent-purple);
+}
+.comment-item strong {
+    color: var(--accent-cyan);
+    font-size: 15px;
+}
+.comment-date {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+.comment-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+}
+
+/* New: Comment actions for edit/delete */
+.comment-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: flex-end;
+}
+.comment-actions button {
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--secondary-bg);
+    color: var(--text-secondary);
+}
+.comment-actions button:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent-blue);
 }

@@ -138,13 +138,7 @@
   border-bottom: none;
 }
 
-.pipeline-row.status-hold,
-.pipeline-row.status-reject,
-.pipeline-card.status-hold,
-.pipeline-card.status-reject {
-  opacity: 0.5;
-  background-color: #2a2f3f;
-}
+/* REMOVED: .pipeline-row.status-hold, .pipeline-row.status-reject, etc. opacity rules */
 
 .candidate-name-cell {
   display: flex;
