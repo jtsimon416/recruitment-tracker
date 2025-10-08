@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
 import '../styles/TalentPool.css';
 
+// --- TagInput component remains unchanged ---
 const TagInput = ({ tags, setTags }) => {
   const [inputValue, setInputValue] = useState('');
 
@@ -54,6 +55,7 @@ const TagInput = ({ tags, setTags }) => {
     </div>
   );
 };
+// -------------------------------------------
 
 function TalentPool() {
   const [candidates, setCandidates] = useState([]);
@@ -71,28 +73,22 @@ function TalentPool() {
   const [locationFilter, setLocationFilter] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    location: '',
-    skills: [],
-    resume_url: '',
-    linkedin_url: '',
-    notes: ''
-  });
-
+  // --- NEW STATE FOR PARSING/PIPELINE ---
+  const [resumeFile, setResumeFile] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [pipelineData, setPipelineData] = useState({
     position_id: '',
     recruiter_id: '',
     stage: 'Screening'
   });
-
-  const [commentData, setCommentData] = useState({
-    author_name: '',
-    comment_text: ''
-  });
-
+  
+  // --- CONFIG CONSTANTS (UPDATE THIS LINE) ---
+  const SUPABASE_URL = 'https://ksfxucazcyiitaoytese.supabase.co'; 
+  const BUCKET_NAME = 'resumes'; 
+  // !!! PASTE YOUR N8N WEBHOOK URL HERE !!!
+  const APILAYER_WEBHOOK = 'YOUR_N8N_WEBHOOK_URL_HERE'; 
+  
+  // Stages remain the same
   const stages = [
     'Screening',
     'Submit to Client',
@@ -103,6 +99,7 @@ function TalentPool() {
     'Hired'
   ];
 
+  // Combined function for initial data loading
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([
@@ -114,53 +111,38 @@ function TalentPool() {
     };
     loadData();
   }, []);
-
-  useEffect(() => {
-    if (!loading) {
-      filterCandidates();
-    }
-  }, [candidates, searchTerm, skillFilter, locationFilter, loading]);
-
+  
+  
   async function fetchCandidates() {
-    const { data, error } = await supabase
-      .from('candidates')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching candidates:', error);
-    } else {
-      setCandidates(data || []);
-    }
+      // NOTE: Modified fetch to include 'resume_url' in main select
+      const { data, error } = await supabase
+          .from('candidates')
+          .select('*')
+          .order('name');
+      if (error) console.error('Error fetching candidates:', error);
+      else {
+          setCandidates(data || []);
+          setFilteredCandidates(data || []);
+      }
   }
-
+  
   async function fetchPositions() {
-    const { data, error } = await supabase
-      .from('positions')
-      .select('*, clients(company_name)')
-      .eq('status', 'Open')
-      .order('title');
-    
-    if (error) {
-      console.error('Error fetching positions:', error);
-    } else {
-      setPositions(data || []);
-    }
+      const { data, error } = await supabase
+          .from('positions')
+          .select('id, title, clients ( company_name )')
+          .eq('status', 'Open');
+      if (error) console.error('Error fetching positions:', error);
+      else setPositions(data || []);
   }
 
   async function fetchRecruiters() {
-    const { data, error } = await supabase
-      .from('recruiters')
-      .select('*')
-      .order('name');
-    
-    if (error) {
-      console.error('Error fetching recruiters:', error);
-    } else {
-      setRecruiters(data || []);
-    }
+      const { data, error } = await supabase
+          .from('recruiters')
+          .select('id, name');
+      if (error) console.error('Error fetching recruiters:', error);
+      else setRecruiters(data || []);
   }
-
+  
   async function fetchComments(candidateId) {
     const { data, error } = await supabase
       .from('comments')
@@ -175,13 +157,13 @@ function TalentPool() {
     }
   }
 
-  function filterCandidates() {
+  const filterCandidates = () => {
     let filtered = candidates;
 
     if (searchTerm) {
       filtered = filtered.filter(c => 
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase())
+        c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -203,82 +185,84 @@ function TalentPool() {
     setFilteredCandidates(filtered);
   }
 
-  async function handleSubmit(e) {
+  useEffect(() => {
+    if (!loading) {
+      filterCandidates();
+    }
+  }, [candidates, searchTerm, skillFilter, locationFilter, loading]);
+
+
+  // --- HANDLER: Uploads, Triggers N8N, and Sets Initial Pipeline ---
+  async function handleParseAndSubmit(e) {
     e.preventDefault();
-
-    const { data: existingCandidate } = await supabase
-      .from('candidates')
-      .select('email')
-      .eq('email', formData.email)
-      .single();
-
-    if (existingCandidate) {
-      alert('A candidate with this email already exists.');
+    if (!resumeFile || !pipelineData.position_id || !pipelineData.recruiter_id) {
+      alert('Please select a file, position, and recruiter.');
       return;
     }
 
-    const { error } = await supabase
-      .from('candidates')
-      .insert([{...formData, skills: formData.skills.join(', ')}]);
+    setIsProcessing(true);
+    const fileToUpload = resumeFile; 
     
-    if (error) {
-      alert('Error adding candidate: ' + error.message);
-    } else {
-      alert('Candidate added successfully!');
-      setFormData({
-        name: '', email: '', phone: '', location: '',
-        skills: [], resume_url: '', linkedin_url: '', notes: ''
+    try {
+      // 1. Upload File to Supabase Storage (Unique file path based on timestamp)
+      const filePath = `${BUCKET_NAME}/${new Date().getTime()}_${fileToUpload.name.replace(/\s/g, '_')}`;
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(filePath, fileToUpload);
+
+      if (uploadError) throw new Error('File upload failed: ' + uploadError.message);
+
+      // 2. Get the public URL for the N8N parser to access
+      const { data: publicURLData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(filePath);
+        
+      const publicURL = publicURLData.publicUrl;
+
+
+      // 3. Trigger N8N Parsing Workflow
+      const n8nResponse = await fetch(APILAYER_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeUrl: publicURL,
+          // Pass the necessary initial pipeline data to N8N
+          pipelineData: pipelineData 
+        }),
       });
+      
+      if (!n8nResponse.ok) {
+          throw new Error(`N8N webhook failed with status: ${n8nResponse.status}. Check your N8N workflow.`);
+      }
+
+      alert(`Resume uploaded and parsing initiated! Candidate is being added to the pipeline.`);
+      
+      // Reset form states
+      setResumeFile(null);
+      e.target.reset(); 
       setShowForm(false);
-      fetchCandidates();
+      await fetchCandidates(); // Re-fetch to show the new candidate
+      
+    } catch (error) {
+      console.error('Resume Processing Error:', error);
+      alert('An error occurred during resume processing: ' + error.message);
+    } finally {
+      setIsProcessing(false);
     }
   }
 
-  function openPipelineModal(candidate) {
+  // --- Placeholder for other unused functions (keep your originals if they are complete) ---
+  function openCommentsModal(candidate) {
     setSelectedCandidate(candidate);
-    setPipelineData({ position_id: '', recruiter_id: '', stage: 'Screening' });
-    setShowPipelineModal(true);
-  }
-
-  async function handleAddToPipeline(e) {
-    e.preventDefault();
-    
-    if (!pipelineData.position_id || !pipelineData.recruiter_id) {
-      alert('Please select both a position and a recruiter');
-      return;
-    }
-
-    const { data: existingEntry } = await supabase
-      .from('pipeline')
-      .select('*')
-      .eq('candidate_id', selectedCandidate.id)
-      .eq('position_id', pipelineData.position_id)
-      .single();
-
-    if (existingEntry) {
-      alert('This candidate is already in the pipeline for this position.');
-      return;
-    }
-
-    const { error } = await supabase.from('pipeline').insert([{
-      candidate_id: selectedCandidate.id, ...pipelineData
-    }]);
-    
-    if (error) {
-      alert('Error adding to pipeline: ' + error.message);
-    } else {
-      alert('Candidate added to pipeline successfully!');
-      setShowPipelineModal(false);
-      setSelectedCandidate(null);
-    }
-  }
-
-  async function openCommentsModal(candidate) {
-    setSelectedCandidate(candidate);
-    await fetchComments(candidate.id);
+    fetchComments(candidate.id);
     setCommentData({ author_name: '', comment_text: '' });
     setShowCommentsModal(true);
   }
+  
+  const [commentData, setCommentData] = useState({
+    author_name: '',
+    comment_text: ''
+  });
 
   async function handleAddComment(e) {
     e.preventDefault();
@@ -300,6 +284,7 @@ function TalentPool() {
     }
   }
 
+
   if (loading) {
     return <div className="loading-state">Loading Talent Pool...</div>;
   }
@@ -315,47 +300,49 @@ function TalentPool() {
 
       {showForm && (
         <div className="form-card">
-          <h2>Add New Candidate</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Name *</label>
-                <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-              </div>
-              <div className="form-group">
-                <label>Email *</label>
-                <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Phone</label>
-                <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
-              </div>
-              <div className="form-group">
-                <label>Location</label>
-                <input type="text" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} />
-              </div>
-            </div>
+          <h2>Add Candidate via Resume Parsing (Drag & Drop)</h2>
+          <form onSubmit={handleParseAndSubmit}>
+            
+            {/* FILE INPUT */}
             <div className="form-group">
-              <label>Skills</label>
-              <TagInput tags={formData.skills} setTags={(newSkills) => setFormData({...formData, skills: newSkills})} />
+                <label>Resume File (.pdf, .docx)*</label>
+                <input
+                    type="file"
+                    required
+                    accept=".pdf,.docx,.doc"
+                    onChange={(e) => setResumeFile(e.target.files[0])}
+                    disabled={isProcessing}
+                />
             </div>
+            
+            {/* MANDATORY PIPELINE FIELDS */}
             <div className="form-row">
-              <div className="form-group">
-                <label>Resume URL</label>
-                <input type="url" value={formData.resume_url} onChange={(e) => setFormData({...formData, resume_url: e.target.value})} />
-              </div>
-              <div className="form-group">
-                <label>LinkedIn URL</label>
-                <input type="url" value={formData.linkedin_url} onChange={(e) => setFormData({...formData, linkedin_url: e.target.value})} />
-              </div>
+                <div className="form-group">
+                    <label>Position *</label>
+                    <select required value={pipelineData.position_id} onChange={(e) => setPipelineData({...pipelineData, position_id: e.target.value})} disabled={isProcessing}>
+                        <option value="">Select position...</option>
+                        {positions.map(pos => (<option key={pos.id} value={pos.id}>{pos.title} - {pos.clients?.company_name || 'N/A'}</option>))}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label>Recruiter *</label>
+                    <select required value={pipelineData.recruiter_id} onChange={(e) => setPipelineData({...pipelineData, recruiter_id: e.target.value})} disabled={isProcessing}>
+                        <option value="">Select recruiter...</option>
+                        {recruiters.map(rec => (<option key={rec.id} value={rec.id}>{rec.name}</option>))}
+                    </select>
+                </div>
             </div>
-            <div className="form-group">
-              <label>Notes</label>
-              <textarea rows="3" value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} />
-            </div>
-            <button type="submit" className="btn-primary">Add Candidate</button>
+            
+            <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={isProcessing || !resumeFile}
+            >
+                {isProcessing ? 'Processing Resume...' : 'Upload & Parse Resume'}
+            </button>
+            <p style={{marginTop: '15px', color: 'var(--accent-pink)'}}>
+                *Candidate details and permanent resume link will be extracted and saved.
+            </p>
           </form>
         </div>
       )}
@@ -372,7 +359,7 @@ function TalentPool() {
           <div>Skills</div>
           <div>Location</div>
           <div>Phone</div>
-          <div>Resume</div>
+          <div>Resume</div> 
           <div>Actions</div>
         </div>
         
@@ -386,9 +373,9 @@ function TalentPool() {
               <div className="skills-cell">{candidate.skills || 'N/A'}</div>
               <div>{candidate.location || 'N/A'}</div>
               <div>{candidate.phone || 'N/A'}</div>
-              <div>{candidate.resume_url ? (<a href={candidate.resume_url} target="_blank" rel="noopener noreferrer" className="btn-link" onClick={(e) => e.stopPropagation()}>View</a>) : ('N/A')}</div>
+              {/* This displays the link to the uploaded resume file */}
+              <div>{candidate.resume_url ? (<a href={candidate.resume_url} target="_blank" rel="noopener noreferrer" className="btn-link" onClick={(e) => e.stopPropagation()}>View</a>) : ('N/A')}</div> 
               <div className="actions-cell" onClick={(e) => e.stopPropagation()}>
-                <button className="btn-add-pipeline" onClick={() => openPipelineModal(candidate)}>+ Pipeline</button>
                 <button className="btn-comments" onClick={() => openCommentsModal(candidate)}>Comments</button>
               </div>
             </div>
@@ -397,42 +384,7 @@ function TalentPool() {
         ))}
       </div>
 
-      {showPipelineModal && (
-        <div className="modal-overlay" onClick={() => setShowPipelineModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Add to Pipeline</h2>
-            <p className="modal-candidate-name">{selectedCandidate?.name}</p>
-            <form onSubmit={handleAddToPipeline}>
-              <div className="form-group">
-                <label>Position *</label>
-                <select required value={pipelineData.position_id} onChange={(e) => setPipelineData({...pipelineData, position_id: e.target.value})}>
-                  <option value="">Select position...</option>
-                  {positions.map(pos => (<option key={pos.id} value={pos.id}>{pos.title} - {pos.clients?.company_name}</option>))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Recruiter *</label>
-                <select required value={pipelineData.recruiter_id} onChange={(e) => setPipelineData({...pipelineData, recruiter_id: e.target.value})}>
-                  <option value="">Select recruiter...</option>
-                  {recruiters.map(rec => (<option key={rec.id} value={rec.id}>{rec.name}</option>))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Initial Stage</label>
-                <select value={pipelineData.stage} onChange={(e) => setPipelineData({...pipelineData, stage: e.target.value})}>
-                  {stages.map(stage => (<option key={stage} value={stage}>{stage}</option>))}
-                </select>
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowPipelineModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Add to Pipeline</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showCommentsModal && (
+      {showCommentsModal && selectedCandidate && (
         <div className="modal-overlay" onClick={() => setShowCommentsModal(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <h2>Comments for {selectedCandidate?.name}</h2>
