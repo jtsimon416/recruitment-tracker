@@ -314,6 +314,44 @@ function ActiveTracker() {
     }
   }
   
+  const handleEditComment = (comment) => {
+    setEditingComment(comment);
+    setEditingText(comment.comment_text);
+  };
+  
+  async function handleUpdateComment(e) {
+    e.preventDefault();
+    if (!editingText.trim()) return;
+    
+    const { error } = await supabase
+      .from('comments')
+      .update({ comment_text: editingText })
+      .eq('id', editingComment.id);
+    
+    if (error) {
+      alert('Error updating comment: ' + error.message);
+    } else {
+      await fetchComments(selectedPipelineEntry.candidate_id);
+      setEditingComment(null);
+      setEditingText('');
+    }
+  }
+  
+  async function handleDeleteComment(commentId) {
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    
+    const { error } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', commentId);
+    
+    if (error) {
+      alert('Error deleting comment: ' + error.message);
+    } else {
+      await fetchComments(selectedPipelineEntry.candidate_id);
+    }
+  }
+  
   const filteredAndSortedPipeline = useMemo(() => {
     let filtered = pipeline;
     
@@ -426,36 +464,21 @@ function ActiveTracker() {
       setNotificationModal({ isOpen: false, type: null, data: null });
     }
   };
-  
-  const handleEditComment = (comment) => { setEditingComment(comment); setEditingText(comment.comment_text); };
-  
-  const handleUpdateComment = async (e) => {
-    e.preventDefault();
-    if (!editingText) return;
-    const { error } = await supabase.from('comments').update({ comment_text: editingText }).eq('id', editingComment.id);
-    if (error) alert('Error updating comment: ' + error.message);
-    else { setEditingComment(null); setEditingText(''); fetchComments(selectedPipelineEntry.candidate_id); }
-  };
-  
-  const handleDeleteComment = async (commentId) => {
-    if (window.confirm('Delete this comment?')) {
-      const { error } = await supabase.from('comments').delete().eq('id', commentId);
-      if (error) alert('Error deleting comment: ' + error.message);
-      else fetchComments(selectedPipelineEntry.candidate_id);
-    }
-  };
+
+  const groupedByPosition = useMemo(() => {
+    const grouped = {};
+    filteredAndSortedPipeline.forEach(item => {
+      const posTitle = item.positions?.title || 'Unknown Position';
+      if (!grouped[posTitle]) grouped[posTitle] = [];
+      grouped[posTitle].push(item);
+    });
+    return grouped;
+  }, [filteredAndSortedPipeline]);
   
   const renderListView = () => {
-    const groupedByPosition = filteredAndSortedPipeline.reduce((acc, item) => {
-      const posTitle = item.positions?.title || 'Unknown Position'; 
-      if (!acc[posTitle]) acc[posTitle] = [];
-      acc[posTitle].push(item);
-      return acc;
-    }, {});
-
     return (
       <div className="list-view">
-        {Object.keys(groupedByPosition).length === 0 ? (
+        {filteredAndSortedPipeline.length === 0 ? (
           <div className="empty-state"><h3>No matching pipeline entries</h3><p>Adjust your filters or add candidates to get started.</p></div>
         ) : (
           Object.keys(groupedByPosition).map(posTitle => (
@@ -475,19 +498,21 @@ function ActiveTracker() {
                     <div className={`pipeline-row status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`} onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)}>
                       <div className="candidate-name-cell">
                         <strong>{item.candidates?.name || 'Unknown'}</strong>
-                        <Binoculars size={18} className="icon-view-details" onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }} />
-                        {item.candidates?.resume_url && (
-                          <a 
-                            href={item.candidates.resume_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="icon-view-resume"
-                            onClick={(e) => e.stopPropagation()}
-                            title="View Resume"
-                          >
-                            <FileText size={18} />
-                          </a>
-                        )}
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                          <Binoculars size={18} className="icon-view-details" onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }} />
+                          {item.candidates?.resume_url && (
+                            <a 
+                              href={item.candidates.resume_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="icon-view-resume"
+                              onClick={(e) => e.stopPropagation()}
+                              title="View Resume"
+                            >
+                              <FileText size={18} />
+                            </a>
+                          )}
+                        </div>
                       </div>
                       <div>{item.recruiters?.name || 'N/A'}</div>
                       <div>{item.candidates?.phone || 'N/A'}</div>
@@ -549,46 +574,34 @@ function ActiveTracker() {
                               {(provided, snapshot) => (
                                 <div 
                                   className={`pipeline-card ${snapshot.isDragging ? 'dragging' : ''} status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`} 
-                                  ref={provided.innerRef} 
-                                  {...provided.draggableProps} 
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                 >
-                                  <div className="card-header">
-                                    <div className="card-name-row">
-                                      <h4>{item.candidates?.name || 'Unknown'}</h4>
-                                      <div className="card-icons">
-                                        <Binoculars 
-                                          size={18} 
-                                          className="icon-view-details-kanban" 
-                                          onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }} 
-                                        />
-                                        {item.candidates?.resume_url && (
-                                          <a 
-                                            href={item.candidates.resume_url} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer" 
-                                            className="icon-view-resume-kanban"
-                                            onClick={(e) => e.stopPropagation()}
-                                            title="View Resume"
-                                          >
-                                            <FileText size={18} />
-                                          </a>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <p className="card-position">{item.positions?.title || 'Unknown Position'}</p>
-                                    <p className="card-recruiter">{item.recruiters?.name || 'N/A'}</p>
+                                  <div className="pipeline-card-header">
+                                    <strong>{item.candidates?.name || 'Unknown'}</strong>
+                                    {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small"></div>}
                                   </div>
-                                  <div className="card-body">
-                                    <select className="card-status-select" value={item.status || 'Active'} onChange={(e) => { e.stopPropagation(); handleStatusChange(item.id, e.target.value); }} onClick={(e) => e.stopPropagation()}>
+                                  <p className="pipeline-card-company"><strong>Position:</strong> {item.positions?.title || 'N/A'}</p>
+                                  <p className="pipeline-card-recruiter"><strong>Recruiter:</strong> {item.recruiters?.name || 'N/A'}</p>
+                                  <p className="pipeline-card-phone"><strong>Phone:</strong> {item.candidates?.phone || 'N/A'}</p>
+                                  <div className="pipeline-card-actions">
+                                    <Binoculars size={18} className="icon-view-details" onClick={() => handleOpenInfoSidebar(item.candidates)} />
+                                    {item.candidates?.resume_url && (
+                                      <a 
+                                        href={item.candidates.resume_url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="icon-view-resume"
+                                        title="View Resume"
+                                      >
+                                        <FileText size={18} />
+                                      </a>
+                                    )}
+                                    <select className="status-select-card" value={item.status || 'Active'} onChange={(e) => handleStatusChange(item.id, e.target.value)}>
                                       {statuses.map(status => <option key={status} value={status}>{status}</option>)}
                                     </select>
-                                  </div>
-                                  <div className="card-actions">
-                                    <div className="comments-button-wrapper">
-                                       {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small"></div>}
-                                       <button className="btn-comments" onClick={(e) => { e.stopPropagation(); openCommentsModal(item); }}>Comments</button>
-                                    </div>
+                                    <button className="btn-comments-card" onClick={() => openCommentsModal(item)}>Comments</button>
                                     <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={() => handleRemove(item.id)}>
                                        {confirmDeleteId === item.id ? 'Confirm Delete' : 'Remove'}
                                     </button>

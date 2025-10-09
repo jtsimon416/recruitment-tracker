@@ -61,6 +61,7 @@ function TalentPool() {
   const [candidates, setCandidates] = useState([]);
   const [filteredCandidates, setFilteredCandidates] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [currentFormView, setCurrentFormView] = useState(null); // 'parse' or 'manual'
   const [showPipelineModal, setShowPipelineModal] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -101,7 +102,8 @@ function TalentPool() {
   
   // --- CONFIG CONSTANTS (Used only for upload logic now) ---
   const BUCKET_NAME = 'resumes'; 
-  const APILAYER_WEBHOOK = 'https://jtsimon416.app.n8n.cloud/webhook/00741332-4763-439b-87d0-d19a13f5a0d0'; // Placeholder
+  // NOTE: This URL is used ONLY by the dedicated Parse button
+  const APILAYER_WEBHOOK = 'https://jtsimon416.app.n8n.cloud/webhook/00741332-4763-439b-87d0-d19a13f5a0d0'; 
   
   // Stages remain the same
   const stages = [
@@ -226,8 +228,51 @@ function TalentPool() {
   }, [candidates, searchTerm, skillFilter, locationFilter, loading]); 
 
   // --- HANDLER: Uploads File for MANUAL Entry (No Parsing) ---
+  // This is called by the file input inside the Manual Entry form.
   async function handleFileUpload(e) {
     const file = e.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    
+    try {
+      // 1. UPLOAD FILE to Supabase Storage (BYPASSES N8N)
+      const filePath = `${BUCKET_NAME}/${new Date().getTime()}_${file.name.replace(/\s/g, '_')}`;
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(filePath, file);
+
+      if (uploadError) throw new Error('File upload failed: ' + uploadError.message);
+
+      // 2. Get the public URL
+      const { data: publicURLData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(filePath);
+        
+      const publicURL = publicURLData.publicUrl;
+
+      // 3. Update local state with the URL
+      setCandidateFormData(prev => ({
+        ...prev,
+        resume_url: publicURL
+      }));
+      e.target.value = null; // Clear input field visually
+      alert("Resume successfully uploaded! The link is attached to the candidate record.");
+
+    } catch (error) {
+      console.error('File Upload Error:', error);
+      alert('An error occurred during file upload: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // --- HANDLER: Uploads File for PARSING (N8N Call) ---
+  // This is called by the dedicated + Resume (Parse) button form.
+  async function handleParseSubmit(e) {
+    e.preventDefault();
+    const fileInput = e.target.elements.resumeFile;
+    const file = fileInput.files[0];
     if (!file) return;
 
     setLoading(true);
@@ -248,20 +293,30 @@ function TalentPool() {
         
       const publicURL = publicURLData.publicUrl;
 
-      setCandidateFormData(prev => ({
-        ...prev,
-        resume_url: publicURL
-      }));
-      e.target.value = null; // Clear input field visually
-      alert("Resume successfully uploaded! The link is attached to the candidate record.");
+      alert(`Resume uploaded and parsing initiated! Candidate should appear shortly, but may require a refresh due to the external service timeout.`);
+      
+      // 3. Trigger N8N Parsing Workflow (Fire-and-Forget) - **N8N CALL IS HERE**
+      await fetch(APILAYER_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeUrl: publicURL }),
+      });
+      
+      // 4. Clean up UI and trigger quick refresh
+      fileInput.value = '';
+      resetForm();
+      loadCandidates(); 
 
     } catch (error) {
-      console.error('File Upload Error:', error);
-      alert('An error occurred during file upload: ' + error.message);
+      console.error('Parsing/Upload Error:', error);
+      alert('WARNING: File upload succeeded, but parsing failed/timed out. Please manually refresh the page to check for the new candidate.');
+      fileInput.value = '';
+      resetForm();
     } finally {
       setLoading(false);
     }
   }
+
 
   // --- HANDLER: MANUAL ADD/EDIT ---
   async function handleManualSubmit(e) {
@@ -331,6 +386,7 @@ function TalentPool() {
         resume_url: candidate.resume_url || '' // Load existing URL
     });
     setShowForm(true);
+    setCurrentFormView('manual'); // Ensure manual form opens for editing
   }
 
   // --- HANDLER: Deletes a candidate and associated data ---
@@ -410,7 +466,23 @@ function TalentPool() {
   function resetForm() {
     clearFormData();
     setShowForm(false);
+    setCurrentFormView(null);
   }
+
+  // --- HANDLER TO OPEN FORMS ---
+  const handleOpenForm = (mode) => {
+    // If the same form is already open, close it.
+    if (showForm && currentFormView === mode) {
+        resetForm();
+    } else {
+        clearFormData(); // Clear old data first
+        setCurrentFormView(mode);
+        setShowForm(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+    }
+  };
+  // ----------------------------------
+
 
   function openCommentsModal(candidate) {
     setSelectedCandidate(candidate);
@@ -479,11 +551,37 @@ function TalentPool() {
     return <div className="loading-state">Loading Talent Pool...</div>;
   }
 
-  const renderForm = () => (
+  const renderParseForm = () => (
     <div className="form-card">
-        <div className="form-header-toggle">
-            <h2>{editingCandidate ? `Edit Candidate: ${editingCandidate.name}` : 'Add New Candidate (Manual Entry)'}</h2>
-        </div>
+        <h2 style={{marginBottom: '25px'}}>Upload Resume for Parsing</h2>
+        <form onSubmit={handleParseSubmit}>
+            <div className="form-group">
+                <label>Resume File (.pdf, .docx)*</label>
+                <input
+                    type="file"
+                    name="resumeFile"
+                    required
+                    accept=".pdf,.docx,.doc"
+                    disabled={loading}
+                />
+            </div>
+            <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={loading}
+            >
+                Upload & Start Parsing Job
+            </button>
+            <p style={{marginTop: '15px', color: 'var(--text-muted)', fontSize: '12px'}}>
+                **This starts a background job** via N8N. The candidate will appear here after the job completes (up to a minute).
+            </p>
+        </form>
+    </div>
+  );
+
+  const renderManualForm = () => (
+    <div className="form-card">
+        <h2 style={{marginBottom: '25px'}}>{editingCandidate ? `Edit Candidate: ${editingCandidate.name}` : 'Manual Candidate Entry'}</h2>
         
         <form onSubmit={handleManualSubmit}>
           <div className="form-row">
@@ -557,25 +655,38 @@ function TalentPool() {
     </div>
   );
 
+
   return (
     <div className="page-container">
       <div className="page-header">
         <h1>Talent Pool</h1>
-        <button className="btn-primary" onClick={() => {
-            if (showForm) {
-                // If form is open, close it (Cancel/Close Form)
-                resetForm();
-            } else {
-                // If form is closed, open it (Add Candidate)
-                clearFormData(); 
-                setShowForm(true);
-            }
-        }}>
-          {showForm ? 'Cancel / Close Form' : '+ Add Candidate'}
-        </button>
+        <div className="header-action-buttons">
+            <button className={`btn-primary ${currentFormView === 'parse' ? 'active' : ''}`} 
+                    onClick={() => handleOpenForm('parse')} 
+                    disabled={!!editingCandidate}>
+                + Resume (Parse)
+            </button>
+            <button className={`btn-secondary ${currentFormView === 'manual' ? 'active' : ''}`} 
+                    onClick={() => handleOpenForm('manual')} 
+                    disabled={!!editingCandidate}>
+                + Manual Entry
+            </button>
+        </div>
       </div>
 
-      {showForm && renderForm()}
+      {/* RENDER FORM BASED ON VIEW STATE */}
+      {showForm && (
+        <>
+            {currentFormView === 'parse' && renderParseForm()}
+            {currentFormView === 'manual' && renderManualForm()}
+            {/* Display Cancel button only if a form is open */}
+            <div className="form-close-bar">
+                <button className="btn-secondary" onClick={resetForm} style={{width: '200px'}}>
+                    Cancel / Close Form
+                </button>
+            </div>
+        </>
+      )}
 
       <div className="filter-bar">
         <input 
@@ -668,8 +779,6 @@ function TalentPool() {
           </button>
         </div>
       )}
-      {/* --- END PAGINATION CONTROLS --- */}
-
       {showCommentsModal && selectedCandidate && (
         <div className="modal-overlay" onClick={() => setShowCommentsModal(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
