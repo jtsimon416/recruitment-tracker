@@ -101,6 +101,7 @@ function TalentPool() {
   
   // --- CONFIG CONSTANTS (Used only for upload logic now) ---
   const BUCKET_NAME = 'resumes'; 
+  const APILAYER_WEBHOOK = 'https://jtsimon416.app.n8n.cloud/webhook/00741332-4763-439b-87d0-d19a13f5a0d0'; // Placeholder
   
   // Stages remain the same
   const stages = [
@@ -173,9 +174,7 @@ function TalentPool() {
 
   const filterCandidates = () => {
     // Reset page to 1 whenever filters change
-    if (currentPage !== 1) {
-        setCurrentPage(1);
-    }
+    setCurrentPage(1);
     
     let filtered = candidates;
 
@@ -186,14 +185,28 @@ function TalentPool() {
       );
     }
 
+    // --- IMPROVED SKILLS FILTER LOGIC ---
     if (skillFilter) {
-      const skillsToFilter = skillFilter.toLowerCase().split(',').map(s => s.trim()).filter(s => s);
-      if (skillsToFilter.length > 0) {
-        filtered = filtered.filter(c => 
-          c.skills && c.skills.toLowerCase().includes(skillsToFilter[0]) // Simple check for now
-        );
+      // 1. Get user's search terms and normalize them (split by comma, trim, lowercase)
+      const searchTerms = skillFilter.toLowerCase().split(',').map(s => s.trim()).filter(s => s);
+
+      if (searchTerms.length > 0) {
+        filtered = filtered.filter(c => {
+          if (!c.skills) return false;
+
+          // 2. Normalize candidate's skills into an array of lowercase tags
+          const candidateTags = c.skills.toLowerCase().split(',').map(tag => tag.trim());
+
+          // 3. Check if the candidate has AT LEAST ONE skill that includes ANY search term
+          return searchTerms.some(searchTerm => 
+            candidateTags.some(candidateTag => 
+              candidateTag.includes(searchTerm)
+            )
+          );
+        });
       }
     }
+    // --- END IMPROVED SKILLS FILTER LOGIC ---
 
     if (locationFilter) {
       filtered = filtered.filter(c => 
@@ -204,11 +217,13 @@ function TalentPool() {
     setFilteredCandidates(filtered);
   }
 
+  // Hook to run filter when dependencies change, excluding currentPage
   useEffect(() => {
     if (!loading) {
       filterCandidates();
     }
-  }, [candidates, searchTerm, skillFilter, locationFilter, loading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [candidates, searchTerm, skillFilter, locationFilter, loading]); 
 
   // --- HANDLER: Uploads File for MANUAL Entry (No Parsing) ---
   async function handleFileUpload(e) {
@@ -563,9 +578,27 @@ function TalentPool() {
       {showForm && renderForm()}
 
       <div className="filter-bar">
-        <input type="text" placeholder="Search by name or email..." className="search-input" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-        <input type="text" placeholder="Filter by skills (comma-separated)..." className="filter-input" value={skillFilter} onChange={(e) => setSkillFilter(e.target.value)} />
-        <input type="text" placeholder="Filter by location..." className="filter-input" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} />
+        <input 
+          type="text" 
+          placeholder="Search by name or email..." 
+          className="search-input" 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)} 
+        />
+        <input 
+          type="text" 
+          placeholder="Filter by skills (comma-separated)..." 
+          className="filter-input" 
+          value={skillFilter} 
+          onChange={(e) => setSkillFilter(e.target.value)} 
+        />
+        <input 
+          type="text" 
+          placeholder="Filter by location..." 
+          className="filter-input" 
+          value={locationFilter} 
+          onChange={(e) => setLocationFilter(e.target.value)} 
+        />
       </div>
 
       <div className="candidates-list">
