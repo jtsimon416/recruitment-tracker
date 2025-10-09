@@ -3,7 +3,64 @@ import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
 import { useLocation } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { Search, ChevronDown, ChevronUp, Binoculars } from 'lucide-react'; 
 import '../styles/ActiveTracker.css';
+
+// --- NEW COMPONENT: Info Sidebar for Candidate Details ---
+const InfoSidebar = ({ candidate, onClose }) => {
+    if (!candidate) return null;
+    
+    // Convert the comma-separated string back into a more readable array
+    const skillsArray = candidate.skills ? candidate.skills.split(',').map(s => s.trim()).filter(s => s) : [];
+
+    return (
+        <div className="info-sidebar-overlay" onClick={onClose}>
+            <div className="info-sidebar" onClick={(e) => e.stopPropagation()}>
+                <div className="sidebar-header-custom">
+                    <h2>Candidate Deep Dive</h2>
+                    <button onClick={onClose} className="btn-close-sidebar" type="button">&times;</button> {/* FIX: Added type="button" */}
+                </div>
+                
+                <div className="sidebar-section">
+                    <h3>Personal Info</h3>
+                    <p><strong>Name:</strong> {candidate.name}</p>
+                    <p><strong>Email:</strong> {candidate.email}</p>
+                    <p><strong>Phone:</strong> {candidate.phone || 'N/A'}</p>
+                    <p><strong>Location:</strong> {candidate.location || 'N/A'}</p>
+                    <p><strong>LinkedIn:</strong> {candidate.linkedin_url ? 
+                        <a href={candidate.linkedin_url} target="_blank" rel="noopener noreferrer" className="btn-link">View Profile</a> : 'N/A'}
+                    </p>
+                </div>
+
+                <div className="sidebar-section">
+                    <h3>Resume Link</h3>
+                    {candidate.resume_url ? (
+                        <a href={candidate.resume_url} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{display: 'block', textAlign: 'center', margin: '15px 0'}}>
+                            View Original Document
+                        </a>
+                    ) : (
+                        <p>No original resume file link available.</p>
+                    )}
+                </div>
+
+                <div className="sidebar-section">
+                    <h3>Skills & Keywords ({skillsArray.length})</h3>
+                    <div className="skills-full-list">
+                        {skillsArray.length > 0 ? skillsArray.map((skill, index) => (
+                            <span key={index} className="skill-tag-full">{skill}</span>
+                        )) : <p>No skills recorded.</p>}
+                    </div>
+                </div>
+
+                <div className="sidebar-section">
+                    <h3>Recruiter Notes</h3>
+                    <p className="notes-text-large">{candidate.notes || 'No detailed notes provided.'}</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+// --- END NEW COMPONENT ---
 
 function ActiveTracker() {
   const { newCommentCandidateIds, clearCommentNotifications, user, createNotification, recruiters } = useData(); // Added recruiters
@@ -11,8 +68,6 @@ function ActiveTracker() {
   
   const [pipeline, setPipeline] = useState([]);
   const [positions, setPositions] = useState([]);
-  // We get recruiters from context now
-  // const [recruiters, setRecruiters] = useState([]); 
   const [view, setView] = useState('list');
   const [expandedCard, setExpandedCard] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
@@ -22,6 +77,11 @@ function ActiveTracker() {
   const [editingComment, setEditingComment] = useState(null);
   const [editingText, setEditingText] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  // --- NEW STATE FOR SIDEBAR ---
+  const [showInfoSidebar, setShowInfoSidebar] = useState(false);
+  const [sidebarCandidate, setSidebarCandidate] = useState(null); 
+  // -----------------------------
 
   const [notificationModal, setNotificationModal] = useState({ isOpen: false, type: null, data: null });
   const [selectedPosition, setSelectedPosition] = useState('all');
@@ -40,7 +100,7 @@ function ActiveTracker() {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchPipeline(), fetchPositions()]); // Removed fetchRecruiters
+      await Promise.all([fetchPipeline(), fetchPositions()]); 
       setLoading(false);
     };
     loadData();
@@ -82,7 +142,12 @@ function ActiveTracker() {
 
 
   async function fetchPipeline() {
-    const { data: pipelineData, error: pipelineError } = await supabase.from('pipeline').select('*, candidates(*), positions(*, clients(*)), recruiters(*)').order('created_at', { ascending: false });
+    // FIX: Add filter to prevent candidates with NULL position_id (the "Unknown Position" issue) from appearing
+    const { data: pipelineData, error: pipelineError } = await supabase.from('pipeline')
+      .select('*, candidates(*), positions(*, clients(*)), recruiters(*)')
+      .not('position_id', 'is', null) // <--- THIS IS THE FILTER FIX
+      .order('created_at', { ascending: false });
+      
     if (pipelineError) console.error('Error fetching pipeline:', pipelineError);
     else setPipeline(pipelineData || []);
   }
@@ -221,6 +286,13 @@ function ActiveTracker() {
     clearCommentNotifications(pipelineEntry.candidate_id);
     setShowCommentsModal(true);
   };
+  
+  // --- NEW HANDLER ---
+  const handleOpenInfoSidebar = (candidate) => {
+    setSidebarCandidate(candidate);
+    setShowInfoSidebar(true);
+  };
+  // -------------------
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -326,7 +398,8 @@ function ActiveTracker() {
   
   const renderListView = () => {
     const groupedByPosition = filteredAndSortedPipeline.reduce((acc, item) => {
-      const posTitle = item.positions?.title || 'Unknown Position';
+      // NOTE: Because of the filter in fetchPipeline, posTitle should no longer be 'Unknown Position' unless the position title itself is null.
+      const posTitle = item.positions?.title || 'Unknown Position'; 
       if (!acc[posTitle]) acc[posTitle] = [];
       acc[posTitle].push(item);
       return acc;
@@ -352,7 +425,10 @@ function ActiveTracker() {
                 {groupedByPosition[posTitle].map(item => (
                   <React.Fragment key={item.id}>
                     <div className={`pipeline-row status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`} onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)}>
-                      <div className="candidate-name-cell"><strong>{item.candidates?.name || 'Unknown'}</strong></div>
+                      <div className="candidate-name-cell">
+                        <strong>{item.candidates?.name || 'Unknown'}</strong>
+                        <Binoculars size={18} className="icon-view-details" onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }} />
+                      </div>
                       <div>{item.recruiters?.name || 'N/A'}</div>
                       <div>{item.candidates?.phone || 'N/A'}</div>
                       <div>
@@ -410,6 +486,7 @@ function ActiveTracker() {
                                 <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={`pipeline-card status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`} onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)} style={{ ...provided.draggableProps.style }}>
                                   <div className="card-header">
                                     <strong>{item.candidates?.name || 'Unknown'}</strong>
+                                    <Binoculars size={18} className="icon-view-details-kanban" onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }} /> 
                                     <span className={`kanban-status-badge status-badge-${(item.status || 'active').toLowerCase()}`}>{item.status || 'Active'}</span>
                                   </div>
                                   <div className="card-body">
@@ -465,6 +542,9 @@ function ActiveTracker() {
       </div>
       
       {view === 'list' ? renderListView() : renderPipelineView()}
+      
+      {/* RENDER INFO SIDEBAR */}
+      {showInfoSidebar && <InfoSidebar candidate={sidebarCandidate} onClose={() => setShowInfoSidebar(false)} />}
       
       {showCommentsModal && (
         <div className="modal-overlay" onClick={() => setShowCommentsModal(false)}>

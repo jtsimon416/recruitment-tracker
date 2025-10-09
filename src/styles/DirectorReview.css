@@ -6,7 +6,7 @@
     margin-bottom: 30px;
 }
 
-/* --- NEW SECTION STYLES --- */
+/* --- SECTION STYLES --- */
 .review-section {
     margin-bottom: 40px;
     padding-top: 15px;
@@ -39,15 +39,8 @@
     white-space: nowrap;
 }
 
-.count-hold {
-    background: var(--accent-orange);
-    color: var(--card-bg);
-}
-
-.count-screening {
-    background: var(--accent-purple);
-    color: var(--card-bg);
-}
+.count-hold { background: var(--accent-orange); color: var(--card-bg); }
+.count-screening { background: var(--accent-purple); color: var(--card-bg); }
 
 .icon-hold { color: var(--accent-orange); }
 .icon-screening { color: var(--accent-purple); }
@@ -64,241 +57,134 @@
     color: var(--text-muted);
     font-style: italic;
 }
-/* --- END NEW SECTION STYLES --- */
+/* --- END SECTION STYLES --- */
 
 
-.review-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 24px;
-    margin-top: 0; /* Adjusted due to new section structure */
-}
+/* --- FILE VIEW / LIST VIEW STYLES (Replaced old .review-grid/.candidate-card) --- */
 
-.candidate-card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
+/* Main container for the rows (looks like one big file/table) */
+.review-list-view {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    min-height: 350px;
-    border-left: 5px solid transparent; /* Added base border for color coding */
-}
-
-.candidate-card.card-on-hold {
-    border-left-color: var(--accent-orange);
-    background: #2a2f3f; /* Keep standard background for hold */
-}
-
-.candidate-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(187, 154, 247, 0.4);
-    border-color: var(--accent-purple);
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.card-title {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent-cyan);
-}
-
-.urgency-badge {
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    text-transform: uppercase;
-    white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.urgency-badge.urgent-standard {
-    background: var(--secondary-bg);
-    color: var(--text-muted);
-}
-
-.urgency-badge.urgent-warning {
-    background: var(--accent-orange);
-    color: var(--card-bg); /* Brighter text on orange */
-    animation: pulse-orange 1.5s infinite alternate;
-}
-
-.urgency-badge.urgent-critical {
-    background: var(--accent-pink);
-    color: white;
-    animation: pulse-red 1s infinite alternate;
-}
-
-@keyframes pulse-red {
-    from { box-shadow: 0 0 0 0 rgba(247, 162, 198, 0.4); }
-    to { box-shadow: 0 0 0 8px rgba(247, 162, 198, 0); }
-}
-
-@keyframes pulse-orange {
-    from { box-shadow: 0 0 0 0 rgba(255, 158, 100, 0.3); }
-    to { box-shadow: 0 0 0 6px rgba(255, 158, 100, 0); }
-}
-
-.card-info p {
-    margin: 6px 0;
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
-.card-info strong {
-    color: var(--text-primary);
-    font-weight: 600;
-    display: inline-block;
-    min-width: 70px;
-}
-
-.card-info .status-name {
-    font-weight: 700;
-}
-.card-info .status-screening {
-    color: var(--accent-purple);
-}
-.card-info .status-hold {
-    color: var(--accent-orange);
-}
-
-
-.notes-box {
-    background: var(--secondary-bg);
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 15px;
-    border-left: 3px solid var(--accent-cyan);
-    height: 80px;
-    overflow-y: auto;
-}
-
-.notes-title {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
-    color: var(--accent-cyan);
-    margin-bottom: 5px;
-}
-
-.notes-text {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-style: italic;
-    margin: 0;
-}
-
-.card-actions {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
-}
-
-.actions-title {
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: 10px;
-    margin-top: 0;
-}
-
-.decision-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-/* Base button style for all actions */
-.card-actions button {
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+    gap: 0; /* No space between rows */
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
     box-shadow: var(--shadow);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border: none;
+    border: 1px solid var(--border-color);
 }
 
-/* Primary Action: Approve & Submit */
-.btn-submit {
-    background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
-    color: white;
-    box-shadow: 0 4px 12px rgba(158, 206, 106, 0.4);
-}
-.btn-submit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(158, 206, 106, 0.6);
-}
-
-/* Comment & Decision Button (unified action) */
-.btn-comment {
-    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-    color: white;
-    box-shadow: 0 4px 12px rgba(187, 154, 247, 0.4);
-    margin-top: 10px;
-}
-.btn-comment:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(187, 154, 247, 0.6);
-}
-
-/* Modal specific decision buttons */
-.decision-buttons-grid {
+/* Definition of the horizontal row structure (the 'file view') */
+.review-list-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* Columns: Name/Icons | Role/Client | Recruiter | Status | Stage | Actions */
+    grid-template-columns: 2fr 1.5fr 1fr 0.8fr 1fr 1.2fr; 
     gap: 15px;
-    margin-top: 25px;
-    padding-top: 25px;
-    border-top: 1px solid var(--border-color);
-}
-.decision-btn {
-    padding: 15px;
-    border-radius: 8px;
-    font-weight: 700;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+    transition: background-color 0.2s;
     cursor: pointer;
-    transition: all 0.2s;
+    min-height: 50px;
+    
+    /* LEFT BORDER URGENCY INDICATOR */
+    border-left: 5px solid var(--secondary-bg); 
+}
+
+.review-list-row:hover {
+    background: var(--hover-bg);
+}
+
+/* URGENCY BORDERS */
+.review-list-row.critical-aging { border-left-color: var(--accent-pink); } /* CRITICAL (7+ days on Hold) */
+.review-list-row.warning-aging { border-left-color: var(--accent-orange); } /* WARNING (5+ days on Hold) */
+.review-list-row.status-screening { border-left-color: var(--accent-purple); } /* New Screening */
+.review-list-row.status-reject { opacity: 0.7; } /* Dims rejected rows */
+
+
+/* --- CELL STYLES --- */
+
+.candidate-name-cell-review {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    font-size: 15px;
+}
+
+.role-cell-review {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.client-name-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.recruiter-cell-review, .stage-cell-review {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.status-cell-review {
+    font-size: 14px;
+}
+
+.status-name {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.status-name.status-screening { background: var(--accent-purple); color: white; }
+.status-name.status-hold { background: var(--accent-orange); color: white; }
+.status-name.status-reject { background: var(--accent-pink); color: white; }
+
+/* QUICK ACTION BUTTONS */
+.actions-cell-review {
+    display: flex;
     gap: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    justify-content: flex-end;
 }
 
-.decision-btn.btn-hold { background: var(--accent-orange); color: white; }
-.decision-btn.btn-reject { background: var(--accent-pink); color: white; }
-.decision-btn.btn-comment-only { 
-    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+.btn-submit-quick, .btn-comment-quick {
+    padding: 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     color: white;
-    grid-column: 1 / -1;
+}
+.btn-submit-quick {
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+}
+.btn-comment-quick {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+}
+.btn-submit-quick:hover, .btn-comment-quick:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+/* --- END FILE VIEW / LIST VIEW STYLES --- */
+
+
+/* --- MODAL STYLES FIXES (PRIMARY FOCUS) --- */
+
+/* New class for extra large modal size for decision making */
+.modal-wide-decision { 
+    max-width: 900px !important; 
+    width: 95%; 
 }
 
-
-/* General Modal Styles */
+/* General Modal Container */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -325,21 +211,51 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   border: 1px solid var(--border-color);
 }
-.modal-large {
-    max-width: 750px;
+
+/* Quick Reply Form Row Fix */
+.modal-content .form-row {
+    /* Kept 1fr 1fr grid, but added padding/margin adjustments below */
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 0; 
+    align-items: flex-start;
 }
 
-.notification-alert {
-    position: fixed;
-    top: 30px;
-    right: 30px;
-    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-    color: white;
-    padding: 15px 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    z-index: 2000;
-    font-weight: 600;
+/* Fix for Select/Dropdowns inside the Modal to ensure full width */
+.modal-content .form-group select {
+    width: 100%;
+    min-width: unset; 
+    white-space: normal;
+    height: auto; 
+    min-height: 44px;
+}
+
+/* --- Keep existing styles for other elements --- */
+
+/* NEW ICON STYLES (Combined) */
+.icon-view-details, .icon-resume-link { /* Binoculars and Resume icons */
+    color: var(--accent-purple); /* Default color for both */
+    cursor: pointer;
+    transition: color 0.2s;
+    flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+.icon-resume-link {
+    color: var(--accent-green); /* Distinct color for the file link */
+}
+
+.icon-view-details:hover {
+    color: var(--accent-pink);
+}
+
+.icon-resume-link:hover {
+    color: var(--accent-cyan); 
+}
+/* --- END NEW ICON STYLES --- */
+
+/* General Modal Styles (Kept for other modals) */
+.modal-large {
+    max-width: 750px;
 }
 
 /* Comment History Section Styling */
@@ -348,52 +264,94 @@
     padding-top: 20px;
     border-top: 1px solid var(--border-color);
 }
-.comments-list h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: var(--accent-purple);
-    font-size: 18px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+
+/* --- SIDEBAR STYLES (Kept from last version) --- */
+.info-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: flex-end;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
 }
-.comment-item {
+
+.info-sidebar {
+    width: 400px;
+    max-width: 90%;
+    background: var(--card-bg);
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    height: 100%;
+    overflow-y: auto;
+    animation: slideIn 0.3s forwards;
+    border-left: 3px solid var(--accent-cyan);
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.sidebar-header-custom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.sidebar-header-custom h2 {
+    margin: 0;
+    color: var(--accent-purple);
+    font-size: 24px;
+}
+
+.btn-close-sidebar {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 30px;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.btn-close-sidebar:hover {
+    color: var(--accent-pink);
+}
+
+.sidebar-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.skills-full-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skill-tag-full {
+    background: var(--secondary-bg);
+    color: var(--accent-green);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--accent-green);
+}
+
+.notes-text-large {
     background: var(--secondary-bg);
     padding: 15px;
     border-radius: 8px;
-    margin-bottom: 10px;
     border-left: 4px solid var(--accent-purple);
-}
-.comment-item strong {
-    color: var(--accent-cyan);
-    font-size: 15px;
-}
-.comment-date {
-    color: var(--text-muted);
-    font-size: 12px;
-}
-.comment-text {
-    font-size: 13px;
-    color: var(--text-secondary);
     white-space: pre-wrap;
 }
-
-/* New: Comment actions for edit/delete */
-.comment-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-    justify-content: flex-end;
-}
-.comment-actions button {
-    padding: 6px 10px;
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    background: var(--secondary-bg);
-    color: var(--text-secondary);
-}
-.comment-actions button:hover {
-    background: var(--hover-bg);
-    border-color: var(--accent-blue);
-}
+/* --- END SIDEBAR STYLES --- */

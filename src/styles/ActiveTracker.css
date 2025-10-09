@@ -138,8 +138,7 @@
   border-bottom: none;
 }
 
-/* REMOVED: .pipeline-row.status-hold, .pipeline-row.status-reject, etc. opacity rules */
-
+/* --- NEW ICON STYLE --- */
 .candidate-name-cell {
   display: flex;
   align-items: center;
@@ -150,6 +149,17 @@
   color: var(--accent-cyan);
   font-size: 15px;
 }
+
+.icon-view-details, .icon-view-details-kanban {
+    color: var(--accent-purple);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.icon-view-details:hover, .icon-view-details-kanban:hover {
+    color: var(--accent-pink);
+}
+/* --- END NEW ICON STYLE --- */
 
 .stage-select,
 .status-select {
@@ -774,3 +784,114 @@
   border: 1px solid #ff4d4d !important; 
   animation: ripple-small 1.5s infinite ease-in-out;
 }
+
+/* --- NEW INFO SIDEBAR STYLES --- */
+.info-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: flex-end;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.info-sidebar {
+    width: 400px; /* Fixed width */
+    max-width: 90%;
+    background: var(--card-bg);
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    height: 100%;
+    overflow-y: auto;
+    animation: slideIn 0.3s forwards;
+    border-left: 3px solid var(--accent-cyan);
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.sidebar-header-custom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.sidebar-header-custom h2 {
+    margin: 0;
+    color: var(--accent-purple);
+    font-size: 24px;
+}
+
+.btn-close-sidebar {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 30px;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.btn-close-sidebar:hover {
+    color: var(--accent-pink);
+}
+
+.sidebar-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.sidebar-section h3 {
+    color: var(--accent-cyan);
+    font-size: 16px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-section p, .sidebar-section a {
+    margin: 8px 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.sidebar-section strong {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.skills-full-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skill-tag-full {
+    background: var(--secondary-bg);
+    color: var(--accent-green);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--accent-green);
+}
+
+.notes-text-large {
+    background: var(--secondary-bg);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-purple);
+    white-space: pre-wrap;
+}
+/* --- END NEW INFO SIDEBAR STYLES --- */

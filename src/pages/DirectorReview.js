@@ -1,17 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
-import { Clock, CheckCircle, XCircle, PauseCircle, MessageSquare, AlertTriangle } from 'lucide-react'; // Added AlertTriangle
+import { Clock, CheckCircle, XCircle, PauseCircle, MessageSquare, AlertTriangle, Binoculars, FileText } from 'lucide-react'; 
 import '../styles/DirectorReview.css';
 
 // --- Configuration ---
-// Thresholds for the urgency tracker (in days)
 const URGENT_THRESHOLD_DAYS = 5;
 const SUPER_URGENT_THRESHOLD_DAYS = 7;
-// Email of the Director (used for access control and comment author)
 const DIRECTOR_EMAIL = 'brian.griffiths@brydongama.com'; 
 
-// Specialized Quick Reply Templates
+// Specialized Quick Reply Templates (KEPT for reference, but quick replies removed from UI per user request)
 const quickReplySets = {
     HOLD: [
         "Need clarification on salary expectations; please check in with the candidate.",
@@ -29,15 +27,74 @@ const quickReplySets = {
     ]
 };
 
-// --- Component: Urgency Badge ---
+// ====================================================================
+// --- HELPER COMPONENTS (Defined FIRST to avoid react/jsx-no-undef) ---
+// ====================================================================
+
+// --- COMPONENT: Info Sidebar for Candidate Details ---
+const InfoSidebar = ({ candidate, onClose }) => {
+    if (!candidate) return null;
+    
+    const skillsArray = candidate.skills ? candidate.skills.split(',').map(s => s.trim()).filter(s => s) : [];
+
+    return (
+        <div className="info-sidebar-overlay" onClick={onClose}>
+            <div className="info-sidebar" onClick={(e) => e.stopPropagation()}>
+                <div className="sidebar-header-custom">
+                    <h2>Candidate Deep Dive</h2>
+                    <button onClick={onClose} className="btn-close-sidebar" type="button">&times;</button>
+                </div>
+                
+                <div className="sidebar-section">
+                    <h3>Personal Info</h3>
+                    <p><strong>Name:</strong> {candidate.name}</p>
+                    <p><strong>Email:</strong> {candidate.email}</p>
+                    <p><strong>Phone:</strong> {candidate.phone || 'N/A'}</p>
+                    <p><strong>Location:</strong> {candidate.location || 'N/A'}</p>
+                    <p><strong>LinkedIn:</strong> {candidate.linkedin_url ? 
+                        <a href={candidate.linkedin_url} target="_blank" rel="noopener noreferrer" className="btn-link">View Profile</a> : 'N/A'}
+                    </p>
+                </div>
+
+                <div className="sidebar-section">
+                    <h3>Resume Link</h3>
+                    {candidate.resume_url ? (
+                        <a href={candidate.resume_url} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{display: 'block', textAlign: 'center', margin: '15px 0'}}>
+                            View Original Document
+                        </a>
+                    ) : (
+                        <p>No original resume file link available.</p>
+                    )}
+                </div>
+
+                <div className="sidebar-section">
+                    <h3>Skills & Keywords ({skillsArray.length})</h3>
+                    <div className="skills-full-list">
+                        {skillsArray.length > 0 ? skillsArray.map((skill, index) => (
+                            <span key={index} className="skill-tag-full">{skill}</span>
+                        )) : <p>No skills recorded.</p>}
+                    </div>
+                </div>
+
+                <div className="sidebar-section">
+                    <h3>Recruiter Notes</h3>
+                    <p className="notes-text-large">{candidate.notes || 'No detailed notes provided.'}</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+// --- END INFO SIDEBAR COMPONENT ---
+
+
+// --- COMPONENT: Urgency Badge ---
 const UrgencyBadge = ({ dateString }) => {
     const diffTime = Math.abs(new Date() - new Date(dateString));
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    let style = "urgent-standard"; // Default style for non-urgent active review
+    let style = "urgent-standard"; 
     let text = `Updated: ${diffDays} days ago`;
 
-    // Highlight Hold candidates based on aging logic
     if (diffDays >= SUPER_URGENT_THRESHOLD_DAYS) {
         style = "urgent-critical";
         text = `CRITICAL: ${diffDays} Days!`;
@@ -54,7 +111,7 @@ const UrgencyBadge = ({ dateString }) => {
     );
 };
 
-// --- Component: Decision Modal (Refactored to enforce feedback) ---
+// --- COMPONENT: Decision Modal ---
 const DecisionModal = ({ pipelineEntry, comments, onClose, onFinalDecision, onEdit, onDelete }) => {
     const { user } = useData();
     const [comment, setComment] = useState("");
@@ -63,28 +120,17 @@ const DecisionModal = ({ pipelineEntry, comments, onClose, onFinalDecision, onEd
     const [editingText, setEditingText] = useState('');
 
     const handleDecision = async (action, commentText) => {
-        // Enforce comment for Hold and Reject, but allow empty comment for "Comment Only" on a Hold candidate
         const isHoldOrReject = action === "Hold" || action === "Reject";
         if (isHoldOrReject && !commentText.trim()) return alert(`Feedback is required to ${action} the candidate.`);
         if (action === "Comment Only" && !commentText.trim()) {
-             // If they hit comment only with no text, we just close the modal and do nothing.
              onClose();
              return;
         }
 
         setIsSubmitting(true);
-        // Call the unified handler with the action and comment
         await onFinalDecision(pipelineEntry, action, commentText);
         setIsSubmitting(false);
-        onClose(); // Close after submission
-    };
-
-    const handleQuickReply = (e) => {
-        const value = e.target.value;
-        if (value) {
-            setComment(value);
-            e.target.value = ""; // Reset dropdown
-        }
+        onClose(); 
     };
     
     const handleEditComment = (comment) => { setEditingComment(comment); setEditingText(comment.comment_text); };
@@ -98,8 +144,6 @@ const DecisionModal = ({ pipelineEntry, comments, onClose, onFinalDecision, onEd
     };
     
     const handleDeleteComment = (commentId) => {
-        // IMPORTANT: window.confirm() must be replaced with a custom modal in production React apps.
-        // Keeping it here for simplicity given the existing use of alert().
         if (window.confirm('Are you sure you want to delete this comment?')) {
             onDelete(commentId, pipelineEntry.candidates.id);
         }
@@ -107,53 +151,29 @@ const DecisionModal = ({ pipelineEntry, comments, onClose, onFinalDecision, onEd
 
     const currentRecruiterName = pipelineEntry.recruiters?.name || 'Recruiter';
     
-    // Filter comments: Only show comments relevant to the current decision (Hold status)
-    // We filter by checking if the comment text contains "Hold" or "hold". 
     const filteredComments = pipelineEntry.status === 'Hold' 
         ? comments.filter(c => c.comment_text.toLowerCase().includes('hold') || c.comment_text.toLowerCase().includes('reject')) 
         : comments;
     
-    // Feedback is MANDATORY only if the current status is not Hold (i.e., it's a new decision being made from Screening)
-    const decisionFeedbackRequired = pipelineEntry.status !== 'Hold'; 
-    
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content modal-wide-decision" onClick={(e) => e.stopPropagation()}> 
                 <h2>Review & Decide for {pipelineEntry.candidates?.name}</h2>
                 <p className="modal-candidate-info">Role: <strong>{pipelineEntry.positions.title}</strong>, Recruiter: <strong>{currentRecruiterName}</strong></p>
 
                 <div className="comments-section">
                     
                     <div className="form-card" style={{borderLeft: '4px solid var(--accent-purple)'}}>
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Quick Reply: Hold Reasons</label>
-                                <select onChange={handleQuickReply} defaultValue="">
-                                    <option value="" disabled>Select a Hold reason...</option>
-                                    {quickReplySets.HOLD.map((reply, index) => (
-                                        <option key={`hold-${index}`} value={reply}>{reply.substring(0, 50)}...</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Quick Reply: Reject Reasons</label>
-                                <select onChange={handleQuickReply} defaultValue="">
-                                    <option value="" disabled>Select a Reject reason...</option>
-                                    {quickReplySets.REJECT.map((reply, index) => (
-                                        <option key={`reject-${index}`} value={reply}>{reply.substring(0, 50)}...</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
+                        {/* Quick Replies removed as requested */}
 
                         <div className="form-group">
-                            <label>Director's Feedback/Decision Notes {decisionFeedbackRequired ? '*' : '(Optional for Hold status)'}</label>
+                            <label>Director's Feedback/Decision Notes *</label>
                             <textarea
-                                rows="5"
+                                rows="8" // Increased rows for more space
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
                                 placeholder="Enter your decision feedback here. This will be sent to the recruiter."
-                                required={decisionFeedbackRequired}
+                                required
                                 disabled={isSubmitting}
                                 id="decision-notes-textarea"
                             />
@@ -164,7 +184,7 @@ const DecisionModal = ({ pipelineEntry, comments, onClose, onFinalDecision, onEd
                                 type="button"
                                 onClick={() => handleDecision("Hold", comment)}
                                 className="decision-btn btn-hold"
-                                disabled={isSubmitting || (decisionFeedbackRequired && !comment.trim())}
+                                disabled={isSubmitting || !comment.trim()}
                             >
                                 <PauseCircle size={18} /> Hold & Notify
                             </button>
@@ -172,7 +192,7 @@ const DecisionModal = ({ pipelineEntry, comments, onClose, onFinalDecision, onEd
                                 type="button"
                                 onClick={() => handleDecision("Reject", comment)}
                                 className="decision-btn btn-reject"
-                                disabled={isSubmitting || (decisionFeedbackRequired && !comment.trim())}
+                                disabled={isSubmitting || !comment.trim()}
                             >
                                 <XCircle size={18} /> Reject & Notify
                             </button>
@@ -231,59 +251,82 @@ const DecisionModal = ({ pipelineEntry, comments, onClose, onFinalDecision, onEd
     );
 };
 
-// --- Component: Candidate Review Card ---
-const CandidateReviewCard = ({ candidate, onAction, onDecisionModal }) => {
+
+// --- COMPONENT: Candidate Review Row (New Condensed View) ---
+const CandidateReviewRow = ({ candidate, onAction, onDecisionModal, onOpenSidebar }) => { 
     
-    const isHold = candidate.status === 'Hold';
+    const diffTime = Math.abs(new Date() - new Date(candidate.updated_at));
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    let urgencyClass = '';
     
+    if (candidate.status === 'Hold') {
+        if (diffDays >= SUPER_URGENT_THRESHOLD_DAYS) {
+            urgencyClass = 'critical-aging';
+        } else if (diffDays >= URGENT_THRESHOLD_DAYS) {
+            urgencyClass = 'warning-aging';
+        }
+    }
+
     return (
-        <div className={`candidate-card ${isHold ? 'card-on-hold' : ''}`}>
-            <div>
-                <div className="card-header">
-                    <h3 className="card-title">{candidate.candidates?.name || 'N/A'}</h3>
-                    {/* The urgency badge is now more useful for Hold candidates */}
-                    <UrgencyBadge dateString={candidate.updated_at} /> 
-                </div>
-                
-                <div className="card-info">
-                    <p><strong>Role:</strong> {candidate.positions?.title || 'N/A'}</p>
-                    <p><strong>Client:</strong> {candidate.positions?.clients?.company_name || 'N/A'}</p>
-                    <p><strong>Recruiter:</strong> {candidate.recruiters?.name || 'N/A'}</p>
-                    {/* Display status and stage */}
-                    <p><strong>Current Status:</strong> <span className={`status-name status-${candidate.status.toLowerCase()}`}>{candidate.status}</span></p>
-                    <p><strong>Current Stage:</strong> <span className={`stage-name status-${candidate.stage.toLowerCase().replace(/\s/g, '-')}`}>{candidate.stage}</span></p>
-                </div>
-
-                <div className="notes-box">
-                    <p className="notes-title">Candidate Notes</p>
-                    <p className="notes-text">{candidate.candidates?.notes || 'No detailed notes provided by recruiter.'}</p>
-                </div>
+        <div className={`review-list-row status-${candidate.status.toLowerCase()} ${urgencyClass}`}>
+            
+            {/* 1. Candidate Name / Icons */}
+            <div className="candidate-name-cell-review">
+                <strong>{candidate.candidates?.name || 'N/A'}</strong>
+                {candidate.candidates?.resume_url && (
+                    <a href={candidate.candidates.resume_url} target="_blank" rel="noopener noreferrer" className="icon-resume-link" onClick={(e) => e.stopPropagation()} title="View Resume File">
+                        <FileText size={18} />
+                    </a>
+                )}
+                <Binoculars size={18} className="icon-view-details" onClick={(e) => { e.stopPropagation(); onOpenSidebar(candidate.candidates); }} title="View Parsed Details" />
             </div>
-
-            <div className="card-actions">
-                <h4 className="actions-title">Director Actions:</h4>
-                <div className="decision-grid" style={{gridTemplateColumns: '1fr'}}>
-                    {/* Primary Action: Approve & Submit - Only visible for Screening candidates */}
-                    {candidate.stage === 'Screening' && (
-                        <button
-                            onClick={() => onAction(candidate, "Submit to Client")}
-                            className="btn-submit"
-                        >
-                            <CheckCircle size={18} className="nav-icon" /> Approve & Submit
-                        </button>
-                    )}
-                    {/* The main decision/feedback button */}
-                    <button
-                        onClick={() => onDecisionModal(candidate)}
-                        className="btn-comment"
-                    >
-                        <MessageSquare size={18} className="nav-icon" /> Provide Feedback & Decide
-                    </button>
-                </div>
+            
+            {/* 2. Role / Client */}
+            <div className="role-cell-review">
+                {candidate.positions?.title || 'N/A'}
+                <span className="client-name-sub">({candidate.positions?.clients?.company_name || 'N/A'})</span>
+            </div>
+            
+            {/* 3. Recruiter */}
+            <div className="recruiter-cell-review">
+                {candidate.recruiters?.name || 'N/A'}
+            </div>
+            
+            {/* 4. Status */}
+            <div className="status-cell-review">
+                 <span className={`status-name status-${candidate.status.toLowerCase()}`}>{candidate.status}</span>
+            </div>
+            
+            {/* 5. Stage */}
+            <div className="stage-cell-review">
+                 {candidate.stage}
+            </div>
+            
+            {/* 6. Quick Actions */}
+            <div className="actions-cell-review">
+                 {/* Quick Approve Button (Submit to Client) */}
+                 {candidate.stage === 'Screening' && (
+                     <button
+                         onClick={(e) => { e.stopPropagation(); onAction(candidate, "Submit to Client"); }}
+                         className="btn-submit-quick"
+                         title="Approve & Submit to Client"
+                     >
+                         <CheckCircle size={18} />
+                     </button>
+                 )}
+                 {/* Feedback/Decision Button */}
+                 <button
+                     onClick={(e) => { e.stopPropagation(); onDecisionModal(candidate); }}
+                     className="btn-comment-quick"
+                     title="Provide Feedback & Decide"
+                 >
+                     <MessageSquare size={18} />
+                 </button>
             </div>
         </div>
     );
 };
+
 
 // --- Main Page Component ---
 function DirectorReview() {
@@ -295,6 +338,9 @@ function DirectorReview() {
     const [alertMessage, setAlertMessage] = useState(null);
     const [comments, setComments] = useState([]);
     
+    const [showInfoSidebar, setShowInfoSidebar] = useState(false);
+    const [sidebarCandidate, setSidebarCandidate] = useState(null); 
+
     const [actionModal, setActionModal] = useState({ isOpen: false, candidate: null, action: null });
 
     const directorEmailClean = DIRECTOR_EMAIL.toLowerCase().trim();
@@ -311,11 +357,9 @@ function DirectorReview() {
 
     async function fetchCandidatesForReview() {
         setLoading(true);
-        // Fetch candidates that are in 'Screening' stage OR have 'Hold' status.
-        // We ensure that anyone marked 'Reject' or 'Submit to Client' is excluded from this list.
         const { data, error } = await supabase
             .from('pipeline')
-            .select('*, candidates(id, name, notes), positions(id, title, clients(company_name)), recruiters(id, name, email)')
+            .select('*, candidates(id, name, email, phone, location, linkedin_url, skills, notes, resume_url), positions(id, title, clients(company_name)), recruiters(id, name, email)')
             .or('stage.eq.Screening,status.eq.Hold')
             .not('status', 'eq', 'Reject') 
             .not('stage', 'eq', 'Submit to Client') 
@@ -331,16 +375,10 @@ function DirectorReview() {
     }
     
     const candidatesForReview = useMemo(() => {
-        // Core filtering logic to ensure no duplication:
-        
-        // 1. Get all candidates explicitly placed on Hold.
         const onHold = pipelineData.filter(p => p.status === 'Hold');
-        
-        // 2. Get all Screening candidates who are NOT already On Hold.
         const screening = pipelineData.filter(p => 
             p.stage === 'Screening' && p.status !== 'Hold'
         );
-        
         return {
             screening: screening,
             onHold: onHold,
@@ -360,6 +398,11 @@ function DirectorReview() {
             setComments(data || []);
         }
     }
+    
+    const handleOpenInfoSidebar = (candidate) => {
+        setSidebarCandidate(candidate);
+        setShowInfoSidebar(true);
+    };
 
     const showAlert = (message) => {
         setAlertMessage(message);
@@ -431,9 +474,8 @@ function DirectorReview() {
 
         if (isHold) {
             newStatus = "Hold";
-            // If currently not on hold and is in Screening, move to Hold status.
             if (pipelineEntry.stage === 'Screening') {
-                newStage = 'Screening'; // Keep stage at screening
+                newStage = 'Screening'; 
             }
             notificationType = 'status_change';
             notificationMessage = `Director put **${pipelineEntry.candidates.name}** on **Hold** for ${pipelineEntry.positions.title}. Feedback: "${comment.substring(0, 50)}..."`;
@@ -443,7 +485,6 @@ function DirectorReview() {
             notificationType = 'status_change';
             notificationMessage = `Director **Rejected** **${pipelineEntry.candidates.name}** for ${pipelineEntry.positions.title}. Feedback: "${comment.substring(0, 50)}..."`;
         } else if (isCommentOnly && !comment.trim()) {
-             // Already handled in the modal, but good for safety
              showAlert(`Comment was empty, no action taken.`);
              return;
         }
@@ -516,8 +557,6 @@ function DirectorReview() {
     };
     
     const handleDeleteComment = async (commentId, candidateId) => {
-        // IMPORTANT: window.confirm() must be replaced with a custom modal in production React apps.
-        // Keeping it here for simplicity given the existing use of alert().
         if (window.confirm('Are you sure you want to delete this comment?')) {
             const { error } = await supabase.from('comments').delete().eq('id', commentId);
             if (error) {
@@ -602,13 +641,14 @@ function DirectorReview() {
                         <p>No new candidates awaiting screening approval.</p>
                     </div>
                 ) : (
-                    <div className="review-grid">
+                    <div className="review-list-view">
                         {candidatesForReview.screening.map(candidate => (
-                            <CandidateReviewCard
+                            <CandidateReviewRow
                                 key={candidate.id}
                                 candidate={candidate}
                                 onAction={handleOpenActionModal}
                                 onDecisionModal={handleOpenDecisionModal}
+                                onOpenSidebar={handleOpenInfoSidebar} 
                             />
                         ))}
                     </div>
@@ -626,13 +666,14 @@ function DirectorReview() {
                         <p>No candidates are currently on hold.</p>
                     </div>
                 ) : (
-                    <div className="review-grid">
+                    <div className="review-list-view">
                         {candidatesForReview.onHold.map(candidate => (
-                            <CandidateReviewCard
+                            <CandidateReviewRow
                                 key={candidate.id}
                                 candidate={candidate}
                                 onAction={handleOpenActionModal}
                                 onDecisionModal={handleOpenDecisionModal}
+                                onOpenSidebar={handleOpenInfoSidebar} 
                             />
                         ))}
                     </div>
@@ -660,6 +701,9 @@ function DirectorReview() {
                     onDelete={handleDeleteComment}
                 />
             )}
+            
+            {/* RENDER INFO SIDEBAR */}
+            {showInfoSidebar && <InfoSidebar candidate={sidebarCandidate} onClose={() => setShowInfoSidebar(false)} />}
         </div>
     );
 }
