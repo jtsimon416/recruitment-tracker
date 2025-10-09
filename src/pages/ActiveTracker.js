@@ -3,14 +3,13 @@ import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
 import { useLocation } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Search, ChevronDown, ChevronUp, Binoculars } from 'lucide-react'; 
+import { Search, ChevronDown, ChevronUp, Binoculars, FileText } from 'lucide-react'; 
 import '../styles/ActiveTracker.css';
 
-// --- NEW COMPONENT: Info Sidebar for Candidate Details ---
+// --- COMPONENT: Info Sidebar for Candidate Details ---
 const InfoSidebar = ({ candidate, onClose }) => {
     if (!candidate) return null;
     
-    // Convert the comma-separated string back into a more readable array
     const skillsArray = candidate.skills ? candidate.skills.split(',').map(s => s.trim()).filter(s => s) : [];
 
     return (
@@ -18,7 +17,7 @@ const InfoSidebar = ({ candidate, onClose }) => {
             <div className="info-sidebar" onClick={(e) => e.stopPropagation()}>
                 <div className="sidebar-header-custom">
                     <h2>Candidate Deep Dive</h2>
-                    <button onClick={onClose} className="btn-close-sidebar" type="button">&times;</button> {/* FIX: Added type="button" */}
+                    <button onClick={onClose} className="btn-close-sidebar" type="button">&times;</button>
                 </div>
                 
                 <div className="sidebar-section">
@@ -46,9 +45,10 @@ const InfoSidebar = ({ candidate, onClose }) => {
                 <div className="sidebar-section">
                     <h3>Skills & Keywords ({skillsArray.length})</h3>
                     <div className="skills-full-list">
-                        {skillsArray.length > 0 ? skillsArray.map((skill, index) => (
-                            <span key={index} className="skill-tag-full">{skill}</span>
-                        )) : <p>No skills recorded.</p>}
+                        {skillsArray.length > 0 ?
+                            skillsArray.map((skill, index) => (
+                                <span key={index} className="skill-tag-full">{skill}</span>
+                            )) : <p>No skills recorded.</p>}
                     </div>
                 </div>
 
@@ -60,10 +60,9 @@ const InfoSidebar = ({ candidate, onClose }) => {
         </div>
     );
 };
-// --- END NEW COMPONENT ---
 
 function ActiveTracker() {
-  const { newCommentCandidateIds, clearCommentNotifications, user, createNotification, recruiters } = useData(); // Added recruiters
+  const { newCommentCandidateIds, clearCommentNotifications, user, createNotification, recruiters } = useData();
   const location = useLocation();
   
   const [pipeline, setPipeline] = useState([]);
@@ -78,10 +77,8 @@ function ActiveTracker() {
   const [editingText, setEditingText] = useState('');
   const [loading, setLoading] = useState(true);
   
-  // --- NEW STATE FOR SIDEBAR ---
   const [showInfoSidebar, setShowInfoSidebar] = useState(false);
   const [sidebarCandidate, setSidebarCandidate] = useState(null); 
-  // -----------------------------
 
   const [notificationModal, setNotificationModal] = useState({ isOpen: false, type: null, data: null });
   const [selectedPosition, setSelectedPosition] = useState('all');
@@ -106,6 +103,17 @@ function ActiveTracker() {
     loadData();
   }, []);
   
+  useEffect(() => {
+    if (location.state?.candidateId && location.state?.positionId) {
+      const matchingEntry = pipeline.find(
+        entry => entry.candidate_id === location.state.candidateId && entry.position_id === location.state.positionId
+      );
+      if (matchingEntry) {
+        setExpandedCard(matchingEntry.id);
+      }
+    }
+  }, [location.state, pipeline]);
+
   useEffect(() => {
     if (pendingMove) {
       const { pipelineId, newStage, oldStage, pipelineItem } = pendingMove;
@@ -132,238 +140,279 @@ function ActiveTracker() {
             setPipeline(prevPipeline =>
               prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: oldStage } : p))
             );
+          } else {
+            const pipelineItem = pipeline.find(p => p.id === pipelineId);
+            if (pipelineItem) {
+              await createNotification(
+                'stage_change',
+                DIRECTOR_EMAIL,
+                {
+                  candidateName: pipelineItem.candidates?.name,
+                  recruiterName: pipelineItem.recruiters?.name,
+                  positionTitle: pipelineItem.positions?.title,
+                  oldStage,
+                  newStage
+                }
+              );
+            }
           }
         };
         updateAndHandle();
       }
-      setPendingMove(null); 
+      setPendingMove(null);
     }
-  }, [pendingMove, user]);
-
-
+  }, [pendingMove, user, pipeline, DIRECTOR_EMAIL, createNotification]);
+  
   async function fetchPipeline() {
-    // FIX: Add filter to prevent candidates with NULL position_id (the "Unknown Position" issue) from appearing
-    const { data: pipelineData, error: pipelineError } = await supabase.from('pipeline')
-      .select('*, candidates(*), positions(*, clients(*)), recruiters(*)')
-      .not('position_id', 'is', null) // <--- THIS IS THE FILTER FIX
-      .order('created_at', { ascending: false });
-      
-    if (pipelineError) console.error('Error fetching pipeline:', pipelineError);
-    else setPipeline(pipelineData || []);
-  }
+    const { data, error } = await supabase
+      .from('pipeline')
+      .select(`
+        *,
+        candidates (*),
+        positions (*),
+        recruiters (*)
+      `)
+      .neq('stage', 'Archived')
+      .not('positions', 'is', null);
 
+    if (error) {
+      console.error('Error fetching pipeline:', error);
+    } else {
+      setPipeline(data || []);
+    }
+  }
+  
   async function fetchPositions() {
-    const { data, error } = await supabase.from('positions').select('*').eq('status', 'Open').order('title');
-    if (error) console.error('Error fetching positions:', error);
-    else setPositions(data || []);
+    const { data, error } = await supabase
+      .from('positions')
+      .select('*')
+      .eq('status', 'Open')
+      .order('title');
+    
+    if (error) {
+      console.error('Error fetching positions:', error);
+    } else {
+      setPositions(data || []);
+    }
   }
-
+  
+  async function updateCandidateStage(id, newStage) {
+    const { error } = await supabase
+      .from('pipeline')
+      .update({ stage: newStage })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating stage:', error);
+      alert('Error updating stage: ' + error.message);
+      return false;
+    } else {
+      await fetchPipeline();
+      return true;
+    }
+  }
+  
+  async function updateCandidateStatus(id, newStatus) {
+    const { error } = await supabase
+      .from('pipeline')
+      .update({ status: newStatus })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating status:', error);
+      alert('Error updating status: ' + error.message);
+    } else {
+      await fetchPipeline();
+    }
+  }
+  
+  async function removeCandidateFromPipeline(id) {
+    const { error } = await supabase
+      .from('pipeline')
+      .update({ stage: 'Archived' })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error removing candidate:', error);
+      alert('Error removing candidate: ' + error.message);
+    } else {
+      await fetchPipeline();
+      setConfirmDeleteId(null);
+    }
+  }
+  
+  const handleStageChange = (pipelineId, newStage) => {
+    const pipelineItem = pipeline.find(p => p.id === pipelineId);
+    if (!pipelineItem) return;
+    
+    const oldStage = pipelineItem.stage;
+    setPipeline(prevPipeline =>
+      prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: newStage } : p))
+    );
+    
+    setPendingMove({ pipelineId, newStage, oldStage, pipelineItem });
+  };
+  
+  const handleStatusChange = (id, newStatus) => {
+    setPipeline(prevPipeline =>
+      prevPipeline.map(p => (p.id === id ? { ...p, status: newStatus } : p))
+    );
+    updateCandidateStatus(id, newStatus);
+  };
+  
+  const handleRemove = (id) => {
+    if (confirmDeleteId === id) {
+      removeCandidateFromPipeline(id);
+    } else {
+      setConfirmDeleteId(id);
+    }
+  };
+  
+  const handleOpenInfoSidebar = (candidate) => {
+    setSidebarCandidate(candidate);
+    setShowInfoSidebar(true);
+  };
+  
+  const openCommentsModal = async (pipelineEntry) => {
+    setSelectedPipelineEntry(pipelineEntry);
+    setShowCommentsModal(true);
+    await fetchComments(pipelineEntry.candidate_id);
+    clearCommentNotifications(pipelineEntry.candidate_id);
+  };
+  
   async function fetchComments(candidateId) {
-    const { data, error } = await supabase.from('comments').select('*').eq('candidate_id', candidateId).order('created_at', { ascending: false });
-    if (error) console.error('Error fetching comments:', error);
-    else setComments(data || []);
+    const { data, error } = await supabase
+      .from('comments')
+      .select('*, recruiters(*)')
+      .eq('candidate_id', candidateId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching comments:', error);
+    } else {
+      setComments(data || []);
+    }
   }
-
+  
+  async function handleAddComment(e) {
+    e.preventDefault();
+    if (!commentData.comment_text.trim()) return;
+    
+    const { error } = await supabase
+      .from('comments')
+      .insert([{
+        candidate_id: selectedPipelineEntry.candidate_id,
+        recruiter_id: user.id,
+        comment_text: commentData.comment_text
+      }]);
+    
+    if (error) {
+      alert('Error adding comment: ' + error.message);
+    } else {
+      setCommentData({ comment_text: '' });
+      await fetchComments(selectedPipelineEntry.candidate_id);
+    }
+  }
+  
   const filteredAndSortedPipeline = useMemo(() => {
-    let filtered = [...pipeline];
-    if (selectedPosition !== 'all') filtered = filtered.filter(p => p.position_id === selectedPosition);
-    if (selectedRecruiter !== 'all') filtered = filtered.filter(p => p.recruiter_id === parseInt(selectedRecruiter));
-    if (selectedStatus !== 'all') filtered = filtered.filter(p => (p.status || 'Active') === selectedStatus);
-    if (selectedStage !== 'all') filtered = filtered.filter(p => p.stage === selectedStage);
+    let filtered = pipeline;
+    
+    if (selectedPosition !== 'all') {
+      filtered = filtered.filter(p => p.position_id === selectedPosition);
+    }
+    
+    if (selectedRecruiter !== 'all') {
+      filtered = filtered.filter(p => p.recruiter_id === selectedRecruiter);
+    }
+    
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(p => p.status === selectedStatus);
+    }
+    
+    if (selectedStage !== 'all') {
+      filtered = filtered.filter(p => p.stage === selectedStage);
+    }
+    
     if (sortConfig.key) {
       filtered.sort((a, b) => {
-        if (sortConfig.key === 'stage') {
-          const aIndex = stages.indexOf(a.stage);
-          const bIndex = stages.indexOf(b.stage);
-          if (aIndex < bIndex) return sortConfig.direction === 'ascending' ? -1 : 1;
-          if (aIndex > bIndex) return sortConfig.direction === 'ascending' ? 1 : -1;
-          return 0;
+        let aValue, bValue;
+        
+        if (sortConfig.key === 'candidates.name') {
+          aValue = a.candidates?.name || '';
+          bValue = b.candidates?.name || '';
+        } else if (sortConfig.key === 'recruiters.name') {
+          aValue = a.recruiters?.name || '';
+          bValue = b.recruiters?.name || '';
+        } else {
+          aValue = a[sortConfig.key] || '';
+          bValue = b[sortConfig.key] || '';
         }
-        const getNestedValue = (obj, path) => path.split('.').reduce((o, k) => (o || {})[k], obj);
-        const aValue = getNestedValue(a, sortConfig.key);
-        const bValue = getNestedValue(b, sortConfig.key);
+        
         if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
         return 0;
       });
     }
+    
     return filtered;
   }, [pipeline, selectedPosition, selectedRecruiter, selectedStatus, selectedStage, sortConfig]);
-
+  
   const requestSort = (key) => {
     let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') direction = 'descending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
     setSortConfig({ key, direction });
   };
   
   const getSortIndicator = (key) => {
-    if (sortConfig.key !== key) return ' ';
-    return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
+    if (sortConfig.key !== key) return null;
+    return sortConfig.direction === 'ascending' ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
   };
   
-  const updateCandidateStage = async (pipelineId, newStage) => {
-    const { error } = await supabase
-      .from('pipeline')
-      .update({ stage: newStage, updated_at: new Date().toISOString() })
-      .eq('id', pipelineId);
-      
-    if (error) {
-      console.error('[DB] Error updating stage:', error.message);
-      alert('Error updating stage. Reverting change.');
-      return false;
-    }
-    return true;
-  };
-
-  const handleStageChange = (pipelineId, newStage) => {
-    const pipelineItem = pipeline.find(p => p.id === pipelineId);
-    if (!pipelineItem || pipelineItem.stage === newStage) return;
-
-    const updatedPipeline = pipeline.map(p => p.id === pipelineId ? { ...p, stage: newStage } : p);
-    setPipeline(updatedPipeline);
-
-    setPendingMove({ pipelineId, newStage, oldStage: pipelineItem.stage, pipelineItem });
-  };
-  
-  const handleOnDragEnd = (result) => {
+  const handleDragEnd = (result) => {
     const { destination, source, draggableId } = result;
-
     if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
       return;
     }
-
-    const pipelineIdAsString = draggableId; 
     
-    const pipelineItem = pipeline.find(p => p.id.toString() === pipelineIdAsString);
-
-    if (!pipelineItem) {
-        console.error(`[DRAG END] Could not find pipeline item with ID: ${pipelineIdAsString}. Aborting.`);
-        return;
-    }
-
     const newStage = destination.droppableId;
+    const pipelineId = draggableId;
+    const pipelineItem = pipeline.find(p => p.id === pipelineId);
+    
+    if (!pipelineItem) return;
+    
     const oldStage = pipelineItem.stage;
-
-    if (newStage === oldStage) {
-      return;
-    }
-
-    const updatedPipeline = pipeline.map(p => 
-      p.id.toString() === pipelineIdAsString ? { ...p, stage: newStage } : p
+    setPipeline(prevPipeline =>
+      prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: newStage } : p))
     );
-    setPipeline(updatedPipeline);
     
-    setPendingMove({ 
-      pipelineId: pipelineItem.id, 
-      newStage, 
-      oldStage, 
-      pipelineItem 
-    });
+    setPendingMove({ pipelineId, newStage, oldStage, pipelineItem });
   };
 
-  const handleStatusChange = async (pipelineId, newStatus) => {
-    const { error } = await supabase.from('pipeline').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', pipelineId);
-    if (error) alert('Error updating status: ' + error.message);
-    else fetchPipeline();
-  };
-
-  const handleRemove = async (pipelineId) => {
-    if (confirmDeleteId !== pipelineId) {
-      setConfirmDeleteId(pipelineId);
-      setTimeout(() => setConfirmDeleteId(null), 3000);
-      return;
+  const confirmStageChange = async () => {
+    const { pipelineId, newStage, oldStage, candidateName, recruiterName, recruiterEmail, positionTitle } = notificationModal.data;
+    const success = await updateCandidateStage(pipelineId, newStage);
+    if (success) {
+      await createNotification('stage_change_director', recruiterEmail, { candidateName, oldStage, newStage, positionTitle });
+    } else {
+      setPipeline(prevPipeline =>
+        prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: oldStage } : p))
+      );
     }
-    const { error } = await supabase.from('pipeline').delete().eq('id', pipelineId);
-    if (error) alert('Error removing from pipeline: ' + error.message);
-    else fetchPipeline();
-    setConfirmDeleteId(null);
-  };
-  
-  const openCommentsModal = async (pipelineEntry) => {
-    setSelectedPipelineEntry(pipelineEntry);
-    await fetchComments(pipelineEntry.candidate_id);
-    setCommentData({ comment_text: '' });
-    clearCommentNotifications(pipelineEntry.candidate_id);
-    setShowCommentsModal(true);
-  };
-  
-  // --- NEW HANDLER ---
-  const handleOpenInfoSidebar = (candidate) => {
-    setSidebarCandidate(candidate);
-    setShowInfoSidebar(true);
-  };
-  // -------------------
-
-  const handleAddComment = async (e) => {
-    e.preventDefault();
-    if (!commentData.comment_text) return;
-    
-    const currentUser = recruiters.find(r => r.email === user?.email);
-    const authorName = currentUser ? currentUser.name : user?.email;
-
-    if (!authorName) {
-        alert('Could not identify user. Please log in again.');
-        return;
-    }
-
-    const { data, error } = await supabase.from('comments').insert([{
-      candidate_id: selectedPipelineEntry.candidate_id,
-      author_name: authorName,
-      comment_text: commentData.comment_text
-    }]).select().single();
-
-    if (error) { alert('Error adding comment: ' + error.message); return; }
-
-    setCommentData({ comment_text: '' });
-    fetchComments(selectedPipelineEntry.candidate_id);
-
-    const isDirector = user?.email === DIRECTOR_EMAIL;
-    if (isDirector) {
-      setNotificationModal({
-        isOpen: true, type: 'comment',
-        data: {
-          comment: data,
-          candidateName: selectedPipelineEntry.candidates?.name,
-          recruiterName: selectedPipelineEntry.recruiters?.name,
-          recruiterEmail: selectedPipelineEntry.recruiters?.email,
-          positionTitle: selectedPipelineEntry.positions?.title
-        }
-      });
-    }
-  };
-
-  const handleNotificationConfirm = async () => {
-    const { type, data } = notificationModal;
     setNotificationModal({ isOpen: false, type: null, data: null });
-
-    if (type === 'stage_change') {
-      const success = await updateCandidateStage(data.pipelineId, data.newStage);
-      if (success) {
-        await createNotification({ type: 'stage_change', message: `Candidate ${data.candidateName} was moved from '${data.oldStage}' to '${data.newStage}' for the ${data.positionTitle} role.`, recipient: data.recruiterEmail });
-        alert(`Recruiter has been notified of the stage change.`);
-      } else {
-        setPipeline(prevPipeline =>
-          prevPipeline.map(p => (p.id === data.pipelineId ? { ...p, stage: data.oldStage } : p))
-        );
-      }
-    } else if (type === 'comment') {
-      await createNotification({ type: 'new_comment', message: `${data.comment.author_name} left a comment for ${data.candidateName} (${data.positionTitle}): "${data.comment.comment_text}"`, recipient: data.recruiterEmail });
-      alert('Recruiter has been notified of the new comment.');
-    }
   };
 
-  const handleNotificationDecline = async () => {
-    const { type, data } = notificationModal;
-    setNotificationModal({ isOpen: false, type: null, data: null });
-
-    if (type === 'stage_change') {
-      const success = await updateCandidateStage(data.pipelineId, data.newStage);
-      if (!success) {
+  const cancelStageChange = () => {
+    const { isOpen, type, data } = notificationModal;
+    if (isOpen && type === 'stage_change') {
+      if (data?.pipelineId && data?.oldStage) {
         setPipeline(prevPipeline =>
-          prevPipeline.map(p => (p.id === data.pipelineId ? { ...p, stage: data.oldStage } : p))
+          prevPipeline.map(p => p.id === data.pipelineId ? { ...p, stage: data.oldStage } : p)
         );
       }
     }
+    setNotificationModal({ isOpen: false, type: null, data: null });
   };
 
   const closeNotificationModal = () => {
@@ -398,7 +447,6 @@ function ActiveTracker() {
   
   const renderListView = () => {
     const groupedByPosition = filteredAndSortedPipeline.reduce((acc, item) => {
-      // NOTE: Because of the filter in fetchPipeline, posTitle should no longer be 'Unknown Position' unless the position title itself is null.
       const posTitle = item.positions?.title || 'Unknown Position'; 
       if (!acc[posTitle]) acc[posTitle] = [];
       acc[posTitle].push(item);
@@ -428,6 +476,18 @@ function ActiveTracker() {
                       <div className="candidate-name-cell">
                         <strong>{item.candidates?.name || 'Unknown'}</strong>
                         <Binoculars size={18} className="icon-view-details" onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }} />
+                        {item.candidates?.resume_url && (
+                          <a 
+                            href={item.candidates.resume_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="icon-view-resume"
+                            onClick={(e) => e.stopPropagation()}
+                            title="View Resume"
+                          >
+                            <FileText size={18} />
+                          </a>
+                        )}
                       </div>
                       <div>{item.recruiters?.name || 'N/A'}</div>
                       <div>{item.candidates?.phone || 'N/A'}</div>
@@ -466,43 +526,68 @@ function ActiveTracker() {
     return (
       <div className="pipeline-view">
         {filteredAndSortedPipeline.length === 0 && selectedStage !== 'all' ? (
-          <div className="empty-state"><h3>No matching pipeline entries</h3><p>Adjust your filters to see results.</p></div>
+          <div className="empty-state"><h3>No candidates in this stage</h3><p>Adjust your filters to see candidates.</p></div>
         ) : (
-          <DragDropContext onDragEnd={handleOnDragEnd}> 
-            <div className="kanban-board">
-              {stages.map((stage) => {
-                const stageItems = filteredAndSortedPipeline.filter(p => p.stage === stage);
-                if (selectedStage !== 'all' && selectedStage !== stage) return null; 
-  
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="pipeline-columns">
+              {stages.map(stage => {
+                const stageItems = selectedStage === 'all' 
+                  ? filteredAndSortedPipeline.filter(item => item.stage === stage)
+                  : (selectedStage === stage ? filteredAndSortedPipeline : []);
+                
                 return (
-                  <Droppable droppableId={stage} key={stage}>
+                  <Droppable key={stage} droppableId={stage}>
                     {(provided, snapshot) => (
-                      <div className="kanban-column" {...provided.droppableProps} ref={provided.innerRef} style={{ background: snapshot.isDraggingOver ? 'var(--hover-bg)' : 'var(--card-bg)' }}>
-                        <div className="column-header"><h3>{stage}</h3><span className="count">{stageItems.length}</span></div>
-                        <div className="column-content">
+                      <div className={`pipeline-column ${snapshot.isDraggingOver ? 'dragging-over' : ''}`} ref={provided.innerRef} {...provided.droppableProps}>
+                        <div className="column-header">
+                          <h3>{stage}</h3>
+                          <span className="column-count">{stageItems.length}</span>
+                        </div>
+                        <div className="column-cards">
                           {stageItems.map((item, index) => (
-                            <Draggable draggableId={item.id.toString()} index={index} key={item.id}>
-                              {(provided) => (
-                                <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={`pipeline-card status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`} onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)} style={{ ...provided.draggableProps.style }}>
+                            <Draggable key={item.id} draggableId={item.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div 
+                                  className={`pipeline-card ${snapshot.isDragging ? 'dragging' : ''} status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`} 
+                                  ref={provided.innerRef} 
+                                  {...provided.draggableProps} 
+                                  {...provided.dragHandleProps}
+                                >
                                   <div className="card-header">
-                                    <strong>{item.candidates?.name || 'Unknown'}</strong>
-                                    <Binoculars size={18} className="icon-view-details-kanban" onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }} /> 
-                                    <span className={`kanban-status-badge status-badge-${(item.status || 'active').toLowerCase()}`}>{item.status || 'Active'}</span>
+                                    <div className="card-name-row">
+                                      <h4>{item.candidates?.name || 'Unknown'}</h4>
+                                      <div className="card-icons">
+                                        <Binoculars 
+                                          size={18} 
+                                          className="icon-view-details-kanban" 
+                                          onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }} 
+                                        />
+                                        {item.candidates?.resume_url && (
+                                          <a 
+                                            href={item.candidates.resume_url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            className="icon-view-resume-kanban"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title="View Resume"
+                                          >
+                                            <FileText size={18} />
+                                          </a>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <p className="card-position">{item.positions?.title || 'Unknown Position'}</p>
+                                    <p className="card-recruiter">{item.recruiters?.name || 'N/A'}</p>
                                   </div>
                                   <div className="card-body">
-                                    <p className="card-position-title">{item.positions?.title}</p>
-                                    <p className="client-name">{item.positions?.clients?.company_name}</p>
-                                    {expandedCard === item.id && (<div className="card-expanded-section"><strong>Notes:</strong><p>{item.candidates?.notes || 'N/A'}</p></div>)}
+                                    <select className="card-status-select" value={item.status || 'Active'} onChange={(e) => { e.stopPropagation(); handleStatusChange(item.id, e.target.value); }} onClick={(e) => e.stopPropagation()}>
+                                      {statuses.map(status => <option key={status} value={status}>{status}</option>)}
+                                    </select>
                                   </div>
-                                  <div className="card-actions" onClick={(e) => e.stopPropagation()}>
-                                    <div className="card-actions-horizontal">
-                                      <select className="status-select" value={item.status || 'Active'} onChange={(e) => handleStatusChange(item.id, e.target.value)} onClick={(e) => e.stopPropagation()}>
-                                        {statuses.map(s => <option key={s} value={s}>{s}</option>)}
-                                      </select>
-                                      <div className="comments-button-wrapper">
-                                        {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small"></div>}
-                                        <button className="btn-comments" onClick={() => openCommentsModal(item)}>Comments</button>
-                                      </div>
+                                  <div className="card-actions">
+                                    <div className="comments-button-wrapper">
+                                       {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small"></div>}
+                                       <button className="btn-comments" onClick={(e) => { e.stopPropagation(); openCommentsModal(item); }}>Comments</button>
                                     </div>
                                     <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={() => handleRemove(item.id)}>
                                        {confirmDeleteId === item.id ? 'Confirm Delete' : 'Remove'}
@@ -543,7 +628,6 @@ function ActiveTracker() {
       
       {view === 'list' ? renderListView() : renderPipelineView()}
       
-      {/* RENDER INFO SIDEBAR */}
       {showInfoSidebar && <InfoSidebar candidate={sidebarCandidate} onClose={() => setShowInfoSidebar(false)} />}
       
       {showCommentsModal && (
@@ -561,21 +645,26 @@ function ActiveTracker() {
                   comments.map(comment => (
                     <div key={comment.id} className="comment-item">
                       {editingComment?.id === comment.id ? (
-                        <form onSubmit={handleUpdateComment} className="comment-edit-form">
-                          <textarea value={editingText} onChange={(e) => setEditingText(e.target.value)} rows="3" />
-                          <div className="comment-edit-actions">
-                            <button type="submit" className="btn-save">Save</button>
-                            <button type="button" className="btn-cancel" onClick={() => setEditingComment(null)}>Cancel</button>
+                        <form onSubmit={handleUpdateComment} className="edit-comment-form">
+                          <textarea value={editingText} onChange={(e) => setEditingText(e.target.value)} required />
+                          <div className="edit-comment-actions">
+                            <button type="submit" className="btn-primary">Save</button>
+                            <button type="button" className="btn-secondary" onClick={() => { setEditingComment(null); setEditingText(''); }}>Cancel</button>
                           </div>
                         </form>
                       ) : (
                         <>
-                          <div className="comment-header"><strong>{comment.author_name}</strong><span className="comment-date">{new Date(comment.created_at).toLocaleString()}</span></div>
-                          <p className="comment-text">{comment.comment_text}</p>
-                          <div className="comment-actions">
-                            <button className="btn-edit" onClick={() => handleEditComment(comment)}>Edit</button>
-                            <button className="btn-delete" onClick={() => handleDeleteComment(comment.id)}>Delete</button>
+                          <div className="comment-header">
+                            <strong>{comment.recruiters?.name || 'Unknown'}</strong>
+                            <span className="comment-date">{new Date(comment.created_at).toLocaleString()}</span>
                           </div>
+                          <p className="comment-text">{comment.comment_text}</p>
+                          {comment.recruiter_id === user?.id && (
+                            <div className="comment-actions">
+                              <button onClick={() => handleEditComment(comment)} className="btn-edit-comment">Edit</button>
+                              <button onClick={() => handleDeleteComment(comment.id)} className="btn-delete-comment">Delete</button>
+                            </div>
+                          )}
                         </>
                       )}
                     </div>
@@ -583,28 +672,20 @@ function ActiveTracker() {
                 )}
               </div>
             </div>
-            <div className="modal-actions"><button className="btn-secondary" onClick={() => setShowCommentsModal(false)}>Close</button></div>
+            <button onClick={() => setShowCommentsModal(false)} className="btn-secondary modal-close-btn">Close</button>
           </div>
         </div>
       )}
-
-      {notificationModal.isOpen && (
+      
+      {notificationModal.isOpen && notificationModal.type === 'stage_change' && (
         <div className="modal-overlay" onClick={closeNotificationModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Confirm Notification</h2>
-            {notificationModal.type === 'stage_change' && (
-              <p>You've moved <strong>{notificationModal.data.candidateName}</strong> to the <strong>"{notificationModal.data.newStage}"</strong> stage. Would you like to send an email notification to <strong>{notificationModal.data.recruiterName}</strong>?</p>
-            )}
-            {notificationModal.type === 'comment' && (
-              <p>You added a comment for <strong>{notificationModal.data.candidateName}</strong>. Would you like to send an email notification to <strong>{notificationModal.data.recruiterName}</strong>?</p>
-            )}
+            <h2>Confirm Stage Change</h2>
+            <p><strong>{notificationModal.data.candidateName}</strong> was moved from <strong>{notificationModal.data.oldStage}</strong> to <strong>{notificationModal.data.newStage}</strong> by <strong>{notificationModal.data.recruiterName}</strong> for position <strong>{notificationModal.data.positionTitle}</strong>.</p>
+            <p>Do you approve this change?</p>
             <div className="modal-actions">
-              <button className="btn-secondary" onClick={handleNotificationDecline}>
-                No, Just Update
-              </button>
-              <button className="btn-primary" onClick={handleNotificationConfirm}>
-                Yes, Send Email
-              </button>
+              <button onClick={confirmStageChange} className="btn-primary">Approve</button>
+              <button onClick={cancelStageChange} className="btn-secondary">Reject</button>
             </div>
           </div>
         </div>
