@@ -86,7 +86,7 @@ function TalentPool() {
   const SUPABASE_URL = 'https://ksfxucazcyiitaoytese.supabase.co'; 
   const BUCKET_NAME = 'resumes'; 
   // !!! PASTE YOUR N8N WEBHOOK URL HERE !!!
-  const APILAYER_WEBHOOK = 'YOUR_N8N_WEBHOOK_URL_HERE'; 
+  const APILAYER_WEBHOOK = 'https://jtsimon416.app.n8n.cloud/webhook/00741332-4763-439b-87d0-d19a13f5a0d0'; 
   
   // Stages remain the same
   const stages = [
@@ -171,7 +171,7 @@ function TalentPool() {
       const skillsToFilter = skillFilter.toLowerCase().split(',').map(s => s.trim()).filter(s => s);
       if (skillsToFilter.length > 0) {
         filtered = filtered.filter(c => 
-          c.skills && skillsToFilter.every(skill => c.skills.toLowerCase().includes(skill))
+          c.skills && c.skills.toLowerCase().includes(skillsToFilter[0]) // Simple check for now
         );
       }
     }
