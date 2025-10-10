@@ -13,7 +13,9 @@ import RoleHistory from './pages/RoleHistory';
 import RubricGenerator from './pages/RubricGenerator';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
-import DirectorReview from './pages/DirectorReview'; // New Import
+import DirectorReview from './pages/DirectorReview';
+import RecruiterOutreach from './pages/RecruiterOutreach';
+import DirectorOutreachDashboard from './pages/DirectorOutreachDashboard';
 import './styles/App.css';
 
 // Component to protect application routes
@@ -51,12 +53,14 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/director-review" element={<DirectorReview />} /> {/* New Route */}
+                    <Route path="/director-review" element={<DirectorReview />} />
+                    <Route path="/director-outreach-dashboard" element={<DirectorOutreachDashboard />} />
                     <Route path="/clients" element={<Clients />} />
                     <Route path="/positions" element={<Positions />} />
                     <Route path="/recruiters" element={<Recruiters />} />
                     <Route path="/talent-pool" element={<TalentPool />} />
                     <Route path="/active-tracker" element={<ActiveTracker />} />
+                    <Route path="/recruiter-outreach" element={<RecruiterOutreach />} />
                     <Route path="/interview-hub" element={<InterviewHub />} />
                     <Route path="/commissions" element={<Commissions />} />
                     <Route path="/role-history" element={<RoleHistory />} />

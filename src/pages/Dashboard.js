@@ -10,16 +10,27 @@ function Dashboard() {
   const { positions, pipeline, interviews, candidates } = useData();
 
   // ========== DATA CALCULATIONS ==========
-  const SLATE_TARGET = 8; // Updated to 8!
+  const SLATE_TARGET = 8;
   const AGING_THRESHOLD_DAYS = 14;
   const STALLED_THRESHOLD_DAYS = 7;
 
+  // FIXED: Count all candidates who have REACHED "Submit to Client" or beyond
   const positionsNeedingCandidates = useMemo(() => {
     return positions
       .filter(pos => pos.status === 'Open')
       .map(pos => {
         const positionPipeline = pipeline.filter(p => p.position_id === pos.id);
-        const submissionCount = positionPipeline.filter(p => p.stage === 'Submit to Client').length;
+        
+        // Count candidates who have reached "Submit to Client" OR any stage beyond it
+        const submissionCount = positionPipeline.filter(p => 
+          p.stage === 'Submit to Client' || 
+          p.stage === 'Interview 1' || 
+          p.stage === 'Interview 2' || 
+          p.stage === 'Interview 3' || 
+          p.stage === 'Offer' || 
+          p.stage === 'Hired'
+        ).length;
+        
         return { ...pos, submissionCount };
       })
       .filter(pos => pos.submissionCount < SLATE_TARGET)
@@ -62,7 +73,7 @@ function Dashboard() {
       .slice(0, 5);
   }, [interviews]);
 
-  // ========== NEW CHART DATA ==========
+  // ========== CHART DATA ==========
   
   // Pipeline Distribution Chart Data
   const pipelineChartData = useMemo(() => {
@@ -87,13 +98,22 @@ function Dashboard() {
       .filter(item => item.count > 0);
   }, [pipeline]);
 
-  // NEW: Slate of 8 Progress Chart Data
+  // FIXED: Slate of 8 Progress Chart Data
   const slateProgressData = useMemo(() => {
     return positions
       .filter(pos => pos.status === 'Open')
       .map(pos => {
         const positionPipeline = pipeline.filter(p => p.position_id === pos.id);
-        const submissionCount = positionPipeline.filter(p => p.stage === 'Submit to Client').length;
+        
+        // Count ALL candidates who have reached "Submit to Client" or beyond
+        const submissionCount = positionPipeline.filter(p => 
+          p.stage === 'Submit to Client' || 
+          p.stage === 'Interview 1' || 
+          p.stage === 'Interview 2' || 
+          p.stage === 'Interview 3' || 
+          p.stage === 'Offer' || 
+          p.stage === 'Hired'
+        ).length;
         
         // Determine color based on progress
         let color;

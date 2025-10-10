@@ -89,7 +89,7 @@ function TalentPool() {
     linkedin_url: '',
     skills: [], // As an array for TagInput
     notes: '',
-    resume_url: '' // NEW: To store the direct link
+    resume_url: '' // To store the direct link
   });
   
   // --- PIPELINE MODAL STATE ---
@@ -100,7 +100,7 @@ function TalentPool() {
     candidate_id: null,
   });
   
-  // --- CONFIG CONSTANTS (Used only for upload logic now) ---
+  // --- CONFIG CONSTANTS ---
   const BUCKET_NAME = 'resumes'; 
   // NOTE: This URL is used ONLY by the dedicated Parse button
   const APILAYER_WEBHOOK = 'https://jtsimon416.app.n8n.cloud/webhook/00741332-4763-439b-87d0-d19a13f5a0d0'; 
@@ -189,17 +189,17 @@ function TalentPool() {
 
     // --- IMPROVED SKILLS FILTER LOGIC ---
     if (skillFilter) {
-      // 1. Get user's search terms and normalize them (split by comma, trim, lowercase)
+      // Get user's search terms and normalize them (split by comma, trim, lowercase)
       const searchTerms = skillFilter.toLowerCase().split(',').map(s => s.trim()).filter(s => s);
 
       if (searchTerms.length > 0) {
         filtered = filtered.filter(c => {
           if (!c.skills) return false;
 
-          // 2. Normalize candidate's skills into an array of lowercase tags
+          // Normalize candidate's skills into an array of lowercase tags
           const candidateTags = c.skills.toLowerCase().split(',').map(tag => tag.trim());
 
-          // 3. Check if the candidate has AT LEAST ONE skill that includes ANY search term
+          // Check if the candidate has AT LEAST ONE skill that includes ANY search term
           return searchTerms.some(searchTerm => 
             candidateTags.some(candidateTag => 
               candidateTag.includes(searchTerm)
@@ -227,7 +227,7 @@ function TalentPool() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candidates, searchTerm, skillFilter, locationFilter, loading]); 
 
-  // --- HANDLER: Uploads File for MANUAL Entry (No Parsing) ---
+  // --- HANDLER: Uploads File for MANUAL Entry (DIRECT TO SUPABASE - NO N8N) ---
   // This is called by the file input inside the Manual Entry form.
   async function handleFileUpload(e) {
     const file = e.target.files[0];
@@ -236,7 +236,7 @@ function TalentPool() {
     setLoading(true);
     
     try {
-      // 1. UPLOAD FILE to Supabase Storage (BYPASSES N8N)
+      // 1. UPLOAD FILE to Supabase Storage (BYPASSES N8N COMPLETELY)
       const filePath = `${BUCKET_NAME}/${new Date().getTime()}_${file.name.replace(/\s/g, '_')}`;
       const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
@@ -257,11 +257,11 @@ function TalentPool() {
         resume_url: publicURL
       }));
       e.target.value = null; // Clear input field visually
-      alert("Resume successfully uploaded! The link is attached to the candidate record.");
+      alert("✅ Resume successfully uploaded! The link will be attached to the candidate record.");
 
     } catch (error) {
       console.error('File Upload Error:', error);
-      alert('An error occurred during file upload: ' + error.message);
+      alert('❌ An error occurred during file upload: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -318,7 +318,7 @@ function TalentPool() {
   }
 
 
-  // --- HANDLER: MANUAL ADD/EDIT ---
+  // --- HANDLER: MANUAL ADD/EDIT (DIRECT TO SUPABASE - NO N8N) ---
   async function handleManualSubmit(e) {
     e.preventDefault();
     setLoading(true);
@@ -337,17 +337,17 @@ function TalentPool() {
             .eq('id', editingCandidate.id);
         
         if (error) {
-            alert('Error updating candidate: ' + error.message);
+            alert('❌ Error updating candidate: ' + error.message);
         } else {
-            alert('Candidate updated successfully!');
+            alert('✅ Candidate updated successfully!');
             resetForm(); 
             await loadCandidates(); 
         }
     } else {
-        // ADD new candidate manually
+        // ADD new candidate manually (DIRECT TO DATABASE - NO N8N)
         // We enforce name and email here as mandatory fields for the Talent Pool.
         if (!dataToSave.name || !dataToSave.email) {
-            alert('Candidate Name and Email are required.');
+            alert('❌ Candidate Name and Email are required.');
             setLoading(false);
             return;
         }
@@ -357,9 +357,9 @@ function TalentPool() {
             .insert([dataToSave]);
 
         if (error) {
-            alert('Error adding candidate: ' + error.message);
+            alert('❌ Error adding candidate: ' + error.message);
         } else {
-            alert('Candidate added successfully!');
+            alert('✅ Candidate added successfully via Manual Entry (N8N Bypassed)!');
             resetForm(); 
             await loadCandidates(); 
         }
@@ -413,138 +413,131 @@ function TalentPool() {
       await loadCandidates();
       
     } catch (error) {
-      console.error('Error deleting candidate:', error);
+      console.error('Delete Error:', error);
       alert('Error deleting candidate: ' + error.message);
     } finally {
       setLoading(false);
     }
   }
-  // -----------------------------------------------------------
-
-  // --- HANDLER: Adds candidate to pipeline from modal ---
-  const handleAddToPipeline = async (e) => {
-    e.preventDefault();
-    if (!pipelineData.position_id || !pipelineData.recruiter_id || !pipelineData.candidate_id) {
-      alert('Please select a position and recruiter.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('pipeline')
-        .insert([{
-          position_id: pipelineData.position_id,
-          recruiter_id: pipelineData.recruiter_id,
-          candidate_id: pipelineData.candidate_id,
-          stage: pipelineData.stage,
-          status: 'Active'
-        }]);
-      
-      if (error) throw error;
-
-      alert(`Candidate added to pipeline successfully!`);
-      closePipelineModal();
-      setLoading(false);
-
-    } catch (error) {
-      console.error('Error adding to pipeline:', error);
-      alert('Error adding to pipeline: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
   
-  // --- UTILITY: Resets form data only (keeps window open) ---
-  function clearFormData() {
-      setEditingCandidate(null);
-      setCandidateFormData({
-        name: '', email: '', phone: '', location: '', linkedin_url: '', skills: [], notes: '', resume_url: ''
-      });
-  }
-
-  // --- UI Handlers: Resets form data AND closes window ---
-  function resetForm() {
-    clearFormData();
-    setShowForm(false);
-    setCurrentFormView(null);
-  }
-
-  // --- HANDLER TO OPEN FORMS ---
-  const handleOpenForm = (mode) => {
-    // If the same form is already open, close it.
-    if (showForm && currentFormView === mode) {
-        resetForm();
-    } else {
-        clearFormData(); // Clear old data first
-        setCurrentFormView(mode);
-        setShowForm(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' }); 
-    }
-  };
-  // ----------------------------------
-
-
-  function openCommentsModal(candidate) {
+  // --- OPEN ADD TO PIPELINE MODAL ---
+  const openPipelineModal = (candidate) => {
     setSelectedCandidate(candidate);
-    fetchComments(candidate.id);
-    setCommentData({ author_name: '', comment_text: '' });
-    setShowCommentsModal(true);
-  }
-  
-  function openPipelineModal(candidate) {
-    setSelectedCandidate(candidate);
-    setPipelineData(prev => ({ 
-      ...prev, 
-      candidate_id: candidate.id,
+    setPipelineData({
       position_id: '',
       recruiter_id: '',
-      stage: 'Screening'
-    }));
+      stage: 'Screening',
+      candidate_id: candidate.id,
+    });
     setShowPipelineModal(true);
-  }
-  
-  function closePipelineModal() {
+  };
+
+  const closePipelineModal = () => {
     setShowPipelineModal(false);
     setSelectedCandidate(null);
-  }
+    setPipelineData({
+      position_id: '',
+      recruiter_id: '',
+      stage: 'Screening',
+      candidate_id: null,
+    });
+  };
 
-  const [commentData, setCommentData] = useState({
-    author_name: '',
-    comment_text: ''
-  });
-
-  async function handleAddComment(e) {
+  // --- SUBMIT PIPELINE ENTRY ---
+  const handlePipelineSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!commentData.author_name || !commentData.comment_text) {
-      alert('Please fill in both your name and comment');
+    if (!pipelineData.position_id || !pipelineData.recruiter_id) {
+      alert('Please select both a Position and a Recruiter.');
       return;
     }
 
-    const { error } = await supabase.from('comments').insert([{
-      candidate_id: selectedCandidate.id, ...commentData
-    }]);
-    
+    const { error } = await supabase
+      .from('pipeline')
+      .insert([pipelineData]);
+
+    if (error) {
+      alert('Error adding to pipeline: ' + error.message);
+    } else {
+      alert(`✅ ${selectedCandidate?.name} added to Active Tracker!`);
+      closePipelineModal();
+    }
+  };
+
+  // --- OPEN COMMENTS MODAL ---
+  const openCommentsModal = async (candidate) => {
+    setSelectedCandidate(candidate);
+    await fetchComments(candidate.id);
+    setShowCommentsModal(true);
+  };
+
+  const closeCommentsModal = () => {
+    setShowCommentsModal(false);
+    setSelectedCandidate(null);
+    setComments([]);
+  };
+
+  // --- ADD COMMENT ---
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    const commentText = e.target.elements.commentInput.value.trim();
+    if (!commentText) return;
+
+    const { error } = await supabase
+      .from('comments')
+      .insert([{
+        candidate_id: selectedCandidate.id,
+        text: commentText,
+      }]);
+
     if (error) {
       alert('Error adding comment: ' + error.message);
     } else {
-      setCommentData(prev => ({ ...prev, comment_text: '' }));
+      e.target.reset();
       await fetchComments(selectedCandidate.id);
     }
+  };
+
+  // --- FORM MANAGEMENT ---
+  function handleOpenForm(formType) {
+    // If the same form is already open, close it
+    if (showForm && currentFormView === formType) {
+        resetForm();
+        return;
+    }
+    
+    // Otherwise, reset and open the requested form
+    resetForm();
+    setCurrentFormView(formType);
+    setShowForm(true);
+    
+    // Scroll to top to show the newly opened form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function resetForm() {
+    setShowForm(false);
+    setCurrentFormView(null);
+    setEditingCandidate(null);
+    setCandidateFormData({
+        name: '',
+        email: '',
+        phone: '',
+        location: '',
+        linkedin_url: '',
+        skills: [],
+        notes: '',
+        resume_url: ''
+    });
   }
   
   // --- PAGINATION LOGIC ---
   const indexOfLastCandidate = currentPage * candidatesPerPage;
   const indexOfFirstCandidate = indexOfLastCandidate - candidatesPerPage;
-  const currentCandidates = filteredCandidates.slice(
-    indexOfFirstCandidate,
-    indexOfLastCandidate
-  );
-  
+  const currentCandidates = filteredCandidates.slice(indexOfFirstCandidate, indexOfLastCandidate);
   const totalPages = Math.ceil(filteredCandidates.length / candidatesPerPage);
   
-  const goToNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  const goToPrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const goToNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const goToPreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
   // -------------------------
 
   if (loading) {
@@ -553,7 +546,7 @@ function TalentPool() {
 
   const renderParseForm = () => (
     <div className="form-card">
-        <h2 style={{marginBottom: '25px'}}>Upload Resume for Parsing</h2>
+        <h2 style={{marginBottom: '25px'}}>Upload Resume for AI Parsing (via N8N)</h2>
         <form onSubmit={handleParseSubmit}>
             <div className="form-group">
                 <label>Resume File (.pdf, .docx)*</label>
@@ -570,10 +563,10 @@ function TalentPool() {
                 className="btn-primary" 
                 disabled={loading}
             >
-                Upload & Start Parsing Job
+                Upload & Start AI Parsing Job
             </button>
             <p style={{marginTop: '15px', color: 'var(--text-muted)', fontSize: '12px'}}>
-                **This starts a background job** via N8N. The candidate will appear here after the job completes (up to a minute).
+                **This starts a background AI parsing job via N8N.** The candidate will appear here after the job completes (up to a minute).
             </p>
         </form>
     </div>
@@ -581,7 +574,9 @@ function TalentPool() {
 
   const renderManualForm = () => (
     <div className="form-card">
-        <h2 style={{marginBottom: '25px'}}>{editingCandidate ? `Edit Candidate: ${editingCandidate.name}` : 'Manual Candidate Entry'}</h2>
+        <h2 style={{marginBottom: '25px'}}>
+          {editingCandidate ? `Edit Candidate: ${editingCandidate.name}` : 'Manual Candidate Entry (Direct to Supabase)'}
+        </h2>
         
         <form onSubmit={handleManualSubmit}>
           <div className="form-row">
@@ -622,34 +617,39 @@ function TalentPool() {
           </div>
           
           <div className="form-group file-upload-section">
-              <label>Upload Resume (Optional)</label>
+              <label>Upload Resume (Optional) - Direct to Supabase Storage</label>
               {editingCandidate && candidateFormData.resume_url ? (
                   // Scenario A: Editing and a link already exists (cannot be changed)
                   <div className="link-status">
-                      <p>Link Ready: <a href={candidateFormData.resume_url} target="_blank" rel="noopener noreferrer" className="btn-link">View Uploaded Resume</a></p>
+                      <p>📎 Resume Link Ready: <a href={candidateFormData.resume_url} target="_blank" rel="noopener noreferrer" className="btn-link">View Uploaded Resume</a></p>
                       <p className="sub-header-text">Link cannot be changed after candidate creation.</p>
                   </div>
               ) : candidateFormData.resume_url ? (
                   // Scenario B: New candidate and file has been uploaded (link is present)
                   <div className="link-status">
-                      <p>Link Ready: <a href={candidateFormData.resume_url} target="_blank" rel="noopener noreferrer" className="btn-link">View Uploaded Resume</a></p>
+                      <p>✅ Resume Link Ready: <a href={candidateFormData.resume_url} target="_blank" rel="noopener noreferrer" className="btn-link">View Uploaded Resume</a></p>
                       <button type="button" className="btn-secondary" onClick={() => setCandidateFormData(prev => ({ ...prev, resume_url: '' }))}>
                           Remove Link
                       </button>
                   </div>
               ) : (
                   // Scenario C: New candidate and no file has been uploaded yet (show file input)
-                  <input 
-                      type="file" 
-                      accept=".pdf,.docx,.doc" 
-                      onChange={(e) => handleFileUpload(e)}
-                      disabled={loading}
-                  />
+                  <>
+                    <input 
+                        type="file" 
+                        accept=".pdf,.docx,.doc" 
+                        onChange={(e) => handleFileUpload(e)}
+                        disabled={loading}
+                    />
+                    <p style={{marginTop: '8px', color: 'var(--accent-cyan)', fontSize: '12px'}}>
+                      ⚡ This bypasses N8N and uploads directly to Supabase Storage.
+                    </p>
+                  </>
               )}
           </div>
           
           <button type="submit" className="btn-primary" disabled={loading}>
-              {editingCandidate ? 'Update Candidate Details' : 'Add Candidate Manually'}
+              {editingCandidate ? 'Update Candidate Details' : '✅ Add Candidate Manually (Bypass N8N)'}
           </button>
         </form>
     </div>
@@ -664,12 +664,12 @@ function TalentPool() {
             <button className={`btn-primary ${currentFormView === 'parse' ? 'active' : ''}`} 
                     onClick={() => handleOpenForm('parse')} 
                     disabled={!!editingCandidate}>
-                + Resume (Parse)
+                🤖 + Resume (AI Parse)
             </button>
             <button className={`btn-secondary ${currentFormView === 'manual' ? 'active' : ''}`} 
                     onClick={() => handleOpenForm('manual')} 
                     disabled={!!editingCandidate}>
-                + Manual Entry
+                ✍️ + Manual Entry (Backup)
             </button>
         </div>
       </div>
@@ -747,91 +747,61 @@ function TalentPool() {
               {/* --- END SKILLS RENDER --- */}
               <div>{candidate.location || 'N/A'}</div>
               <div>{candidate.phone || 'N/A'}</div>
-              {/* This displays the link to the uploaded resume file */}
-              <div>{candidate.resume_url ? (<a href={candidate.resume_url} target="_blank" rel="noopener noreferrer" className="btn-link" onClick={(e) => e.stopPropagation()}>View</a>) : ('N/A')}</div> 
-              <div className="actions-cell" onClick={(e) => e.stopPropagation()}>
-                <button className="btn-edit" onClick={() => handleEdit(candidate)}>Edit</button>
-                <button className="btn-add-pipeline" onClick={() => openPipelineModal(candidate)}>
-                    Add to Pipeline
-                </button>
-                <button className="btn-comments" onClick={() => openCommentsModal(candidate)}>Comments</button>
-                <button className="btn-delete" onClick={(e) => { e.stopPropagation(); handleDelete(candidate.id); }}>
-                  Delete
-                </button>
+              <div>{candidate.resume_url ? <a href={candidate.resume_url} target="_blank" rel="noopener noreferrer" className="btn-link" onClick={(e) => e.stopPropagation()}>View Resume</a> : 'N/A'}</div>
+              
+              <div className="actions-cell">
+                <button className="btn-edit" onClick={(e) => { e.stopPropagation(); handleEdit(candidate); }}>Edit</button>
+                <button className="btn-add-pipeline" onClick={(e) => { e.stopPropagation(); openPipelineModal(candidate); }}>+ Pipeline</button>
+                <button className="btn-comments" onClick={(e) => { e.stopPropagation(); openCommentsModal(candidate); }}>Comments</button>
+                <button className="btn-delete" onClick={(e) => { e.stopPropagation(); handleDelete(candidate.id); }}>Delete</button>
               </div>
             </div>
-            {expandedRow === candidate.id && candidate.notes && (<div className="candidate-row-notes"><strong>Notes:</strong> {candidate.notes}</div>)}
+            
+            {expandedRow === candidate.id && (
+              <div className="expanded-details">
+                <p><strong>Email:</strong> {candidate.email || 'N/A'}</p>
+                <p><strong>Notes:</strong> {candidate.notes || 'No notes available.'}</p>
+              </div>
+            )}
           </React.Fragment>
         ))}
       </div>
-      
-      {/* --- PAGINATION CONTROLS --- */}
-      {totalPages > 1 && (
-        <div className="pagination-controls">
-          <button onClick={goToPrevPage} disabled={currentPage === 1} className="btn-secondary">
-            Previous Page
-          </button>
-          <span className="page-info">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button onClick={goToNextPage} disabled={currentPage === totalPages || totalPages === 0} className="btn-secondary">
-            Next Page
-          </button>
-        </div>
-      )}
-      {showCommentsModal && selectedCandidate && (
-        <div className="modal-overlay" onClick={() => setShowCommentsModal(false)}>
-          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <h2>Comments for {selectedCandidate?.name}</h2>
-            <div className="comments-section">
-              <form onSubmit={handleAddComment} className="comment-form">
-                <div className="form-group"><label>Your Name *</label><input type="text" required placeholder="e.g., Director Jane" value={commentData.author_name} onChange={(e) => setCommentData({...commentData, author_name: e.target.value})} /></div>
-                <div className="form-group"><label>Comment *</label><textarea required rows="3" placeholder="Leave feedback..." value={commentData.comment_text} onChange={(e) => setCommentData({...commentData, comment_text: e.target.value})} /></div>
-                <button type="submit" className="btn-primary">Add Comment</button>
-              </form>
-              <div className="comments-list">
-                <h3>Comment History ({comments.length})</h3>
-                {comments.length === 0 ? (<p className="empty-comments">No comments yet.</p>) : (
-                  comments.map(comment => (
-                    <div key={comment.id} className="comment-item">
-                      <div className="comment-header"><strong>{comment.author_name}</strong><span className="comment-date">{new Date(comment.created_at).toLocaleString()}</span></div>
-                      <p className="comment-text">{comment.comment_text}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-            <div className="modal-actions"><button className="btn-secondary" onClick={() => setShowCommentsModal(false)}>Close</button></div>
-          </div>
-        </div>
-      )}
-      
-      {/* --- ADD TO PIPELINE MODAL --- */}
-      {showPipelineModal && selectedCandidate && (
+
+      {/* PAGINATION CONTROLS */}
+      <div className="pagination-controls">
+        <button onClick={goToPreviousPage} disabled={currentPage === 1}>Previous</button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button onClick={goToNextPage} disabled={currentPage === totalPages}>Next</button>
+      </div>
+
+      {/* PIPELINE MODAL */}
+      {showPipelineModal && (
         <div className="modal-overlay" onClick={closePipelineModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Add {selectedCandidate.name} to Pipeline</h2>
-            <form onSubmit={handleAddToPipeline}>
-                <p className="modal-candidate-name">Assign role and recruiter to start tracking.</p>
-
+            <h2>Add {selectedCandidate?.name} to Active Tracker</h2>
+            <form onSubmit={handlePipelineSubmit}>
                 <div className="form-group">
-                    <label>Position *</label>
+                    <label>Select Position</label>
                     <select 
-                        required 
                         value={pipelineData.position_id} 
                         onChange={(e) => setPipelineData({...pipelineData, position_id: e.target.value})}
+                        required
                     >
                         <option value="">Select position...</option>
-                        {positions.map(pos => (<option key={pos.id} value={pos.id}>{pos.title} - {pos.clients?.company_name || 'N/A'}</option>))}
+                        {positions.map(pos => (
+                            <option key={pos.id} value={pos.id}>
+                                {pos.title} - {pos.clients?.company_name || 'No Client'}
+                            </option>
+                        ))}
                     </select>
                 </div>
-
+                
                 <div className="form-group">
-                    <label>Recruiter *</label>
+                    <label>Assign Recruiter</label>
                     <select 
-                        required 
                         value={pipelineData.recruiter_id} 
                         onChange={(e) => setPipelineData({...pipelineData, recruiter_id: e.target.value})}
+                        required
                     >
                         <option value="">Select recruiter...</option>
                         {recruiters.map(rec => (<option key={rec.id} value={rec.id}>{rec.name}</option>))}
@@ -853,6 +823,41 @@ function TalentPool() {
                     <button type="submit" className="btn-primary">Add to Active Tracker</button>
                 </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* COMMENTS MODAL */}
+      {showCommentsModal && (
+        <div className="modal-overlay" onClick={closeCommentsModal}>
+          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+            <h2>Comments for {selectedCandidate?.name}</h2>
+            
+            <form onSubmit={handleAddComment} style={{ marginBottom: '20px' }}>
+              <div className="form-group">
+                <label>Add a Comment</label>
+                <textarea name="commentInput" rows="3" required></textarea>
+              </div>
+              <button type="submit" className="btn-primary">Add Comment</button>
+            </form>
+
+            <div className="comments-list">
+              <h3>Previous Comments</h3>
+              {comments.length === 0 ? (
+                <p>No comments yet.</p>
+              ) : (
+                comments.map(comment => (
+                  <div key={comment.id} className="comment-item">
+                    <p>{comment.text}</p>
+                    <small>{new Date(comment.created_at).toLocaleString()}</small>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={closeCommentsModal}>Close</button>
+            </div>
           </div>
         </div>
       )}

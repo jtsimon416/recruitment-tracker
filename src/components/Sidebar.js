@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
+import { Activity, Users } from 'lucide-react';
 import '../styles/Sidebar.css';
 
 function Sidebar() {
@@ -41,6 +42,10 @@ function Sidebar() {
                 <NavLink to="/director-review" className="nav-link">
                     Director Review
                 </NavLink>
+                <NavLink to="/director-outreach-dashboard" className="nav-link">
+                    <Users size={18} style={{ marginRight: '8px' }} />
+                    Outreach Dashboard
+                </NavLink>
             </div>
         )}
 
@@ -64,6 +69,10 @@ function Sidebar() {
               </div>
             )}
           </div>
+          <NavLink to="/recruiter-outreach" className="nav-link">
+            <Activity size={18} style={{ marginRight: '8px' }} />
+            My Outreach
+          </NavLink>
           <NavLink to="/interview-hub" className="nav-link">Interview Hub</NavLink>
           <NavLink to="/commissions" className="nav-link">Commissions</NavLink>
           <NavLink to="/role-history" className="nav-link">Role History</NavLink>

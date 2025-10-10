@@ -134,34 +134,22 @@ function ActiveTracker() {
           }
         });
       } else {
+        // RECRUITER MOVED CANDIDATE - NO NOTIFICATION!
         const updateAndHandle = async () => {
           const success = await updateCandidateStage(pipelineId, newStage);
           if (!success) {
+            // Revert the change if it failed
             setPipeline(prevPipeline =>
               prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: oldStage } : p))
             );
-          } else {
-            const pipelineItem = pipeline.find(p => p.id === pipelineId);
-            if (pipelineItem) {
-              await createNotification(
-                'stage_change',
-                DIRECTOR_EMAIL,
-                {
-                  candidateName: pipelineItem.candidates?.name,
-                  recruiterName: pipelineItem.recruiters?.name,
-                  positionTitle: pipelineItem.positions?.title,
-                  oldStage,
-                  newStage
-                }
-              );
-            }
           }
+          // ✅ REMOVED: No notification sent to Director when recruiter moves candidate
         };
         updateAndHandle();
       }
       setPendingMove(null);
     }
-  }, [pendingMove, user, pipeline, DIRECTOR_EMAIL, createNotification]);
+  }, [pendingMove, user, pipeline, DIRECTOR_EMAIL]);
   
   async function fetchPipeline() {
     const { data, error } = await supabase
@@ -251,6 +239,54 @@ function ActiveTracker() {
     );
     
     setPendingMove({ pipelineId, newStage, oldStage, pipelineItem });
+  };
+
+  const confirmStageChange = async () => {
+    const { pipelineId, newStage, oldStage, candidateName, recruiterName, recruiterEmail, positionTitle } = notificationModal.data;
+    const success = await updateCandidateStage(pipelineId, newStage);
+    if (success) {
+      await createNotification({
+        type: 'stage_change_director',
+        recipient: recruiterEmail,
+        message: `Director moved ${candidateName} from "${oldStage}" to "${newStage}" for ${positionTitle}.`
+      });
+    } else {
+      setPipeline(prevPipeline =>
+        prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: oldStage } : p))
+      );
+    }
+    setNotificationModal({ isOpen: false, type: null, data: null });
+  };
+
+  const cancelStageChange = () => {
+    const { isOpen, type, data } = notificationModal;
+    if (isOpen && type === 'stage_change') {
+      if (data?.pipelineId && data?.oldStage) {
+        setPipeline(prevPipeline =>
+          prevPipeline.map(p => p.id === data.pipelineId ? { ...p, stage: data.oldStage } : p)
+        );
+      }
+    }
+    setNotificationModal({ isOpen: false, type: null, data: null });
+  };
+
+  const closeNotificationModal = () => {
+    const { isOpen, type, data } = notificationModal;
+    if (isOpen) {
+      if (type === 'stage_change') {
+        setPipeline(prevPipeline =>
+          prevPipeline.map(p => (p.id === data.pipelineId ? { ...p, stage: data.oldStage } : p))
+        );
+      }
+      setNotificationModal({ isOpen: false, type: null, data: null });
+    }
+  };
+
+  const handleDragEnd = (result) => {
+    const { source, destination, draggableId } = result;
+    if (!destination || source.droppableId === destination.droppableId) return;
+    
+    handleStageChange(draggableId, destination.droppableId);
   };
   
   const handleStatusChange = (id, newStatus) => {
@@ -356,43 +392,41 @@ function ActiveTracker() {
     let filtered = pipeline;
     
     if (selectedPosition !== 'all') {
-      filtered = filtered.filter(p => p.position_id === selectedPosition);
+      filtered = filtered.filter(item => item.position_id === selectedPosition);
     }
     
     if (selectedRecruiter !== 'all') {
-      filtered = filtered.filter(p => p.recruiter_id === selectedRecruiter);
+      filtered = filtered.filter(item => item.recruiter_id === selectedRecruiter);
     }
     
     if (selectedStatus !== 'all') {
-      filtered = filtered.filter(p => p.status === selectedStatus);
+      filtered = filtered.filter(item => item.status === selectedStatus);
     }
     
     if (selectedStage !== 'all') {
-      filtered = filtered.filter(p => p.stage === selectedStage);
+      filtered = filtered.filter(item => item.stage === selectedStage);
     }
     
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        let aValue, bValue;
-        
-        if (sortConfig.key === 'candidates.name') {
-          aValue = a.candidates?.name || '';
-          bValue = b.candidates?.name || '';
-        } else if (sortConfig.key === 'recruiters.name') {
-          aValue = a.recruiters?.name || '';
-          bValue = b.recruiters?.name || '';
-        } else {
-          aValue = a[sortConfig.key] || '';
-          bValue = b[sortConfig.key] || '';
-        }
-        
-        if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
-        return 0;
-      });
-    }
+    const sorted = [...filtered].sort((a, b) => {
+      let aValue, bValue;
+      
+      if (sortConfig.key === 'candidates.name') {
+        aValue = a.candidates?.name || '';
+        bValue = b.candidates?.name || '';
+      } else if (sortConfig.key === 'recruiters.name') {
+        aValue = a.recruiters?.name || '';
+        bValue = b.recruiters?.name || '';
+      } else {
+        aValue = a[sortConfig.key] || '';
+        bValue = b[sortConfig.key] || '';
+      }
+      
+      if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+      return 0;
+    });
     
-    return filtered;
+    return sorted;
   }, [pipeline, selectedPosition, selectedRecruiter, selectedStatus, selectedStage, sortConfig]);
   
   const requestSort = (key) => {
@@ -405,64 +439,7 @@ function ActiveTracker() {
   
   const getSortIndicator = (key) => {
     if (sortConfig.key !== key) return null;
-    return sortConfig.direction === 'ascending' ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
-  };
-  
-  const handleDragEnd = (result) => {
-    const { destination, source, draggableId } = result;
-    if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
-      return;
-    }
-    
-    const newStage = destination.droppableId;
-    const pipelineId = draggableId;
-    const pipelineItem = pipeline.find(p => p.id === pipelineId);
-    
-    if (!pipelineItem) return;
-    
-    const oldStage = pipelineItem.stage;
-    setPipeline(prevPipeline =>
-      prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: newStage } : p))
-    );
-    
-    setPendingMove({ pipelineId, newStage, oldStage, pipelineItem });
-  };
-
-  const confirmStageChange = async () => {
-    const { pipelineId, newStage, oldStage, candidateName, recruiterName, recruiterEmail, positionTitle } = notificationModal.data;
-    const success = await updateCandidateStage(pipelineId, newStage);
-    if (success) {
-      await createNotification('stage_change_director', recruiterEmail, { candidateName, oldStage, newStage, positionTitle });
-    } else {
-      setPipeline(prevPipeline =>
-        prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: oldStage } : p))
-      );
-    }
-    setNotificationModal({ isOpen: false, type: null, data: null });
-  };
-
-  const cancelStageChange = () => {
-    const { isOpen, type, data } = notificationModal;
-    if (isOpen && type === 'stage_change') {
-      if (data?.pipelineId && data?.oldStage) {
-        setPipeline(prevPipeline =>
-          prevPipeline.map(p => p.id === data.pipelineId ? { ...p, stage: data.oldStage } : p)
-        );
-      }
-    }
-    setNotificationModal({ isOpen: false, type: null, data: null });
-  };
-
-  const closeNotificationModal = () => {
-    const { isOpen, type, data } = notificationModal;
-    if (isOpen) {
-      if (type === 'stage_change') {
-        setPipeline(prevPipeline =>
-          prevPipeline.map(p => (p.id === data.pipelineId ? { ...p, stage: data.oldStage } : p))
-        );
-      }
-      setNotificationModal({ isOpen: false, type: null, data: null });
-    }
+    return sortConfig.direction === 'ascending' ? ' ↑' : ' ↓';
   };
 
   const groupedByPosition = useMemo(() => {
@@ -497,24 +474,21 @@ function ActiveTracker() {
                   <React.Fragment key={item.id}>
                     <div className={`pipeline-row status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`} onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)}>
                       <div className="candidate-name-cell">
-                        <strong>{item.candidates?.name || 'Unknown'}</strong>
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
-                          <Binoculars size={18} className="icon-view-details" onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }} />
-                          {item.candidates?.resume_url && (
-                            <a 
-                              href={item.candidates.resume_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="icon-view-resume"
-                              onClick={(e) => e.stopPropagation()}
-                              title="View Resume"
-                            >
-                              <FileText size={18} />
-                            </a>
-                          )}
-                        </div>
+                        <strong>{item.candidates?.name}</strong>
+                        <Binoculars 
+                          size={18} 
+                          className="icon-view-details" 
+                          onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }}
+                          title="View Full Details"
+                        />
+                        {item.candidates?.resume_url && (
+                          <a href={item.candidates.resume_url} target="_blank" rel="noopener noreferrer" className="icon-view-resume" onClick={(e) => e.stopPropagation()} title="View Resume">
+                            <FileText size={18} />
+                          </a>
+                        )}
+                        {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small" title="New feedback available"></div>}
                       </div>
-                      <div>{item.recruiters?.name || 'N/A'}</div>
+                      <div>{item.recruiters?.name}</div>
                       <div>{item.candidates?.phone || 'N/A'}</div>
                       <div>
                         <select className="status-select" value={item.status || 'Active'} onChange={(e) => { e.stopPropagation(); handleStatusChange(item.id, e.target.value); }} onClick={(e) => e.stopPropagation()}>
@@ -526,12 +500,11 @@ function ActiveTracker() {
                           {stages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
                         </select>
                       </div>
-                      <div className="actions-cell" onClick={(e) => e.stopPropagation()}>
+                      <div className="actions-cell">
                          <div className="comments-button-wrapper">
-                            {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small"></div>}
-                            <button className="btn-comments" onClick={() => openCommentsModal(item)}>Comments</button>
+                            <button className="btn-comments" onClick={(e) => { e.stopPropagation(); openCommentsModal(item); }}>Comments</button>
                          </div>
-                         <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={() => handleRemove(item.id)}>
+                         <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={(e) => { e.stopPropagation(); handleRemove(item.id); }}>
                             {confirmDeleteId === item.id ? 'Confirm Delete' : 'Remove'} 
                          </button>
                       </div>
@@ -573,35 +546,38 @@ function ActiveTracker() {
                             <Draggable key={item.id} draggableId={item.id} index={index}>
                               {(provided, snapshot) => (
                                 <div 
-                                  className={`pipeline-card ${snapshot.isDragging ? 'dragging' : ''} status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`} 
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
+                                  className={`pipeline-card ${snapshot.isDragging ? 'dragging' : ''} status-${(item.status || 'active').toLowerCase()} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`}
+                                  ref={provided.innerRef} 
+                                  {...provided.draggableProps} 
                                   {...provided.dragHandleProps}
                                 >
-                                  <div className="pipeline-card-header">
-                                    <strong>{item.candidates?.name || 'Unknown'}</strong>
-                                    {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small"></div>}
+                                  <div className="card-header">
+                                    <strong>{item.candidates?.name}</strong>
+                                    <div className="card-icons">
+                                      <Binoculars 
+                                        size={16} 
+                                        className="icon-view-details" 
+                                        onClick={() => handleOpenInfoSidebar(item.candidates)}
+                                        title="View Full Details"
+                                      />
+                                      {item.candidates?.resume_url && (
+                                        <a href={item.candidates.resume_url} target="_blank" rel="noopener noreferrer" className="icon-view-resume" title="View Resume">
+                                          <FileText size={16} />
+                                        </a>
+                                      )}
+                                      {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small" title="New feedback available"></div>}
+                                    </div>
                                   </div>
-                                  <p className="pipeline-card-company"><strong>Position:</strong> {item.positions?.title || 'N/A'}</p>
-                                  <p className="pipeline-card-recruiter"><strong>Recruiter:</strong> {item.recruiters?.name || 'N/A'}</p>
-                                  <p className="pipeline-card-phone"><strong>Phone:</strong> {item.candidates?.phone || 'N/A'}</p>
-                                  <div className="pipeline-card-actions">
-                                    <Binoculars size={18} className="icon-view-details" onClick={() => handleOpenInfoSidebar(item.candidates)} />
-                                    {item.candidates?.resume_url && (
-                                      <a 
-                                        href={item.candidates.resume_url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
-                                        className="icon-view-resume"
-                                        title="View Resume"
-                                      >
-                                        <FileText size={18} />
-                                      </a>
-                                    )}
-                                    <select className="status-select-card" value={item.status || 'Active'} onChange={(e) => handleStatusChange(item.id, e.target.value)}>
+                                  <div className="card-body">
+                                    <p><strong>Position:</strong> {item.positions?.title}</p>
+                                    <p><strong>Recruiter:</strong> {item.recruiters?.name}</p>
+                                    <p><strong>Phone:</strong> {item.candidates?.phone || 'N/A'}</p>
+                                    <select className="status-select" value={item.status || 'Active'} onChange={(e) => handleStatusChange(item.id, e.target.value)}>
                                       {statuses.map(status => <option key={status} value={status}>{status}</option>)}
                                     </select>
-                                    <button className="btn-comments-card" onClick={() => openCommentsModal(item)}>Comments</button>
+                                  </div>
+                                  <div className="card-actions">
+                                    <button className="btn-comments" onClick={() => openCommentsModal(item)}>Comments</button>
                                     <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={() => handleRemove(item.id)}>
                                        {confirmDeleteId === item.id ? 'Confirm Delete' : 'Remove'}
                                     </button>
@@ -645,16 +621,18 @@ function ActiveTracker() {
       
       {showCommentsModal && (
         <div className="modal-overlay" onClick={() => setShowCommentsModal(false)}>
-          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content comments-modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>Comments for {selectedPipelineEntry?.candidates?.name}</h2>
+            <form onSubmit={handleAddComment} className="comment-form">
+              <textarea value={commentData.comment_text} onChange={(e) => setCommentData({ comment_text: e.target.value })} placeholder="Add a comment..." required />
+              <button type="submit" className="btn-primary">Add Comment</button>
+            </form>
             <div className="comments-section">
-              <form onSubmit={handleAddComment} className="comment-form">
-                <div className="form-group"><label>Comment *</label><textarea required rows="3" value={commentData.comment_text} onChange={(e) => setCommentData({...commentData, comment_text: e.target.value})} /></div>
-                <button type="submit" className="btn-primary">Add Comment</button>
-              </form>
+              <h3>Comment History</h3>
               <div className="comments-list">
-                <h3>Comment History ({comments.length})</h3>
-                {comments.length === 0 ? (<p className="empty-comments">No comments yet.</p>) : (
+                {comments.length === 0 ? (
+                  <p className="empty-comments">No comments yet.</p>
+                ) : (
                   comments.map(comment => (
                     <div key={comment.id} className="comment-item">
                       {editingComment?.id === comment.id ? (
