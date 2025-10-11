@@ -319,13 +319,21 @@ function ActiveTracker() {
   
   async function fetchComments(candidateId) {
     const { data, error } = await supabase
-  .from('comments')
-  .select('*')  // <-- Just get comments, no join
-  .eq('candidate_id', candidateId)
-  .order('created_at', { ascending: false });
-    
+      .from('comments')
+      .select(`
+        id,
+        candidate_id,
+        comment_text,
+        author_name,
+        user_id,
+        created_at
+      `)
+      .eq('candidate_id', candidateId)
+      .order('created_at', { ascending: false });
+
     if (error) {
       console.error('Error fetching comments:', error);
+      setComments([]);
     } else {
       setComments(data || []);
     }
@@ -335,14 +343,30 @@ function ActiveTracker() {
     e.preventDefault();
     if (!commentData.comment_text.trim()) return;
 
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      alert('You must be logged in to comment');
+      return;
+    }
+
+    const { data: recruiterProfile } = await supabase
+      .from('recruiters')
+      .select('name')
+      .eq('email', user.email)
+      .single();
+
     const { error } = await supabase
-  .from('comments')
-  .insert([{
-    candidate_id: selectedPipelineEntry.candidate_id,
-    comment_text: commentData.comment_text
-  }]);
+      .from('comments')
+      .insert([{
+        candidate_id: selectedPipelineEntry.candidate_id,
+        comment_text: commentData.comment_text.trim(),
+        user_id: user.id,
+        author_name: recruiterProfile?.name || user.email.split('@')[0]
+      }]);
 
     if (error) {
+      console.error('Add comment error:', error);
       alert('Error adding comment: ' + error.message);
     } else {
       setCommentData({ comment_text: '' });
@@ -645,11 +669,11 @@ function ActiveTracker() {
                       ) : (
                         <>
                           <div className="comment-header">
-                            <strong>{comment.recruiters?.name || 'Unknown'}</strong>
+                            <strong>{comment.author_name || 'Unknown'}</strong>
                             <span className="comment-date">{new Date(comment.created_at).toLocaleString()}</span>
                           </div>
                           <p className="comment-text">{comment.comment_text}</p>
-                          {comment.recruiter_id === user?.id && (
+                          {comment.user_id === user?.id && (
                             <div className="comment-actions">
                               <button onClick={() => handleEditComment(comment)} className="btn-edit-comment">Edit</button>
                               <button onClick={() => handleDeleteComment(comment.id)} className="btn-delete-comment">Delete</button>

@@ -106,12 +106,27 @@ export function DataProvider({ children }) {
   };
 
   // --- UPDATED NOTIFICATION FUNCTION (WEBHOOK VERSION) ---
+  const DIRECTOR_EMAIL = 'brian.griffiths@brydongama.com';
+
   const createNotification = async (payload) => {
     // Validate payload has required fields
     if (!payload.recipient || !payload.message) {
       console.error('Invalid notification payload:', payload);
       return;
     }
+
+    // NEW: Add this Director check here
+    const { data: { user } } = await supabase.auth.getUser();
+    const userEmailClean = user?.email?.toLowerCase().trim();
+    const directorEmailClean = DIRECTOR_EMAIL.toLowerCase().trim();
+    const isDirector = userEmailClean === directorEmailClean;
+
+    if (!isDirector) {
+      console.log('🚫 Email notification blocked: User is not Director');
+      return;
+    }
+
+    console.log('✅ Director action detected - sending notification');
 
     try {
       // Call N8N webhook directly instead of writing to database
