@@ -35,13 +35,13 @@
 
 /* Floating Log Activity Button */
 .btn-floating-add {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
+  position: fixed !important;
+  bottom: 30px !important;
+  right: 30px !important;
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  background: linear-gradient(135deg, #7dcfff, #BB9AF7);
   border: none;
   color: white;
   display: flex;
@@ -49,13 +49,13 @@
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(125, 207, 255, 0.4);
-  z-index: 100;
+  z-index: 9999 !important;
   transition: all 0.3s ease;
 }
 
 .btn-floating-add:hover {
   box-shadow: 0 6px 30px rgba(187, 154, 247, 0.6);
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.05);
 }
 
 /* Page Header */
@@ -578,28 +578,31 @@
 
 /* MODALS */
 .modal-overlay {
-  position: fixed;
+  position: fixed !important;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 10000;
+  backdrop-filter: blur(4px);
   padding: 1rem;
 }
 
 .modal-content {
+  position: relative;
   background: var(--card-bg, #24283b);
-  border: 1px solid var(--border-color, #414868);
   border-radius: 12px;
+  padding: 30px;
   max-width: 600px;
-  width: 100%;
+  width: 90%;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color, #414868);
 }
 
 .log-modal {

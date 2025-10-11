@@ -568,6 +568,7 @@ function RecruiterOutreach() {
   }
 
   return (
+    <>
     <PageTransition isLoading={loading}>
       <div className="page-container recruiter-outreach-container">
       {/* Toast Notification */}
@@ -584,17 +585,6 @@ function RecruiterOutreach() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Floating Log Activity Button */}
-      <motion.button
-        className="btn-floating-add"
-        onClick={() => setShowLogModal(true)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        title="Log New Outreach Activity"
-      >
-        <Plus size={24} />
-      </motion.button>
 
       {/* Page Header */}
       <div className="page-header">
@@ -1286,6 +1276,24 @@ function RecruiterOutreach() {
       )}
       </div>
     </PageTransition>
+
+    {/* Floating Log Activity Button - OUTSIDE PageTransition */}
+    <motion.button
+      className="btn-floating-add"
+      onClick={() => setShowLogModal(true)}
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
+      title="Log New Outreach Activity"
+      style={{
+        position: 'fixed',
+        bottom: '30px',
+        right: '30px',
+        zIndex: 9999
+      }}
+    >
+      <Plus size={24} />
+    </motion.button>
+  </>
   );
 }
 
