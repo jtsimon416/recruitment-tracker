@@ -319,10 +319,10 @@ function ActiveTracker() {
   
   async function fetchComments(candidateId) {
     const { data, error } = await supabase
-      .from('comments')
-      .select('*, recruiters(*)')
-      .eq('candidate_id', candidateId)
-      .order('created_at', { ascending: false });
+  .from('comments')
+  .select('*')  // <-- Just get comments, no join
+  .eq('candidate_id', candidateId)
+  .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Error fetching comments:', error);
@@ -334,15 +334,14 @@ function ActiveTracker() {
   async function handleAddComment(e) {
     e.preventDefault();
     if (!commentData.comment_text.trim()) return;
-    
+
     const { error } = await supabase
-      .from('comments')
-      .insert([{
-        candidate_id: selectedPipelineEntry.candidate_id,
-        recruiter_id: user.id,
-        comment_text: commentData.comment_text
-      }]);
-    
+  .from('comments')
+  .insert([{
+    candidate_id: selectedPipelineEntry.candidate_id,
+    comment_text: commentData.comment_text
+  }]);
+
     if (error) {
       alert('Error adding comment: ' + error.message);
     } else {

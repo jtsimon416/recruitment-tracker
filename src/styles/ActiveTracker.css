@@ -1,11 +1,28 @@
-.page-container {
-  padding: 20px;
-  max-width: 100%;
-  margin: 0 auto;
+/* ========== CRITICAL FIX: STOP PAGE FROM SCROLLING ========== */
+
+/* The main app container should NEVER scroll horizontally */
+body {
   overflow-x: hidden !important;
 }
 
-/* FIX: Make header buttons fit on screen */
+#root {
+  overflow-x: hidden !important;
+}
+
+.app-container {
+  overflow-x: hidden !important;
+}
+
+/* Page container - NO horizontal scroll */
+.page-container {
+  padding: 30px;
+  max-width: 1600px;
+  margin: 0 auto;
+  overflow-x: hidden !important;
+  overflow-y: auto;
+}
+
+/* Header stays fixed in place */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -13,8 +30,11 @@
   margin-bottom: 30px;
   padding-bottom: 20px;
   border-bottom: 2px solid var(--border-color);
-  flex-wrap: wrap; /* FIX: Allow wrapping */
-  gap: 10px; /* FIX: Reduced gap */
+  flex-wrap: wrap;
+  gap: 15px;
+  position: relative;
+  z-index: 10;
+  min-height: 80px;
 }
 
 .page-header h1 {
@@ -22,25 +42,27 @@
   font-size: 32px;
   color: var(--text-primary);
   font-weight: 700;
+  flex-shrink: 0;
 }
 
-/* FIX: Tighter spacing for filter buttons */
 .header-controls {
   display: flex;
-  gap: 10px; /* FIX: Reduced from 15px */
+  gap: 10px;
   align-items: center;
-  flex-wrap: wrap; /* FIX: Allow wrapping */
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .position-filter {
-  padding: 10px 16px;
+  padding: 8px 12px;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
+  min-width: 140px;
 }
 
 .position-filter:focus {
@@ -59,12 +81,12 @@
 }
 
 .toggle-btn {
-  padding: 8px 20px;
+  padding: 8px 16px;
   background: transparent;
   border: none;
   border-radius: 6px;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -155,11 +177,11 @@
   border-bottom: none;
 }
 
-/* Candidate Name Cell with Icons */
 .candidate-name-cell {
   display: flex;
-  align-items: center;
+  align-items: center;  /* NOT flex-start */
   gap: 10px;
+  flex-direction: row;  /* ADD THIS - forces horizontal */
 }
 
 .candidate-name-cell strong {
@@ -167,7 +189,6 @@
   font-size: 15px;
 }
 
-/* Icon Styles for List View */
 .icon-view-details {
   color: var(--accent-purple);
   cursor: pointer;
@@ -192,7 +213,6 @@
   color: var(--accent-cyan);
 }
 
-/* Dropdowns */
 .stage-select,
 .status-select {
   padding: 8px 12px;
@@ -213,7 +233,6 @@
   box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.1);
 }
 
-/* Actions Cell */
 .actions-cell {
   display: flex;
   gap: 8px;
@@ -290,18 +309,22 @@
   letter-spacing: 0.5px;
 }
 
-/* ========== PIPELINE (KANBAN) VIEW ========== */
-/* FIX: Only pipeline columns scroll, not the whole page */
+/* ========== PIPELINE VIEW - ONLY THIS SCROLLS ========== */
 .pipeline-view {
   width: 100%;
-  overflow-x: visible;
+  overflow-x: auto !important; /* THIS scrolls */
+  overflow-y: visible;
+  padding-bottom: 10px;
+  /* Prevent this from affecting parent */
+  position: relative;
 }
 
 .pipeline-columns {
   display: flex;
-  gap: 12px;
+  gap: 20px;
+  min-width: min-content;
   padding-bottom: 20px;
-  justify-content: space-between;
+  width: fit-content; /* Important: only as wide as content */
 }
 
 .pipeline-column {
@@ -309,9 +332,9 @@
   border-radius: 12px;
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow);
-  min-width: 180px;
-  max-width: 220px;
-  flex: 1;
+  min-width: 300px;
+  max-width: 340px;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
 }
@@ -325,7 +348,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 16px;
   background: var(--secondary-bg);
   border-bottom: 2px solid var(--border-color);
   border-radius: 12px 12px 0 0;
@@ -334,10 +357,10 @@
 .column-header h3 {
   margin: 0;
   color: var(--accent-cyan);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 
 .column-count {
@@ -364,7 +387,7 @@
   background: var(--secondary-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 12px;
+  padding: 16px;
   cursor: grab;
   transition: all 0.3s ease;
   position: relative;
@@ -381,7 +404,6 @@
   cursor: grabbing;
 }
 
-/* Card Header with Name and Icons */
 .card-header {
   margin-bottom: 12px;
   padding-bottom: 12px;
@@ -398,7 +420,7 @@
 
 .card-name-row h4 {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--accent-cyan);
   flex: 1;
 }
@@ -409,7 +431,6 @@
   align-items: center;
 }
 
-/* Icon Styles for Kanban View */
 .icon-view-details-kanban {
   color: var(--accent-purple);
   cursor: pointer;
@@ -437,13 +458,13 @@
 .card-position {
   color: var(--text-primary);
   font-weight: 600;
-  font-size: 11px;
+  font-size: 13px;
   margin: 4px 0;
 }
 
 .card-recruiter {
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 12px;
   margin: 4px 0;
 }
 
@@ -474,7 +495,6 @@
   gap: 8px;
 }
 
-/* Status Colors */
 .status-active {
   border-left: 4px solid var(--accent-green);
 }
@@ -855,12 +875,11 @@
 /* ========== RESPONSIVE DESIGN ========== */
 @media (max-width: 1400px) {
   .pipeline-columns {
-    gap: 10px;
+    gap: 15px;
   }
-
+  
   .pipeline-column {
-    min-width: 160px;
-    max-width: 200px;
+    min-width: 280px;
   }
 }
 

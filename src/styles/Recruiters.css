@@ -215,3 +215,21 @@
   margin: 0;
   color: var(--text-secondary);
 }
+
+.recruiter-card {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.recruiter-card p {
+  margin: 8px 0;
+  line-height: 1.6;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.recruiter-card strong {
+  min-width: 60px;
+  flex-shrink: 0;
+}
