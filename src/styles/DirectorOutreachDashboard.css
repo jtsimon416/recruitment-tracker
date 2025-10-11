@@ -603,3 +603,17 @@
     justify-content: center;
   }
 }
+
+/* ========== NEW STYLES ========== */
+
+/* Resume Badge */
+.resume-badge {
+  font-size: 16px;
+  margin-left: 8px;
+}
+
+.activity-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

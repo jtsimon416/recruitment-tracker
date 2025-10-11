@@ -356,13 +356,24 @@ function ActiveTracker() {
       .eq('email', user.email)
       .single();
 
+    let authorName;
+    if (recruiterProfile?.name) {
+      authorName = recruiterProfile.name;
+    } else {
+      const emailName = user.email.split('@')[0];
+      authorName = emailName
+        .split('.')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+
     const { error } = await supabase
       .from('comments')
       .insert([{
         candidate_id: selectedPipelineEntry.candidate_id,
         comment_text: commentData.comment_text.trim(),
         user_id: user.id,
-        author_name: recruiterProfile?.name || user.email.split('@')[0]
+        author_name: authorName
       }]);
 
     if (error) {

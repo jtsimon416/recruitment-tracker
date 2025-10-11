@@ -388,12 +388,13 @@ function DirectorReview() {
     async function fetchComments(candidateId) {
         const { data, error } = await supabase
             .from('comments')
-            .select('*')
+            .select('id, candidate_id, comment_text, author_name, user_id, created_at')
             .eq('candidate_id', candidateId)
             .order('created_at', { ascending: false });
-        
+
         if (error) {
             console.error('Error fetching comments:', error);
+            setComments([]);
         } else {
             setComments(data || []);
         }
@@ -490,12 +491,15 @@ function DirectorReview() {
         }
 
         setLoading(true);
-        
+
         // 1. Save the comment first, mandatory for Hold/Reject/Comment-Only
+        const { data: { user } } = await supabase.auth.getUser();
+
         const { error: commentError } = await supabase.from('comments').insert([{
             candidate_id: pipelineEntry.candidates.id,
             author_name: authorName,
-            comment_text: comment
+            comment_text: comment,
+            user_id: user?.id
         }]);
 
         if (commentError) {

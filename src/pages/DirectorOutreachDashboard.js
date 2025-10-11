@@ -66,7 +66,11 @@ function DirectorOutreachDashboard() {
     switch(status) {
       case 'outreach_sent': return '#7AA2F7';
       case 'reply_received': return '#9ECE6A';
+      case 'accepted': return '#73daca';
+      case 'declined': return '#565f89';
       case 'call_scheduled': return '#BB9AF7';
+      case 'added_to_pool': return '#7dcfff';
+      case 'added_to_pipeline': return '#9ECE6A';
       case 'cold': return '#565f89';
       case 'completed': return '#7dcfff';
       default: return '#c0caf5';
@@ -77,11 +81,20 @@ function DirectorOutreachDashboard() {
     switch(status) {
       case 'outreach_sent': return 'Outreach Sent';
       case 'reply_received': return 'Reply Received';
+      case 'accepted': return 'Accepted Interest';
+      case 'declined': return 'Declined';
       case 'call_scheduled': return 'Call Scheduled';
+      case 'added_to_pool': return 'Added to Pool ✓';
+      case 'added_to_pipeline': return 'Added to Pipeline ✓';
       case 'cold': return 'Cold';
       case 'completed': return 'Completed';
       default: return status;
     }
+  }
+
+  // Helper function to check if activity has resume
+  function hasResume(activity) {
+    return activity.notes && activity.notes.includes('📄 Resume');
   }
 
   // Metrics Calculations
@@ -101,6 +114,7 @@ function DirectorOutreachDashboard() {
     const weekReplies = weekActivities.filter(a => a.activity_status === 'reply_received').length;
     const weekCalls = weekActivities.filter(a => a.activity_status === 'call_scheduled').length;
     const weekResponseRate = weekOutreach > 0 ? ((weekReplies / weekOutreach) * 100).toFixed(1) : 0;
+    const declined = outreachActivities.filter(a => a.activity_status === 'declined').length;
 
     return {
       todayOutreach,
@@ -108,7 +122,8 @@ function DirectorOutreachDashboard() {
       weekOutreach,
       weekReplies,
       weekCalls,
-      weekResponseRate
+      weekResponseRate,
+      declined
     };
   }, [outreachActivities]);
 
@@ -326,6 +341,10 @@ function DirectorOutreachDashboard() {
               <span className="metric-label">Response Rate</span>
               <span className="metric-value">{metrics.weekResponseRate}%</span>
             </div>
+            <div className="metric-item">
+              <span className="metric-label">Declined</span>
+              <span className="metric-value" style={{color: '#f7768e'}}>{metrics.declined}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -492,12 +511,19 @@ function DirectorOutreachDashboard() {
                       <span className="time-ago">{getTimeAgo(activity.created_at)}</span>
                     </div>
                   </div>
-                  <span
-                    className="status-badge"
-                    style={{ backgroundColor: getStatusColor(activity.activity_status) }}
-                  >
-                    {getStatusLabel(activity.activity_status)}
-                  </span>
+                  <div className="activity-status">
+                    <span
+                      className="status-badge"
+                      style={{ backgroundColor: getStatusColor(activity.activity_status) }}
+                    >
+                      {getStatusLabel(activity.activity_status)}
+                    </span>
+                    {hasResume(activity) && (
+                      <span className="resume-badge" title="Resume attached">
+                        📄
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="activity-body">

@@ -34,27 +34,28 @@
 }
 
 /* Floating Log Activity Button */
-.floating-log-button {
+.btn-floating-add {
   position: fixed;
-  bottom: 2rem;
-  right: 2rem;
+  bottom: 30px;
+  right: 30px;
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #BB9AF7 0%, #9d7cd8 100%);
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
   border: none;
   color: white;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(187, 154, 247, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(125, 207, 255, 0.4);
+  z-index: 100;
   transition: all 0.3s ease;
 }
 
-.floating-log-button:hover {
+.btn-floating-add:hover {
   box-shadow: 0 6px 30px rgba(187, 154, 247, 0.6);
+  transform: translateY(-2px);
 }
 
 /* Page Header */
@@ -833,4 +834,186 @@
   .form-group-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* ========== NEW BUTTON STYLES ========== */
+
+/* Declined Count Banner */
+.declined-count-banner {
+  background: rgba(247, 118, 142, 0.1);
+  border-left: 3px solid var(--accent-pink);
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Accept/Decline Buttons */
+.btn-accept-interest {
+  background: var(--accent-green, #9ECE6A);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-accept-interest:hover {
+  background: #73daca;
+  transform: translateY(-1px);
+}
+
+.btn-decline-interest {
+  background: var(--accent-pink, #f7768e);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-decline-interest:hover {
+  background: var(--accent-orange, #e0af68);
+  transform: translateY(-1px);
+}
+
+/* Resume Buttons */
+.resume-indicator {
+  color: var(--accent-green, #9ECE6A);
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.btn-upload-resume,
+.btn-upload-resume-manual {
+  background: var(--accent-purple, #BB9AF7);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-upload-resume:hover,
+.btn-upload-resume-manual:hover {
+  background: var(--accent-pink, #f7768e);
+  transform: translateY(-1px);
+}
+
+.btn-schedule-call {
+  background: var(--accent-purple, #BB9AF7);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-schedule-call:hover {
+  background: var(--accent-pink, #f7768e);
+  transform: translateY(-1px);
+}
+
+.file-input {
+  padding: 10px;
+  border: 2px dashed var(--border-color, #414868);
+  border-radius: 8px;
+  background: var(--secondary-bg, #24283b);
+  cursor: pointer;
+  width: 100%;
+  color: var(--text-primary, #c0caf5);
+}
+
+/* Talent Pool / Pipeline Buttons */
+.btn-add-pool,
+.btn-add-pipeline {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-add-pool {
+  background: var(--accent-cyan, #7dcfff);
+  color: white;
+}
+
+.btn-add-pool:hover:not(:disabled) {
+  background: var(--accent-blue, #7AA2F7);
+  transform: translateY(-1px);
+}
+
+.btn-add-pipeline {
+  background: var(--accent-green, #9ECE6A);
+  color: white;
+}
+
+.btn-add-pipeline:hover:not(:disabled) {
+  background: #73daca;
+  transform: translateY(-1px);
+}
+
+.btn-add-pool:disabled,
+.btn-add-pipeline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Action Button Groups */
+.action-buttons-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.modal-subtext {
+  color: var(--text-secondary, #565f89);
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color, #414868);
+  border-radius: 6px;
+  background: var(--secondary-bg, #24283b);
+  color: var(--text-primary, #c0caf5);
+  font-size: 14px;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--accent-cyan, #7dcfff);
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
+import { supabase } from '../services/supabaseClient';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -28,6 +29,13 @@ function RecruiterOutreach() {
   const [expandedNotes, setExpandedNotes] = useState({});
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
+  // Resume upload state
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [selectedActivityForResume, setSelectedActivityForResume] = useState(null);
+  const [resumeUploadMethod, setResumeUploadMethod] = useState(null);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [manualResumeUrl, setManualResumeUrl] = useState('');
+
   // Filters
   const [filterPosition, setFilterPosition] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -42,8 +50,7 @@ function RecruiterOutreach() {
     scheduled_call_date: '',
     scheduled_call_time: '',
     call_duration: '30',
-    notes: '',
-    set_followup: false
+    notes: ''
   });
 
   useEffect(() => {
@@ -56,29 +63,10 @@ function RecruiterOutreach() {
     if (user?.email) {
       const data = await fetchMyOutreachActivities(user.email);
       if (data) {
-        const calculated = calculateFollowupNeeded(data);
-        setActivities(calculated);
+        setActivities(data);
       }
     }
     setLoading(false);
-  }
-
-  function calculateFollowupNeeded(activitiesData) {
-    const now = new Date();
-    return activitiesData.map(activity => {
-      if (activity.activity_status === 'outreach_sent') {
-        const daysSinceOutreach = Math.floor((now - new Date(activity.created_at)) / (1000 * 60 * 60 * 24));
-        const daysSinceFollowup = activity.last_followup_date
-          ? Math.floor((now - new Date(activity.last_followup_date)) / (1000 * 60 * 60 * 24))
-          : daysSinceOutreach;
-
-        activity.followup_needed = daysSinceFollowup >= 3;
-        activity.days_since_last_contact = daysSinceFollowup;
-      } else {
-        activity.followup_needed = false;
-      }
-      return activity;
-    });
   }
 
   function showToast(message, type = 'success') {
@@ -117,8 +105,7 @@ function RecruiterOutreach() {
       linkedin_url: logForm.linkedin_url,
       candidate_name: logForm.candidate_name || null,
       activity_status: logForm.activity_status,
-      notes: logForm.notes || null,
-      followup_needed: logForm.set_followup
+      notes: logForm.notes || null
     };
 
     // Add scheduled call data if applicable
@@ -148,19 +135,8 @@ function RecruiterOutreach() {
       scheduled_call_date: '',
       scheduled_call_time: '',
       call_duration: '30',
-      notes: '',
-      set_followup: false
+      notes: ''
     });
-  }
-
-  async function handleSendFollowup(activity) {
-    window.open(activity.linkedin_url, '_blank');
-    await updateOutreachActivity(activity.id, {
-      last_followup_date: new Date().toISOString(),
-      followup_needed: false
-    });
-    showToast('Follow-up logged. Good luck!');
-    await loadData();
   }
 
   async function handleMarkCold(activity) {
@@ -237,6 +213,205 @@ function RecruiterOutreach() {
     await loadData();
   }
 
+  // Accept/Decline Interest functions
+  async function handleAcceptInterest(activity) {
+    const confirm = window.confirm(`Mark ${activity.candidate_name || 'this candidate'} as Accepted Interest?`);
+    if (!confirm) return;
+
+    await updateOutreachActivity(activity.id, {
+      activity_status: 'accepted',
+      notes: `${activity.notes || ''}\n\n✅ Accepted Interest - ${new Date().toLocaleDateString()}`
+    });
+
+    showToast('Candidate accepted! You can now upload resume and schedule call.');
+    await loadData();
+  }
+
+  async function handleDeclineInterest(activity) {
+    const reason = prompt('Optional: Why did they decline?');
+
+    await updateOutreachActivity(activity.id, {
+      activity_status: 'declined',
+      notes: `${activity.notes || ''}\n\n❌ Declined${reason ? ': ' + reason : ''} - ${new Date().toLocaleDateString()}`
+    });
+
+    showToast('Candidate marked as declined.');
+    await loadData();
+  }
+
+  // Resume Upload functions
+  function openResumeModal(activity, method) {
+    setSelectedActivityForResume(activity);
+    setResumeUploadMethod(method);
+    setShowResumeModal(true);
+    setResumeFile(null);
+    setManualResumeUrl('');
+  }
+
+  async function handleResumeUploadParse() {
+    if (!resumeFile) {
+      showToast('Please select a file', 'error');
+      return;
+    }
+
+    const BUCKET_NAME = 'resumes';
+    const fileName = `${Date.now()}_${resumeFile.name}`;
+
+    // Upload to Supabase
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(fileName, resumeFile);
+
+    if (uploadError) {
+      showToast('Upload error: ' + uploadError.message, 'error');
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(fileName);
+
+    // Update activity with resume URL
+    await updateOutreachActivity(selectedActivityForResume.id, {
+      notes: `${selectedActivityForResume.notes || ''}\n\n📄 Resume: ${publicUrl}`
+    });
+
+    // Send to N8N for parsing
+    try {
+      await fetch('https://jtsimon416.app.n8n.cloud/webhook/00741332-4763-439b-87d0-d19a13f5a0d0', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resume_url: publicUrl })
+      });
+      showToast('Resume uploaded and sent for parsing!');
+    } catch (error) {
+      showToast('Resume uploaded (parsing unavailable)', 'warning');
+    }
+
+    setShowResumeModal(false);
+    await loadData();
+  }
+
+  async function handleResumeUploadManual() {
+    if (!manualResumeUrl.trim()) {
+      showToast('Please enter a resume URL', 'error');
+      return;
+    }
+
+    await updateOutreachActivity(selectedActivityForResume.id, {
+      notes: `${selectedActivityForResume.notes || ''}\n\n📄 Resume URL: ${manualResumeUrl}`
+    });
+
+    showToast('Resume URL saved!');
+    setShowResumeModal(false);
+    await loadData();
+  }
+
+  // Helper function to check if activity has resume
+  function hasResume(activity) {
+    return activity.notes && activity.notes.includes('📄 Resume');
+  }
+
+  // Add to Talent Pool / Pipeline functions
+  async function handleAddToTalentPool(activity) {
+    if (!hasResume(activity)) {
+      showToast('Resume required to add to Talent Pool', 'error');
+      return;
+    }
+
+    const confirm = window.confirm(`Add ${activity.candidate_name || 'this candidate'} to Talent Pool?`);
+    if (!confirm) return;
+
+    // Extract resume URL from notes
+    const resumeMatch = activity.notes.match(/📄 Resume.*?:(.+?)(\n|$)/);
+    const resumeUrl = resumeMatch ? resumeMatch[1].trim() : '';
+
+    const candidateData = {
+      name: activity.candidate_name || 'LinkedIn Contact',
+      email: '', // To be filled later
+      linkedin_url: activity.linkedin_url,
+      resume_url: resumeUrl,
+      notes: activity.notes || '',
+      skills: []
+    };
+
+    const { error } = await supabase
+      .from('candidates')
+      .insert([candidateData]);
+
+    if (error) {
+      showToast('Error adding to Talent Pool: ' + error.message, 'error');
+      return;
+    }
+
+    await updateOutreachActivity(activity.id, {
+      activity_status: 'added_to_pool'
+    });
+
+    showToast('✅ Candidate added to Talent Pool!');
+    await loadData();
+  }
+
+  async function handleAddToPipeline(activity) {
+    if (!hasResume(activity)) {
+      showToast('Resume required to add to Pipeline', 'error');
+      return;
+    }
+
+    const confirm = window.confirm(`Add ${activity.candidate_name || 'this candidate'} to Pipeline for Director screening?`);
+    if (!confirm) return;
+
+    // Extract resume URL from notes
+    const resumeMatch = activity.notes.match(/📄 Resume.*?:(.+?)(\n|$)/);
+    const resumeUrl = resumeMatch ? resumeMatch[1].trim() : '';
+
+    // First create candidate in Talent Pool
+    const candidateData = {
+      name: activity.candidate_name || 'LinkedIn Contact',
+      email: '',
+      linkedin_url: activity.linkedin_url,
+      resume_url: resumeUrl,
+      notes: activity.notes || '',
+      skills: []
+    };
+
+    const { data: newCandidate, error: candidateError } = await supabase
+      .from('candidates')
+      .insert([candidateData])
+      .select()
+      .single();
+
+    if (candidateError) {
+      showToast('Error creating candidate: ' + candidateError.message, 'error');
+      return;
+    }
+
+    // Then add to pipeline
+    const pipelineData = {
+      candidate_id: newCandidate.id,
+      position_id: activity.position_id,
+      recruiter_id: activity.recruiter_id,
+      stage: 'Screening',
+      status: 'Active'
+    };
+
+    const { error: pipelineError } = await supabase
+      .from('pipeline')
+      .insert([pipelineData]);
+
+    if (pipelineError) {
+      showToast('Error adding to pipeline: ' + pipelineError.message, 'error');
+      return;
+    }
+
+    await updateOutreachActivity(activity.id, {
+      activity_status: 'added_to_pipeline'
+    });
+
+    showToast('✅ Candidate added to Pipeline and submitted to Director!');
+    await loadData();
+  }
+
   // Get today's calls
   const todaysCalls = useMemo(() => {
     const today = new Date();
@@ -251,12 +426,7 @@ function RecruiterOutreach() {
     }).sort((a, b) => new Date(a.scheduled_call_date) - new Date(b.scheduled_call_date));
   }, [activities]);
 
-  // Get follow-ups due
-  const followupsDue = useMemo(() => {
-    return activities.filter(a => a.followup_needed).sort((a, b) => b.days_since_last_contact - a.days_since_last_contact);
-  }, [activities]);
-
-  // Kanban columns
+  // Kanban columns (filtered to exclude declined)
   const waitingActivities = useMemo(() => {
     return activities.filter(a => a.activity_status === 'outreach_sent').sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   }, [activities]);
@@ -265,13 +435,22 @@ function RecruiterOutreach() {
     return activities.filter(a => a.activity_status === 'reply_received').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }, [activities]);
 
+  const acceptedActivities = useMemo(() => {
+    return activities.filter(a => a.activity_status === 'accepted').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }, [activities]);
+
   const scheduledActivities = useMemo(() => {
     return activities.filter(a => a.activity_status === 'call_scheduled').sort((a, b) => new Date(a.scheduled_call_date) - new Date(b.scheduled_call_date));
   }, [activities]);
 
+  // Declined count
+  const declinedCount = activities.filter(a => a.activity_status === 'declined').length;
+
   // Recent activity feed with filters
   const recentActivities = useMemo(() => {
-    let filtered = activities.filter(a => a.activity_status !== 'cold');
+    let filtered = activities
+      .filter(a => a.activity_status !== 'cold')
+      .filter(a => a.activity_status !== 'declined'); // Hide declined
 
     if (filterPosition !== 'all') {
       filtered = filtered.filter(a => a.position_id === filterPosition);
@@ -362,7 +541,11 @@ function RecruiterOutreach() {
     switch(status) {
       case 'outreach_sent': return '#7AA2F7';
       case 'reply_received': return '#9ECE6A';
+      case 'accepted': return '#73daca';
+      case 'declined': return '#565f89';
       case 'call_scheduled': return '#BB9AF7';
+      case 'added_to_pool': return '#7dcfff';
+      case 'added_to_pipeline': return '#9ECE6A';
       case 'cold': return '#565f89';
       case 'completed': return '#7dcfff';
       default: return '#c0caf5';
@@ -373,7 +556,11 @@ function RecruiterOutreach() {
     switch(status) {
       case 'outreach_sent': return 'Outreach Sent';
       case 'reply_received': return 'Reply Received';
+      case 'accepted': return 'Accepted Interest';
+      case 'declined': return 'Declined';
       case 'call_scheduled': return 'Call Scheduled';
+      case 'added_to_pool': return 'Added to Pool ✓';
+      case 'added_to_pipeline': return 'Added to Pipeline ✓';
       case 'cold': return 'Cold';
       case 'completed': return 'Completed';
       default: return status;
@@ -400,12 +587,13 @@ function RecruiterOutreach() {
 
       {/* Floating Log Activity Button */}
       <motion.button
-        className="floating-log-button"
+        className="btn-floating-add"
         onClick={() => setShowLogModal(true)}
         whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileTap={{ scale: 0.95 }}
+        title="Log New Outreach Activity"
       >
-        <Plus size={28} />
+        <Plus size={24} />
       </motion.button>
 
       {/* Page Header */}
@@ -413,6 +601,13 @@ function RecruiterOutreach() {
         <h1>My LinkedIn Outreach</h1>
         <p className="subtitle">Track your conversations and never miss a follow-up</p>
       </div>
+
+      {/* Declined Count Banner */}
+      {declinedCount > 0 && (
+        <div className="declined-count-banner">
+          ❌ {declinedCount} candidate{declinedCount > 1 ? 's' : ''} declined for active roles
+        </div>
+      )}
 
       {/* A. TODAY'S AGENDA */}
       <div className="todays-agenda-section">
@@ -458,40 +653,6 @@ function RecruiterOutreach() {
             )}
           </div>
 
-          {/* Follow-ups Due */}
-          <div className="agenda-card">
-            <h3><Clock size={20} /> Follow-Ups Due</h3>
-            {followupsDue.length === 0 ? (
-              <p className="empty-message">All caught up!</p>
-            ) : (
-              <div className="followups-list">
-                {followupsDue.map(activity => (
-                  <div key={activity.id} className="followup-item">
-                    <div
-                      className="urgency-dot"
-                      style={{ backgroundColor: getUrgencyColor(activity.days_since_last_contact) }}
-                    />
-                    <div className="followup-details">
-                      <strong>{activity.candidate_name || 'LinkedIn Contact'}</strong>
-                      <p>{activity.positions?.title}</p>
-                      <p className="days-ago">{activity.days_since_last_contact} days ago</p>
-                      <div className="followup-actions">
-                        <a href={activity.linkedin_url} target="_blank" rel="noopener noreferrer" className="btn-icon">
-                          <ExternalLink size={16} />
-                        </a>
-                        <button className="btn-small btn-primary" onClick={() => handleSendFollowup(activity)}>
-                          <Send size={14} /> Send Follow-up
-                        </button>
-                        <button className="btn-small btn-secondary" onClick={() => handleMarkCold(activity)}>
-                          Mark Cold
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -538,9 +699,6 @@ function RecruiterOutreach() {
                                 <a href={activity.linkedin_url} target="_blank" rel="noopener noreferrer" className="btn-icon">
                                   <ExternalLink size={14} />
                                 </a>
-                                <button className="btn-quick-action" onClick={() => handleSendFollowup(activity)}>
-                                  Send Follow-up
-                                </button>
                               </div>
                             </motion.div>
                           )}
@@ -579,13 +737,100 @@ function RecruiterOutreach() {
                             <strong>{activity.candidate_name || 'LinkedIn Contact'}</strong>
                             <p className="position-name">{activity.positions?.title}</p>
                             <p className="time-ago">{getTimeAgo(activity.created_at)}</p>
-                            <div className="card-actions">
+                            <div className="card-actions action-buttons-group">
                               <a href={activity.linkedin_url} target="_blank" rel="noopener noreferrer" className="btn-icon">
                                 <ExternalLink size={14} />
                               </a>
-                              <button className="btn-quick-action" onClick={() => openScheduleModal(activity)}>
-                                Schedule Call
+                              <button
+                                className="btn-accept-interest"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAcceptInterest(activity);
+                                }}
+                              >
+                                <CheckCircle size={16} />
+                                Accept
                               </button>
+                              <button
+                                className="btn-decline-interest"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeclineInterest(activity);
+                                }}
+                              >
+                                <X size={16} />
+                                Decline
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                </div>
+              )}
+            </Droppable>
+
+            {/* ACCEPTED */}
+            <Droppable droppableId="accepted">
+              {(provided, snapshot) => (
+                <div
+                  className={`kanban-column ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                >
+                  <div className="column-header">
+                    <h3>Accepted</h3>
+                    <span className="count-badge">{acceptedActivities.length}</span>
+                  </div>
+                  <div className="column-cards">
+                    {acceptedActivities.map((activity, index) => (
+                      <Draggable key={activity.id} draggableId={activity.id} index={index}>
+                        {(provided, snapshot) => (
+                          <motion.div
+                            className={`kanban-card ${snapshot.isDragging ? 'dragging' : ''}`}
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            layout
+                          >
+                            <strong>{activity.candidate_name || 'LinkedIn Contact'}</strong>
+                            <p className="position-name">{activity.positions?.title}</p>
+                            <p className="time-ago">{getTimeAgo(activity.created_at)}</p>
+                            {hasResume(activity) && (
+                              <span className="resume-indicator">📄 Resume Attached</span>
+                            )}
+                            <div className="card-actions action-buttons-group">
+                              <a href={activity.linkedin_url} target="_blank" rel="noopener noreferrer" className="btn-icon">
+                                <ExternalLink size={14} />
+                              </a>
+                              {!hasResume(activity) ? (
+                                <>
+                                  <button
+                                    className="btn-upload-resume"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openResumeModal(activity, 'parse');
+                                    }}
+                                  >
+                                    📄 Upload Resume
+                                  </button>
+                                  <button
+                                    className="btn-upload-resume-manual"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openResumeModal(activity, 'manual');
+                                    }}
+                                  >
+                                    🔗 Add URL
+                                  </button>
+                                </>
+                              ) : (
+                                <button className="btn-schedule-call" onClick={() => openScheduleModal(activity)}>
+                                  📞 Schedule Call
+                                </button>
+                              )}
                             </div>
                           </motion.div>
                         )}
@@ -623,16 +868,46 @@ function RecruiterOutreach() {
                             <strong>{activity.candidate_name || 'LinkedIn Contact'}</strong>
                             <p className="position-name">{activity.positions?.title}</p>
                             <p className="call-time-display">{formatCallDateTime(activity.scheduled_call_date)}</p>
-                            <div className="card-actions">
+                            {hasResume(activity) && (
+                              <span className="resume-indicator">📄 Resume Attached</span>
+                            )}
+                            <div className="card-actions action-buttons-group">
                               <a href={activity.linkedin_url} target="_blank" rel="noopener noreferrer" className="btn-icon">
                                 <ExternalLink size={14} />
                               </a>
-                              <button className="btn-quick-action" onClick={() => openScheduleModal(activity)}>
-                                Reschedule
-                              </button>
-                              <button className="btn-quick-action btn-primary" onClick={() => handleMarkComplete(activity)}>
-                                Complete
-                              </button>
+                              {hasResume(activity) ? (
+                                <>
+                                  <button
+                                    className="btn-add-pool"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAddToTalentPool(activity);
+                                    }}
+                                  >
+                                    💼 Talent Pool
+                                  </button>
+                                  <button
+                                    className="btn-add-pipeline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAddToPipeline(activity);
+                                    }}
+                                  >
+                                    🚀 Pipeline
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  className="btn-upload-resume"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openResumeModal(activity, 'parse');
+                                  }}
+                                  title="Resume required"
+                                >
+                                  📄 Upload Resume First
+                                </button>
+                              )}
                             </div>
                           </motion.div>
                         )}
@@ -891,17 +1166,6 @@ function RecruiterOutreach() {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={logForm.set_followup}
-                      onChange={(e) => setLogForm({...logForm, set_followup: e.target.checked})}
-                    />
-                    Set follow-up reminder (3 days)
-                  </label>
-                </div>
-
                 <div className="modal-actions">
                   <button type="button" className="btn-secondary" onClick={() => setShowLogModal(false)}>
                     Cancel
@@ -969,6 +1233,57 @@ function RecruiterOutreach() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* RESUME UPLOAD MODAL */}
+      {showResumeModal && (
+        <div className="modal-overlay" onClick={() => setShowResumeModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Upload Resume</h2>
+            <p className="modal-subtext">
+              For: {selectedActivityForResume?.candidate_name || 'LinkedIn Contact'}
+            </p>
+
+            {resumeUploadMethod === 'parse' ? (
+              <div className="form-group">
+                <label>Select Resume File (.pdf, .doc, .docx)</label>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => setResumeFile(e.target.files[0])}
+                  className="file-input"
+                />
+                <div className="modal-actions">
+                  <button className="btn-primary" onClick={handleResumeUploadParse}>
+                    Upload & Parse
+                  </button>
+                  <button className="btn-secondary" onClick={() => setShowResumeModal(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label>Resume URL</label>
+                <input
+                  type="url"
+                  value={manualResumeUrl}
+                  onChange={(e) => setManualResumeUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="input-field"
+                />
+                <div className="modal-actions">
+                  <button className="btn-primary" onClick={handleResumeUploadManual}>
+                    Save URL
+                  </button>
+                  <button className="btn-secondary" onClick={() => setShowResumeModal(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       </div>
     </PageTransition>
   );

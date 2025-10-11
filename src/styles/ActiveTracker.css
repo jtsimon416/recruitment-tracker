@@ -935,3 +935,79 @@ body {
     width: 100%;
   }
 }
+
+/* ========== COMMENT STYLING ========== */
+
+.comment-item {
+  background: var(--secondary-bg);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border-left: 3px solid var(--accent-cyan);
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.comment-header strong {
+  color: var(--accent-cyan);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.comment-date {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.comment-text {
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-edit-comment,
+.btn-delete-comment {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-comment {
+  background: var(--accent-blue);
+  color: white;
+}
+
+.btn-edit-comment:hover {
+  background: var(--accent-cyan);
+  transform: translateY(-1px);
+}
+
+.btn-delete-comment {
+  background: var(--accent-pink);
+  color: white;
+}
+
+.btn-delete-comment:hover {
+  background: var(--accent-orange);
+  transform: translateY(-1px);
+}
