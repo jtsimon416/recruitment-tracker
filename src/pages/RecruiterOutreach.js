@@ -6,6 +6,7 @@ import {
   Plus, ExternalLink, Clock, Calendar, ChevronDown, ChevronUp,
   Send, X, AlertCircle, CheckCircle, Filter, Download
 } from 'lucide-react';
+import PageTransition from '../components/PageTransition';
 import '../styles/RecruiterOutreach.css';
 
 function RecruiterOutreach() {
@@ -379,10 +380,9 @@ function RecruiterOutreach() {
     }
   }
 
-  if (loading) return <div className="loading-state">Loading your outreach activities...</div>;
-
   return (
-    <div className="recruiter-outreach-container">
+    <PageTransition isLoading={loading}>
+      <div className="page-container recruiter-outreach-container">
       {/* Toast Notification */}
       <AnimatePresence>
         {toast.show && (
@@ -703,11 +703,11 @@ function RecruiterOutreach() {
         </div>
 
         <div className="activity-feed">
-          {recentActivities.length === 0 ? (
+          {!loading && recentActivities.length === 0 ? (
             <div className="empty-state">
               <p>No activities found. Start logging your LinkedIn outreach!</p>
             </div>
-          ) : (
+          ) : !loading && (
             recentActivities.map(activity => (
               <motion.div
                 key={activity.id}
@@ -969,7 +969,8 @@ function RecruiterOutreach() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </PageTransition>
   );
 }
 

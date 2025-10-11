@@ -3,7 +3,8 @@ import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
 import { useLocation } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Search, ChevronDown, ChevronUp, Binoculars, FileText } from 'lucide-react'; 
+import { Search, ChevronDown, ChevronUp, Binoculars, FileText } from 'lucide-react';
+import PageTransition from '../components/PageTransition';
 import '../styles/ActiveTracker.css';
 
 // --- COMPONENT: Info Sidebar for Candidate Details ---
@@ -455,9 +456,9 @@ function ActiveTracker() {
   const renderListView = () => {
     return (
       <div className="list-view">
-        {filteredAndSortedPipeline.length === 0 ? (
+        {!loading && filteredAndSortedPipeline.length === 0 ? (
           <div className="empty-state"><h3>No matching pipeline entries</h3><p>Adjust your filters or add candidates to get started.</p></div>
-        ) : (
+        ) : !loading && (
           Object.keys(groupedByPosition).map(posTitle => (
             <div key={posTitle} className="position-section">
               <h2 className="position-section-title">{posTitle}</h2>
@@ -600,10 +601,9 @@ function ActiveTracker() {
     );
   };
   
-  if (loading) return <div className="loading-state">Loading Active Tracker...</div>;
-  
   return (
-    <div className="page-container">
+    <PageTransition isLoading={loading}>
+      <div className="page-container">
       <div className="page-header">
         <h1>Active Tracker</h1>
         <div className="header-controls">
@@ -681,7 +681,8 @@ function ActiveTracker() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PageTransition>
   );
 }
 

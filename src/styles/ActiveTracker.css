@@ -1,9 +1,11 @@
 .page-container {
-  padding: 30px;
-  max-width: 1600px;
+  padding: 20px;
+  max-width: 100%;
   margin: 0 auto;
+  overflow-x: hidden !important;
 }
 
+/* FIX: Make header buttons fit on screen */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -11,6 +13,8 @@
   margin-bottom: 30px;
   padding-bottom: 20px;
   border-bottom: 2px solid var(--border-color);
+  flex-wrap: wrap; /* FIX: Allow wrapping */
+  gap: 10px; /* FIX: Reduced gap */
 }
 
 .page-header h1 {
@@ -20,10 +24,12 @@
   font-weight: 700;
 }
 
+/* FIX: Tighter spacing for filter buttons */
 .header-controls {
   display: flex;
-  gap: 15px;
+  gap: 10px; /* FIX: Reduced from 15px */
   align-items: center;
+  flex-wrap: wrap; /* FIX: Allow wrapping */
 }
 
 .position-filter {
@@ -285,16 +291,17 @@
 }
 
 /* ========== PIPELINE (KANBAN) VIEW ========== */
+/* FIX: Only pipeline columns scroll, not the whole page */
 .pipeline-view {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: visible;
 }
 
 .pipeline-columns {
   display: flex;
-  gap: 20px;
-  min-width: min-content;
+  gap: 12px;
   padding-bottom: 20px;
+  justify-content: space-between;
 }
 
 .pipeline-column {
@@ -302,7 +309,8 @@
   border-radius: 12px;
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow);
-  min-width: 300px;
+  min-width: 180px;
+  max-width: 220px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -317,7 +325,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: 12px;
   background: var(--secondary-bg);
   border-bottom: 2px solid var(--border-color);
   border-radius: 12px 12px 0 0;
@@ -326,10 +334,10 @@
 .column-header h3 {
   margin: 0;
   color: var(--accent-cyan);
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .column-count {
@@ -356,7 +364,7 @@
   background: var(--secondary-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 16px;
+  padding: 12px;
   cursor: grab;
   transition: all 0.3s ease;
   position: relative;
@@ -390,7 +398,7 @@
 
 .card-name-row h4 {
   margin: 0;
-  font-size: 15px;
+  font-size: 13px;
   color: var(--accent-cyan);
   flex: 1;
 }
@@ -429,13 +437,13 @@
 .card-position {
   color: var(--text-primary);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 11px;
   margin: 4px 0;
 }
 
 .card-recruiter {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 11px;
   margin: 4px 0;
 }
 
@@ -847,11 +855,12 @@
 /* ========== RESPONSIVE DESIGN ========== */
 @media (max-width: 1400px) {
   .pipeline-columns {
-    gap: 15px;
+    gap: 10px;
   }
-  
+
   .pipeline-column {
-    min-width: 280px;
+    min-width: 160px;
+    max-width: 200px;
   }
 }
 

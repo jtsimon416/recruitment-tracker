@@ -84,15 +84,17 @@
 }
 
 .metric-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 1rem;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
 }
 
 .metric-item {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  align-items: flex-start;
+  min-width: 100px;
 }
 
 .metric-label {

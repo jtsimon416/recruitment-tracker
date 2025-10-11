@@ -5,20 +5,71 @@
   --card-bg: #2a2f3f;
   --hover-bg: #353b4f;
   --border-color: #3d4355;
-  
+
   --text-primary: #e8eaf0;
   --text-secondary: #b8bccf;
   --text-muted: #8a8fa3;
-  
+
   --accent-blue: #7aa2f7;
   --accent-purple: #bb9af7;
   --accent-pink: #f7a2c6;
   --accent-green: #9ece6a;
   --accent-orange: #ff9e64;
   --accent-cyan: #7dcfff;
-  
+
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+
+/* ============================================
+   NPROGRESS LOADING BAR - CUSTOM STYLING
+   ============================================ */
+
+/* Main progress bar */
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: linear-gradient(90deg, #7AA2F7 0%, #BB9AF7 50%, #7dcfff 100%) !important;
+  position: fixed;
+  z-index: 10000;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px !important;
+  box-shadow: 0 0 10px #7AA2F7, 0 0 5px #BB9AF7 !important;
+}
+
+/* Fancy blur effect */
+#nprogress .peg {
+  display: block;
+  position: absolute;
+  right: 0;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 15px #7AA2F7, 0 0 8px #BB9AF7 !important;
+  opacity: 1;
+  transform: rotate(3deg) translate(0px, -4px);
+}
+
+/* Remove spinner (we only want the bar) */
+#nprogress .spinner {
+  display: none !important;
+}
+
+/* Ensure bar is always on top */
+#nprogress .bar {
+  z-index: 10001 !important;
+}
+
+/* Smooth animation */
+#nprogress .bar {
+  transition: width 0.4s ease, opacity 0.4s ease !important;
+}
+
+/* ============================================
+   END NPROGRESS STYLING
+   ============================================ */
 
 * {
   margin: 0;
@@ -113,6 +164,12 @@ body {
   padding: 30px;
   max-width: 1400px;
   margin: 0 auto;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .page-header {

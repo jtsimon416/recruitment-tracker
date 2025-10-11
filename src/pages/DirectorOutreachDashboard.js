@@ -269,7 +269,7 @@ function DirectorOutreachDashboard() {
   if (loading) return <div className="loading-state">Loading outreach dashboard...</div>;
 
   return (
-    <div className="director-outreach-container">
+    <div className="page-container director-outreach-container">
       {/* Toast Notification */}
       <AnimatePresence>
         {toast.show && (

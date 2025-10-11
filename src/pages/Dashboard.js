@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { motion } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import PipelineFunnel from '../components/PipelineFunnel';
 import '../styles/Dashboard.css';
 
 function Dashboard() {
@@ -73,71 +73,6 @@ function Dashboard() {
       .slice(0, 5);
   }, [interviews]);
 
-  // ========== CHART DATA ==========
-  
-  // Pipeline Distribution Chart Data
-  const pipelineChartData = useMemo(() => {
-    const stageCounts = {
-      'Screening': 0,
-      'Submit to Client': 0,
-      'Interview 1': 0,
-      'Interview 2': 0,
-      'Interview 3': 0,
-      'Offer': 0,
-      'Hired': 0
-    };
-
-    pipeline.forEach(item => {
-      if (stageCounts.hasOwnProperty(item.stage)) {
-        stageCounts[item.stage]++;
-      }
-    });
-
-    return Object.entries(stageCounts)
-      .map(([stage, count]) => ({ stage, count }))
-      .filter(item => item.count > 0);
-  }, [pipeline]);
-
-  // FIXED: Slate of 8 Progress Chart Data
-  const slateProgressData = useMemo(() => {
-    return positions
-      .filter(pos => pos.status === 'Open')
-      .map(pos => {
-        const positionPipeline = pipeline.filter(p => p.position_id === pos.id);
-        
-        // Count ALL candidates who have reached "Submit to Client" or beyond
-        const submissionCount = positionPipeline.filter(p => 
-          p.stage === 'Submit to Client' || 
-          p.stage === 'Interview 1' || 
-          p.stage === 'Interview 2' || 
-          p.stage === 'Interview 3' || 
-          p.stage === 'Offer' || 
-          p.stage === 'Hired'
-        ).length;
-        
-        // Determine color based on progress
-        let color;
-        if (submissionCount === 0) {
-          color = '#F7768E'; // Pink/Red - Critical
-        } else if (submissionCount <= 3) {
-          color = '#E0AF68'; // Orange - Needs attention
-        } else if (submissionCount < SLATE_TARGET) {
-          color = '#7AA2F7'; // Blue - In progress
-        } else {
-          color = '#9ECE6A'; // Green - Complete
-        }
-        
-        return {
-          position: pos.title.length > 25 ? pos.title.substring(0, 25) + '...' : pos.title,
-          fullTitle: pos.title,
-          count: submissionCount,
-          target: SLATE_TARGET,
-          color: color,
-          percentage: Math.round((submissionCount / SLATE_TARGET) * 100)
-        };
-      })
-      .sort((a, b) => a.count - b.count); // Show most urgent first
-  }, [positions, pipeline]);
 
   // ========== FRAMER MOTION VARIANTS ==========
   const containerVariants = {
@@ -174,62 +109,9 @@ function Dashboard() {
     navigate('/active-tracker', { state: { candidateId, positionId } });
   };
 
-  // ========== CUSTOM CHART COMPONENTS ==========
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div style={{
-          background: 'var(--card-bg)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '8px',
-          padding: '10px 15px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
-        }}>
-          <p style={{ color: 'var(--text-primary)', margin: 0, fontWeight: 600 }}>
-            {payload[0].payload.stage || payload[0].name}
-          </p>
-          <p style={{ color: 'var(--accent-cyan)', margin: '5px 0 0 0', fontSize: '14px' }}>
-            Count: {payload[0].value}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const SlateTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div style={{
-          background: 'var(--card-bg)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '8px',
-          padding: '12px 16px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-          minWidth: '200px'
-        }}>
-          <p style={{ color: 'var(--text-primary)', margin: 0, fontWeight: 600, fontSize: '14px' }}>
-            {data.fullTitle}
-          </p>
-          <p style={{ color: 'var(--accent-cyan)', margin: '8px 0 0 0', fontSize: '16px', fontWeight: 700 }}>
-            {data.count} / {data.target} submitted
-          </p>
-          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0 0', fontSize: '12px' }}>
-            {data.percentage}% complete
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Chart Colors matching your theme
-  const CHART_COLORS = ['#7AA2F7', '#BB9AF7', '#9ECE6A', '#E0AF68', '#F7768E', '#7DCFFF'];
-
   return (
-    <div className="dashboard-container">
-      <motion.div 
+    <div className="page-container dashboard-container">
+      <motion.div
         className="page-header"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -238,79 +120,13 @@ function Dashboard() {
         <h1>Dashboard</h1>
       </motion.div>
 
-      {/* ========== ANALYTICS CHARTS SECTION ========== */}
+      {/* ========== PIPELINE FUNNEL SECTION ========== */}
       <motion.div
-        className="dashboard-analytics"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
       >
-        <motion.div variants={cardVariants} className="dashboard-card analytics-card">
-          <h2>Pipeline Distribution</h2>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={pipelineChartData}>
-              <XAxis 
-                dataKey="stage" 
-                stroke="#565f89" 
-                style={{ fontSize: '12px', fill: 'var(--text-secondary)' }}
-              />
-              <YAxis 
-                stroke="#565f89"
-                style={{ fontSize: '12px', fill: 'var(--text-secondary)' }}
-              />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(122, 162, 247, 0.1)' }} />
-              <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                {pipelineChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </motion.div>
-
-        <motion.div variants={cardVariants} className="dashboard-card analytics-card">
-          <h2>Slate of 8 Progress</h2>
-          {slateProgressData.length === 0 ? (
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              height: '280px',
-              color: 'var(--text-muted)',
-              fontStyle: 'italic'
-            }}>
-              No open positions to track
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart 
-                data={slateProgressData} 
-                layout="vertical"
-                margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-              >
-                <XAxis 
-                  type="number" 
-                  domain={[0, SLATE_TARGET]}
-                  stroke="#565f89"
-                  style={{ fontSize: '12px', fill: 'var(--text-secondary)' }}
-                />
-                <YAxis 
-                  type="category" 
-                  dataKey="position" 
-                  stroke="#565f89"
-                  style={{ fontSize: '11px', fill: 'var(--text-secondary)' }}
-                  width={120}
-                />
-                <Tooltip content={<SlateTooltip />} cursor={{ fill: 'rgba(122, 162, 247, 0.1)' }} />
-                <Bar dataKey="count" radius={[0, 8, 8, 0]}>
-                  {slateProgressData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </motion.div>
+        <PipelineFunnel />
       </motion.div>
 
       {/* ========== MAIN DASHBOARD GRID ========== */}
