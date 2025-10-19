@@ -1,0 +1,235 @@
+/* Pipeline Funnel Container */
+.pipeline-funnel-wrapper {
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto 30px auto; /* FIX: Added 30px bottom margin */
+  padding: 15px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pipeline-funnel-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* Table Container */
+.pipeline-table-container {
+  overflow-x: auto;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.pipeline-funnel-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--primary-bg);
+  table-layout: fixed;
+}
+
+/* Table Header */
+.pipeline-funnel-table thead {
+  background: var(--secondary-bg);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.pos-header {
+  width: 180px;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.stage-header {
+  width: 70px;
+  text-align: center;
+  padding: 10px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Table Rows */
+.pipeline-funnel-row {
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.2s ease;
+}
+
+.pipeline-funnel-row:hover {
+  background: rgba(122, 162, 247, 0.04);
+}
+
+.pipeline-funnel-row:last-child {
+  border-bottom: none;
+}
+
+/* Position Cell */
+.pos-cell {
+  padding: 10px 12px;
+  border-right: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.pos-info {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pos-info:hover .pos-title {
+  color: var(--accent-cyan);
+}
+
+.pos-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin-bottom: 3px;
+  transition: color 0.2s ease;
+}
+
+.pos-count {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.pos-client {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+/* Stage Cells */
+.stage-cell {
+  text-align: center;
+  padding: 10px 3px;
+  vertical-align: middle;
+  position: relative;
+}
+
+.stage-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.stage-num {
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.stage-num:hover {
+  background: rgba(122, 162, 247, 0.12);
+}
+
+.stage-num:active {
+  transform: scale(0.95);
+}
+
+.stage-empty {
+  font-size: 16px;
+  color: var(--text-secondary);
+  opacity: 0.25;
+  font-weight: 300;
+}
+
+/* Chevron Arrows */
+.arrow-wrapper {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+}
+
+.chevron-arrow {
+  display: block;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* Loading & Empty States */
+.pipeline-loading,
+.pipeline-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .pipeline-funnel-wrapper {
+    padding: 12px;
+  }
+
+  .pipeline-table-container {
+    overflow-x: scroll;
+  }
+  
+  .pos-header,
+  .pos-cell {
+    position: sticky;
+    left: 0;
+    background: var(--secondary-bg);
+    z-index: 10;
+  }
+
+  .pos-cell {
+    background: var(--primary-bg);
+  }
+
+  .pipeline-funnel-row:hover .pos-cell {
+    background: rgba(122, 162, 247, 0.04);
+  }
+}
+
+@media (max-width: 768px) {
+  .pipeline-funnel-title {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .pos-header {
+    width: 140px;
+  }
+
+  .pos-title {
+    font-size: 12px;
+  }
+
+  .pos-client {
+    font-size: 10px;
+  }
+
+  .stage-header {
+    font-size: 8px;
+    width: 60px;
+    padding: 8px 3px;
+  }
+
+  .stage-num {
+    font-size: 16px;
+    padding: 3px 6px;
+  }
+
+  .chevron-arrow {
+    width: 20px;
+    height: 30px;
+  }
+}

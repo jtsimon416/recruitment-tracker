@@ -1,0 +1,362 @@
+/* Main container for the page */
+.director-review-container {
+    padding: 2rem;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+/* --- UPDATED STYLES FOR COLLAPSIBLE HEADER --- */
+.review-header-container {
+    background-color: #313152; /* Slightly darker background */
+    border: 1px solid #7a73ec; /* Accent border color */
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    overflow: hidden; /* Key for smooth collapse */
+    transition: all 0.3s ease-in-out;
+}
+
+.review-header-title {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    background-color: #383860; /* Darker to distinguish it as the clickable bar */
+    transition: background-color 0.2s;
+}
+
+.review-header-title:hover {
+    background-color: #404060;
+}
+
+.review-header-title h3 {
+    color: #4ed3c1; /* Accent text color */
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.lightbulb-icon {
+    color: #ffd700; /* Gold color for lightbulb */
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.review-header-content {
+    padding: 0 1.5rem;
+    max-height: 500px; /* Large initial max-height for expanded state */
+    transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+    color: #e0e0e0;
+}
+
+/* State for collapsed content */
+.review-header-content.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.review-header-content p {
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+    color: #ccc;
+}
+
+.review-header-content ul {
+    list-style: disc;
+    margin-left: 20px;
+    padding-left: 0;
+    padding-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #d0d0d0;
+}
+
+.review-header-content ul li {
+    margin-bottom: 0.5rem;
+}
+
+/* Ensure strong tags render bold and bright for visibility */
+.review-header-content strong {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.review-header-content em {
+    font-style: italic;
+    color: #f0f0f0;
+}
+/* --- END UPDATED STYLES --- */
+
+.review-section {
+    margin-bottom: 3rem;
+}
+
+/* H1 is for the main page title */
+.review-section h1 {
+    font-size: 1.8rem;
+    color: #e0e0e0;
+    margin-bottom: 1rem; 
+}
+
+/* H2 is for the queue titles (Screening Queue, Hold Queue) */
+.review-section h2 {
+    font-size: 1.5rem;
+    color: #e0e0e0;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #404060;
+}
+
+.review-sub-section {
+    margin-top: 2rem; 
+}
+
+
+.no-candidates-message {
+    color: #a0a0a0;
+    text-align: center;
+    padding: 2rem;
+    font-size: 1rem;
+    background-color: #2c2c4d;
+    border-radius: 4px;
+    border: 1px solid #404060;
+}
+
+/* List of cards */
+.candidate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Card style copied from ActiveTracker */
+.candidate-card {
+    background-color: #2c2c4d;
+    border-radius: 4px;
+    padding: 0.5rem 1.5rem;
+    display: grid;
+    grid-template-columns: 2.5fr 2fr 1.5fr 1.5fr 1fr 1fr 2fr; /* 7 columns for fine-tuned layout */
+    gap: 1.5rem;
+    align-items: center;
+    border: 1px solid #404060;
+    transition: background-color 0.2s, border-color 0.2s;
+    min-height: 55px;
+}
+
+.candidate-card:hover {
+    background-color: #313152;
+    border-color: #7070a0;
+}
+
+/* Card with aging warning */
+.card-aging {
+    border-left: 4px solid #e74c3c;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.3);
+}
+
+/* Info items within the card */
+.card-info-item {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.info-label {
+    font-size: 0.7rem;
+    color: #9090b0;
+    text-transform: uppercase;
+    margin-bottom: 0.1rem;
+}
+
+.info-value {
+    font-size: 0.9rem;
+    color: #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.candidate-name-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.candidate-name-group .info-value {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.name-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Actions on the far right */
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Icon Buttons (Resume, Binoculars) */
+.icon-btn {
+    background-color: #404060;
+    color: #d0d0d0;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    font-size: 0.8rem;
+    padding: 0;
+}
+
+.icon-btn:hover {
+    background-color: #505070;
+    color: #ffffff;
+}
+
+/* Warning icon in actions area */
+.aging-warning-icon {
+    font-size: 1.2rem;
+    color: #e74c3c;
+}
+
+/* --- Base Button Styling (from Talent Pool) --- */
+.btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px; /* More rounded corners */
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    border: none; /* No explicit border, rely on gradient */
+    transition: all 0.2s ease-in-out;
+    white-space: nowrap;
+    color: #fff; /* Default text color for gradient buttons */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Talent Pool Specific Button Styles --- */
+
+/* Comments Button (Image 1: Blue/Purple gradient) */
+.talent-pool-btn-comments {
+    background: linear-gradient(145deg, #7a73ec, #5b54d4);
+}
+.talent-pool-btn-comments:hover {
+    background: linear-gradient(145deg, #5b54d4, #7a73ec);
+}
+
+/* Pipeline Button (Image 1: Green/Blue gradient, using for 'Submit') */
+.talent-pool-btn-pipeline {
+    background: linear-gradient(145deg, #4ed3c1, #36a798);
+}
+.talent-pool-btn-pipeline:hover {
+    background: linear-gradient(145deg, #36a798, #4ed3c1);
+}
+
+/* Edit Button (Image 1: Pink/Purple gradient, using for 'Hold') */
+.talent-pool-btn-edit {
+    background: linear-gradient(145deg, #e67e9b, #d85c80);
+}
+.talent-pool-btn-edit:hover {
+    background: linear-gradient(145deg, #d85c80, #e67e9b);
+}
+
+/* Delete Button (Image 1: Darker/Greyish, using for 'Reject') */
+.talent-pool-btn-delete {
+    background: linear-gradient(145deg, #5a5a7a, #4a4a6a);
+    color: #ccc;
+}
+.talent-pool-btn-delete:hover {
+    background: linear-gradient(145deg, #4a4a6a, #5a5a7a);
+    color: #fff;
+}
+
+
+/* --- Modal styles are largely consistent, with button styles updated --- */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background-color: #2a2a4a; color: #e0e0e0; padding: 2rem; border-radius: 8px; width: 90%; max-width: 600px; border: 1px solid #404060; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6); position: relative; max-height: 90vh; overflow-y: auto; }
+
+/* Styling for the X close button in the modal */
+.modal-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 2rem; /* Larger for easy clicking */
+    color: #e0e0e0;
+    cursor: pointer;
+    line-height: 1; /* Align 'X' vertically */
+    padding: 0.2rem 0.5rem; /* Make clickable area larger */
+    border-radius: 5px;
+    transition: background-color 0.2s, color 0.2s;
+}
+.modal-close-btn:hover {
+    background-color: #404060;
+    color: #ffffff;
+}
+
+.modal-content h2, .modal-content h3 { text-align: left; }
+.modal-comments-history { max-height: 200px; overflow-y: auto; border: 1px solid #404060; border-radius: 4px; padding: 1rem; background-color: #1a1a2e; margin-bottom: 1.5rem; }
+.comment { background-color: #313152; margin-bottom: 0.75rem; padding: 0.75rem; border-radius: 4px; }
+.modal-content textarea { width: 100%; min-height: 120px; padding: 0.8rem; border: 1px solid #5a5a7a; border-radius: 4px; font-size: 1rem; margin-bottom: 1.5rem; resize: vertical; background-color: #1a1a2e; color: #e0e0e0; }
+.modal-decision-buttons { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: flex-end; }
+.modal-decision-buttons .btn { font-size: 0.9rem; padding: 0.6rem 1.3rem; }
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .candidate-card { 
+        grid-template-columns: 1fr; /* Stack on smaller screens */
+        gap: 1rem; 
+        padding: 1rem; 
+    }
+    .candidate-name-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .name-icons {
+        justify-content: flex-start;
+    }
+    .card-actions { 
+        justify-content: flex-start; 
+        padding-top: 0.5rem; 
+    }
+}
+
+@media (max-width: 768px) {
+    .director-review-container {
+        padding: 1rem;
+    }
+    .candidate-card {
+        padding: 0.75rem;
+    }
+    .info-value, .candidate-name-group .info-value {
+        font-size: 0.85rem;
+    }
+    .btn {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.75rem;
+    }
+    .modal-content {
+        padding: 1.5rem;
+    }
+    .modal-decision-buttons .btn {
+        font-size: 0.8rem;
+        padding: 0.5rem 1rem;
+    }
+}

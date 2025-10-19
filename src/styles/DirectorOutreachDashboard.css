@@ -1,0 +1,336 @@
+/* src/styles/DirectorOutreachDashboard.css */
+
+.director-outreach-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.director-outreach-container .page-header {
+  margin-bottom: 2rem;
+}
+
+.director-outreach-container .page-header h1 {
+  font-size: 2rem;
+  color: #c0caf5;
+  margin: 0;
+}
+
+.director-outreach-container .subtitle {
+  font-size: 1rem;
+  color: #a9b1d6;
+  margin-top: 0.25rem;
+}
+
+/* --- FILTERS SECTION --- */
+.filters-section {
+  background-color: #1e2030;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  border: 1px solid #2a2f4e;
+}
+
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.filters-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: #c0caf5;
+}
+
+.btn-clear-filters {
+  background: none;
+  border: 1px solid #f7768e;
+  color: #f7768e;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-clear-filters:hover {
+  background-color: rgba(247, 118, 142, 0.1);
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.filter-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+  color: #a9b1d6;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-chip {
+  background-color: #2a2f4e;
+  color: #c0caf5;
+  border: 1px solid #414868;
+  padding: 0.5rem 0.75rem;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.filter-chip.active {
+  background-color: #7aa2f7;
+  color: #1a1b26;
+  border-color: #7aa2f7;
+  font-weight: bold;
+}
+
+.filter-chip:hover:not(.active) {
+  background-color: #414868;
+}
+
+/* ** ADDED: Styles to make the date filter match the chips ** */
+.date-filter-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.date-filter-row select,
+.date-filter-row input[type="date"] {
+  background-color: #2a2f4e;
+  color: #c0caf5;
+  border: 1px solid #414868;
+  padding: 0.5rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.date-filter-row select {
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a9b1d6%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22/%3E%3C/svg%3E');
+  background-repeat: no-repeat;
+  background-position: right 0.7em top 50%;
+  background-size: 0.65em auto;
+  padding-right: 2rem;
+}
+
+.date-filter-row input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+
+/* --- LIVE ACTIVITY FEED --- */
+.activity-feed-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+.activity-feed-section h2 {
+  color: #c0caf5;
+}
+
+.activity-count {
+  font-size: 0.9rem;
+  color: #a9b1d6;
+  background-color: #2a2f4e;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+}
+
+.activity-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ======================================= */
+/* === OUTREACH CARD STYLES ========== */
+/* ======================================= */
+
+.outreach-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #24283b;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #414868;
+  transition: background-color 0.2s ease;
+  flex-wrap: wrap;
+}
+
+.outreach-card:hover {
+  background-color: #2f344d;
+}
+
+.card-col {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+/* Column Sizing */
+.card-col-candidate { flex: 3 1 280px; min-width: 250px; }
+.card-col-position  { flex: 2 1 250px; min-width: 220px; }
+.card-col-contact   { flex: 2 1 200px; min-width: 180px; flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+.card-col-actions   { flex: 1 1 150px; min-width: 130px; justify-content: flex-end; }
+
+.recruiter-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #1a1b26;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.candidate-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.candidate-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.candidate-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #c0caf5;
+}
+
+.recruiter-name-label {
+  font-size: 0.85rem;
+  color: #a9b1d6;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.card-col-position {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+.position-title {
+  color: #c0caf5;
+  font-weight: 500;
+}
+
+.call-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #bb9af7;
+  font-size: 0.9rem;
+}
+
+.card-col-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #1a1b26;
+  white-space: nowrap;
+}
+
+.card-rating-display {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #e0af68;
+  font-weight: bold;
+}
+.card-rating-display .filled {
+  color: #e0af68;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-buttons .btn-linkedin {
+  background: #414868;
+  border: none;
+  color: #c0caf5;
+  padding: 0.5rem 0.75rem;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.action-buttons .btn-notes-toggle {
+  background: #414868;
+  border: none;
+  color: #c0caf5;
+  width: 32px;
+  height: 32px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.action-buttons .btn-linkedin:hover,
+.action-buttons .btn-notes-toggle:hover {
+  background-color: #7aa2f7;
+  color: #1a1b26;
+}
+
+.expanded-notes-card-footer {
+  flex-basis: 100%;
+  padding: 1rem;
+  margin-top: 1rem;
+  background-color: rgba(26, 27, 38, 0.7);
+  border-top: 1px solid #414868;
+  color: #a9b1d6;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

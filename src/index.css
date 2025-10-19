@@ -1,0 +1,277 @@
+/* src/index.css */
+
+:root {
+  --main-bg: #1A1B26;
+  --secondary-bg: #24283B;
+  --card-bg: #1F2335;
+  --hover-bg: #2A2F41;
+
+  --text-primary: #C0CAF5;
+  --text-secondary: #A9B1D6;
+  --text-muted: #565F89;
+
+  --accent-blue: #7AA2F7;
+  --accent-green: #9ECE6A;
+  --accent-purple: #BB9AF7;
+  --accent-pink: #F7768E;
+  --accent-orange: #FF9E64;
+  --accent-red: #f7768e;
+
+  /* Rose Gold Color Palette */
+  --rose-gold: #E8B4B8;
+  --peachy-rose: #F4C2A8;
+  --dusty-pink: #F7A9BA;
+  --soft-lavender: #C5B9D6;
+  --mint-cream: #B8D4D0;
+
+  --border-color: #414868;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --border-radius: 8px;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--main-bg);
+  color: var(--text-primary);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Add this new section to the bottom of the file */
+
+/* Dark Scrollbar for the entire application */
+body::-webkit-scrollbar {
+  width: 12px;
+}
+
+body::-webkit-scrollbar-track {
+  background: var(--main-bg); /* Use your app's main background color */
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: #565f89; /* A dark color from your theme */
+  border-radius: 6px;
+  border: 3px solid var(--main-bg); /* Creates a nice padding effect */
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #7AA2F7; /* A brighter color on hover */
+}
+
+/* ===================================================================
+   FIRST SLATE SPRINT TRACKER STYLES
+   =================================================================== */
+
+/* First Slate Sprint Card */
+.first-slate-sprint-card {
+  background: linear-gradient(135deg, var(--card-bg) 0%, var(--secondary-bg) 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(232, 180, 184, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+}
+
+.first-slate-sprint-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(232, 180, 184, 0.3);
+  border-color: var(--rose-gold);
+}
+
+.first-slate-section {
+  margin-bottom: 2rem;
+}
+
+.first-slate-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.first-slate-position-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--rose-gold);
+  margin-bottom: 0.25rem;
+}
+
+.first-slate-company {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* Countdown Timer */
+.countdown-timer {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.05em;
+  text-align: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.countdown-timer.overdue {
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Progress Bar */
+.progress-bar-container {
+  width: 100%;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  margin: 1rem 0;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--rose-gold), var(--peachy-rose));
+  border-radius: 12px;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px rgba(232, 180, 184, 0.5);
+}
+
+.progress-bar-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 600;
+  color: var(--text-primary);
+  z-index: 1;
+}
+
+/* New Strategy Badge */
+.new-strategy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #F7A9BA, #F39C9C);
+  color: var(--main-bg);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Premium Button Style */
+.btn-premium {
+  background: linear-gradient(135deg, var(--rose-gold), #F39C9C);
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  color: var(--main-bg);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(232, 180, 184, 0.3);
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(232, 180, 184, 0.5);
+}
+
+.first-slate-dates {
+  display: flex;
+  gap: 2rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.first-slate-date-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.first-slate-date-label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.first-slate-date-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.first-slate-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.completed-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.completed-status.on-time {
+  background: rgba(184, 212, 208, 0.2);
+  color: var(--mint-cream);
+}
+
+.completed-status.late {
+  background: rgba(247, 169, 186, 0.2);
+  color: var(--dusty-pink);
+}
+
+.strategy-info {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.strategy-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.view-strategy-btn {
+  background: linear-gradient(135deg, var(--accent-blue), #5a7ac7);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.view-strategy-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(122, 162, 247, 0.3);
+}

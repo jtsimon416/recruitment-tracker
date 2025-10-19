@@ -1,0 +1,10 @@
+[functions.linkedin-parser]
+enabled = true
+# CRITICAL FIX: Set to false so the database trigger call (which is authenticated via Service Role Key in SQL) is allowed.
+# If this function were called directly by a client (browser), this would typically be set to true.
+verify_jwt = false 
+import_map = "./functions/linkedin-parser/deno.json"
+entrypoint = "./functions/linkedin-parser/index.ts"
+# REMOVED: The 'timeout_ms' key was removed as it is not a supported configuration key
+#          in the functions section, resolving your 'invalid keys' error.
+
