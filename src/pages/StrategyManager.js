@@ -23,8 +23,12 @@ function StrategyManager() {
       window.location.href = '/';
       return;
     }
-    fetchCompletedPositions();
-  }, [isDirectorOrManager]);
+    if (activeTab === 'strategies') {
+      fetchCompletedPositions();
+    } else if (activeTab === 'role_instructions') {
+      fetchAllPositions();
+    }
+  }, [isDirectorOrManager, activeTab]);
 
   const fetchCompletedPositions = async () => {
     const { data, error } = await supabase
@@ -32,6 +36,20 @@ function StrategyManager() {
       .select('*, clients(company_name), recruiters(name)')
       .not('first_slate_completed_at', 'is', null)
       .order('first_slate_completed_at', { ascending: false });
+
+    if (!error && data) {
+      setPositions(data);
+    }
+    setLoading(false);
+  };
+
+  const fetchAllPositions = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('positions')
+      .select('*, clients(company_name), recruiters(name)')
+      .eq('status', 'Open')
+      .order('created_at', { ascending: false });
 
     if (!error && data) {
       setPositions(data);
@@ -139,6 +157,89 @@ function StrategyManager() {
     }
   };
 
+  const uploadRoleInstructions = async (positionId, file, notes) => {
+    setUploadingFile(positionId);
+
+    try {
+      const fileName = `${positionId}_instructions_${Date.now()}.docx`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('role-instructions')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        alert('Error uploading file: ' + uploadError.message);
+        setUploadingFile(null);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('role-instructions')
+        .getPublicUrl(fileName);
+
+      await supabase
+        .from('positions')
+        .update({
+          role_instructions_url: urlData.publicUrl,
+          role_instructions_uploaded_at: new Date().toISOString(),
+          role_instructions_viewed_by: [],
+          role_instructions_notes: notes
+        })
+        .eq('id', positionId);
+
+      await supabase
+        .from('pipeline_audit_log')
+        .insert({
+          position_id: positionId,
+          event_type: 'role_instructions_uploaded',
+          performed_by: userProfile.id,
+          notes: `Role instructions uploaded: ${file.name}`,
+          metadata: { filename: file.name, notes },
+          created_at: new Date().toISOString()
+        });
+
+      alert('✅ Role instructions uploaded! Recruiters will see it on their active roles.');
+      fetchAllPositions();
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      setUploadingFile(null);
+    }
+  };
+
+  const removeRoleInstructions = async (positionId) => {
+    if (!window.confirm('Remove role instructions? Recruiters will no longer see them.')) {
+      return;
+    }
+
+    try {
+      await supabase
+        .from('positions')
+        .update({
+          role_instructions_url: null,
+          role_instructions_uploaded_at: null,
+          role_instructions_viewed_by: [],
+          role_instructions_notes: null
+        })
+        .eq('id', positionId);
+
+      await supabase
+        .from('pipeline_audit_log')
+        .insert({
+          position_id: positionId,
+          event_type: 'role_instructions_removed',
+          performed_by: userProfile.id,
+          notes: 'Role instructions removed',
+          created_at: new Date().toISOString()
+        });
+
+      alert('Role instructions removed.');
+      fetchAllPositions();
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  };
+
   const exportAuditReport = async (position) => {
     await fetchAuditLogs(position.id);
 
@@ -230,6 +331,23 @@ function StrategyManager() {
         >
           <FileText size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
           Strategy Documents
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'role_instructions' ? 'active' : ''}`}
+          onClick={() => setActiveTab('role_instructions')}
+          style={{
+            padding: '0.75rem 1.5rem',
+            background: activeTab === 'role_instructions' ? 'linear-gradient(135deg, var(--rose-gold), #F39C9C)' : 'transparent',
+            border: 'none',
+            borderBottom: activeTab === 'role_instructions' ? '3px solid var(--rose-gold)' : '3px solid transparent',
+            color: activeTab === 'role_instructions' ? 'var(--main-bg)' : 'var(--text-secondary)',
+            cursor: 'pointer',
+            fontWeight: 600,
+            transition: 'all 0.3s'
+          }}
+        >
+          <FileText size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+          Role Instructions
         </button>
         <button
           className={`tab-button ${activeTab === 'audit' ? 'active' : ''}`}
@@ -400,6 +518,170 @@ function StrategyManager() {
                       <Download size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
                       Export Audit Report (CSV)
                     </button>
+                  </div>
+                </motion.div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* Role Instructions Tab */}
+      {activeTab === 'role_instructions' && (
+        <div>
+          {positions.length === 0 ? (
+            <div className="first-slate-sprint-card">
+              <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                No open positions available.
+              </p>
+            </div>
+          ) : (
+            positions.map((position) => {
+              const hasInstructions = position.role_instructions_url;
+              const sprintStatus = position.first_slate_started_at
+                ? (position.first_slate_completed_at ? 'Completed' : 'Active Sprint')
+                : 'Not Started';
+
+              return (
+                <motion.div
+                  key={position.id}
+                  className="first-slate-sprint-card"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{ marginBottom: '1.5rem' }}
+                >
+                  <div className="first-slate-header">
+                    <div>
+                      <div className="first-slate-position-title">
+                        {position.title}
+                      </div>
+                      <div className="first-slate-company">
+                        @ {position.clients?.company_name || 'N/A'}
+                      </div>
+                      <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                        Status: {position.status} | First Slate: {sprintStatus}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Role Instructions Section */}
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
+                    <h3 style={{ color: 'var(--rose-gold)', marginBottom: '0.5rem' }}>
+                      Role Instructions:
+                    </h3>
+
+                    {hasInstructions ? (
+                      <div>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.5rem',
+                          fontSize: '0.9rem',
+                          marginBottom: '1rem',
+                          padding: '1rem',
+                          background: 'rgba(232, 180, 184, 0.1)',
+                          borderRadius: '8px',
+                          border: '1px solid var(--rose-gold)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <CheckCircle size={16} color="var(--mint-cream)" />
+                            <span style={{ fontWeight: 600 }}>Instructions uploaded</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Calendar size={16} color="var(--text-muted)" />
+                            <span>Uploaded: {formatDateTime(position.role_instructions_uploaded_at)}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Eye size={16} color="var(--text-muted)" />
+                            <span>Viewed by: {position.role_instructions_viewed_by?.length || 0} recruiters</span>
+                          </div>
+                          {position.role_instructions_notes && (
+                            <div style={{
+                              marginTop: '0.5rem',
+                              paddingTop: '0.5rem',
+                              borderTop: '1px solid var(--border-color)',
+                              fontStyle: 'italic',
+                              color: 'var(--text-secondary)'
+                            }}>
+                              Notes: {position.role_instructions_notes}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                          <a
+                            href={position.role_instructions_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="view-strategy-btn"
+                          >
+                            <FileText size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+                            Preview
+                          </a>
+                          <button
+                            className="btn-secondary"
+                            onClick={() => removeRoleInstructions(position.id)}
+                            style={{
+                              background: 'linear-gradient(135deg, #F7768E, #E74C3C)',
+                              border: 'none',
+                              borderRadius: '6px',
+                              padding: '0.5rem 1rem',
+                              color: 'white',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <Trash2 size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{
+                          color: 'var(--text-muted)',
+                          fontSize: '0.9rem',
+                          marginBottom: '1rem'
+                        }}>
+                          No instructions uploaded yet
+                        </div>
+
+                        <div style={{
+                          padding: '1rem',
+                          background: 'var(--secondary-bg)',
+                          borderRadius: '8px',
+                          border: '1px solid var(--border-color)'
+                        }}>
+                          <h4 style={{
+                            color: 'var(--rose-gold)',
+                            marginBottom: '0.75rem',
+                            fontSize: '0.95rem'
+                          }}>
+                            Upload Role Instructions:
+                          </h4>
+                          <input
+                            type="file"
+                            accept=".docx,.doc"
+                            id={`instructions-${position.id}`}
+                            style={{ marginBottom: '0.75rem', width: '100%' }}
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const notes = prompt('Optional notes for these instructions:');
+                                uploadRoleInstructions(position.id, file, notes || '');
+                              }
+                            }}
+                          />
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            Accepted formats: .docx, .doc
+                          </div>
+                          {uploadingFile === position.id && (
+                            <div style={{ marginTop: '0.5rem', color: 'var(--accent-blue)' }}>
+                              Uploading...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               );
