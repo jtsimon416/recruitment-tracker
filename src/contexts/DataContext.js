@@ -231,7 +231,7 @@ export function DataProvider({ children }) {
   }
 
   async function fetchPositions() {
-    const { data, error } = await supabase.from('positions').select('*').order('title');
+    const { data, error } = await supabase.from('positions').select('*, clients(company_name)').order('title');
     if (error) console.error('Error fetching positions:', error);
     else setPositions(data || []);
   }

@@ -119,43 +119,28 @@ const MyActiveRoles = ({ userProfile }) => {
   }, [userProfile]);
 
   const fetchMyActiveRoles = async () => {
-    console.log('🔍 Fetching active roles for recruiter:', userProfile.id);
+    console.log('🔍 Fetching all open roles for recruiter:', userProfile.id);
     setLoading(true);
 
     try {
-      // Fetch positions where the recruiter has pipeline entries
-      const { data: pipelineData, error: pipelineError } = await supabase
-        .from('pipeline')
-        .select('position_id')
-        .eq('recruiter_id', userProfile.id);
-
-      if (pipelineError) throw pipelineError;
-
-      const positionIds = [...new Set(pipelineData.map(p => p.position_id))];
-      console.log('📊 Found pipeline entries for positions:', positionIds);
-
-      if (positionIds.length === 0) {
-        setActiveRoles([]);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch position details
+      // Fetch all open position details directly
       const { data: positionsData, error: positionsError } = await supabase
         .from('positions')
         .select('*, clients(company_name)')
-        .in('id', positionIds)
         .eq('status', 'Open');
 
       if (positionsError) throw positionsError;
+      
+      const openPositions = positionsData || [];
+      console.log('✅ Fetched all open roles:', openPositions);
+      setActiveRoles(openPositions);
 
-      console.log('✅ Fetched active roles:', positionsData);
-      setActiveRoles(positionsData || []);
-
-      // Fetch role instructions for these positions
-      if (positionIds.length > 0) {
+      // If there are open positions, get their IDs to fetch instructions
+      if (openPositions.length > 0) {
+        const positionIds = openPositions.map(p => p.id);
         await fetchRoleInstructionsForPositions(positionIds);
       }
+      
     } catch (error) {
       console.error('❌ Error fetching active roles:', error);
     } finally {
