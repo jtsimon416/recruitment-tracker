@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { supabase } from '../services/supabaseClient';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText, Trash2, Eye, Download, Calendar, Clock,
-  CheckCircle, TrendingUp, BarChart
+  CheckCircle, TrendingUp, BarChart, Upload
 } from 'lucide-react';
+import DocumentViewerModal from '../components/DocumentViewerModal';
 import '../styles/Dashboard.css';
 
 function StrategyManager() {
@@ -17,6 +18,12 @@ function StrategyManager() {
   const [uploadingFile, setUploadingFile] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
 
+  // Document viewer state
+  const [viewingDocument, setViewingDocument] = useState(null);
+
+  // Role instructions state (for multiple documents)
+  const [roleInstructions, setRoleInstructions] = useState({});
+
   useEffect(() => {
     if (!isDirectorOrManager) {
       alert('Access Denied: This page is for managers only.');
@@ -27,34 +34,83 @@ function StrategyManager() {
       fetchCompletedPositions();
     } else if (activeTab === 'role_instructions') {
       fetchAllPositions();
+    } else if (activeTab === 'audit') {
+      fetchCompletedPositions(); // Audit tab should also show completed positions
     }
   }, [isDirectorOrManager, activeTab]);
 
   const fetchCompletedPositions = async () => {
+    console.log('🔍 Fetching completed positions...');
+    setLoading(true);
     const { data, error } = await supabase
       .from('positions')
-      .select('*, clients(company_name), recruiters(name)')
+      .select('*, clients(company_name)')
       .not('first_slate_completed_at', 'is', null)
       .order('first_slate_completed_at', { ascending: false });
 
+    console.log('✅ Completed positions response:', { data, error });
     if (!error && data) {
+      console.log(`📊 Found ${data.length} completed positions`);
       setPositions(data);
+    } else if (error) {
+      console.error('❌ Error fetching completed positions:', error);
     }
     setLoading(false);
   };
 
   const fetchAllPositions = async () => {
+    console.log('🔍 Fetching all open positions for Role Instructions tab...');
     setLoading(true);
     const { data, error } = await supabase
       .from('positions')
-      .select('*, clients(company_name), recruiters(name)')
+      .select('*, clients(company_name)')
       .eq('status', 'Open')
       .order('created_at', { ascending: false });
 
+    console.log('✅ Open positions response:', { data, error, count: data?.length || 0 });
     if (!error && data) {
+      console.log(`📊 Found ${data.length} open positions:`, data.map(p => ({ id: p.id, title: p.title, status: p.status })));
       setPositions(data);
+
+      // Fetch role instructions for each position
+      if (data.length > 0) {
+        await fetchRoleInstructionsForPositions(data.map(p => p.id));
+      }
+    } else if (error) {
+      console.error('❌ Error fetching open positions:', error);
     }
     setLoading(false);
+  };
+
+  const fetchRoleInstructionsForPositions = async (positionIds) => {
+    console.log('🔍 Fetching role instructions for positions:', positionIds);
+
+    try {
+      const { data, error } = await supabase
+        .from('role_instructions')
+        .select('*, recruiters(name)')
+        .in('position_id', positionIds)
+        .order('uploaded_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log('✅ Fetched role instructions:', data);
+
+      // Group by position_id
+      const grouped = {};
+      if (data) {
+        data.forEach(doc => {
+          if (!grouped[doc.position_id]) {
+            grouped[doc.position_id] = [];
+          }
+          grouped[doc.position_id].push(doc);
+        });
+      }
+
+      setRoleInstructions(grouped);
+    } catch (error) {
+      console.error('❌ Error fetching role instructions:', error);
+    }
   };
 
   const fetchAuditLogs = async (positionId) => {
@@ -161,6 +217,7 @@ function StrategyManager() {
     setUploadingFile(positionId);
 
     try {
+      console.log('📤 Uploading role instructions for position:', positionId);
       const fileName = `${positionId}_instructions_${Date.now()}.docx`;
 
       const { error: uploadError } = await supabase.storage
@@ -177,16 +234,31 @@ function StrategyManager() {
         .from('role-instructions')
         .getPublicUrl(fileName);
 
-      await supabase
-        .from('positions')
-        .update({
-          role_instructions_url: urlData.publicUrl,
-          role_instructions_uploaded_at: new Date().toISOString(),
-          role_instructions_viewed_by: [],
-          role_instructions_notes: notes
-        })
-        .eq('id', positionId);
+      console.log('✅ File uploaded to storage:', urlData.publicUrl);
 
+      // Insert into role_instructions table
+      const { error: insertError } = await supabase
+        .from('role_instructions')
+        .insert({
+          position_id: positionId,
+          file_url: urlData.publicUrl,
+          file_name: file.name,
+          notes: notes,
+          uploaded_by: userProfile.id,
+          uploaded_at: new Date().toISOString(),
+          viewed_by: []
+        });
+
+      if (insertError) {
+        console.error('❌ Error inserting role instructions:', insertError);
+        alert('Error saving document info: ' + insertError.message);
+        setUploadingFile(null);
+        return;
+      }
+
+      console.log('✅ Role instructions record created');
+
+      // Create audit log
       await supabase
         .from('pipeline_audit_log')
         .insert({
@@ -201,43 +273,56 @@ function StrategyManager() {
       alert('✅ Role instructions uploaded! Recruiters will see it on their active roles.');
       fetchAllPositions();
     } catch (error) {
+      console.error('❌ Error uploading role instructions:', error);
       alert('Error: ' + error.message);
     } finally {
       setUploadingFile(null);
     }
   };
 
-  const removeRoleInstructions = async (positionId) => {
-    if (!window.confirm('Remove role instructions? Recruiters will no longer see them.')) {
+  const removeRoleInstructionsDocument = async (documentId, positionId, fileName) => {
+    if (!window.confirm(`Remove "${fileName}"? Recruiters will no longer see this document.`)) {
       return;
     }
 
     try {
-      await supabase
-        .from('positions')
-        .update({
-          role_instructions_url: null,
-          role_instructions_uploaded_at: null,
-          role_instructions_viewed_by: [],
-          role_instructions_notes: null
-        })
-        .eq('id', positionId);
+      console.log('🗑️ Removing role instructions document:', documentId);
 
+      // Delete from role_instructions table
+      const { error: deleteError } = await supabase
+        .from('role_instructions')
+        .delete()
+        .eq('id', documentId);
+
+      if (deleteError) throw deleteError;
+
+      // Create audit log
       await supabase
         .from('pipeline_audit_log')
         .insert({
           position_id: positionId,
           event_type: 'role_instructions_removed',
           performed_by: userProfile.id,
-          notes: 'Role instructions removed',
+          notes: `Role instructions removed: ${fileName}`,
+          metadata: { filename: fileName, document_id: documentId },
           created_at: new Date().toISOString()
         });
 
+      console.log('✅ Role instructions document removed');
       alert('Role instructions removed.');
       fetchAllPositions();
     } catch (error) {
+      console.error('❌ Error removing role instructions:', error);
       alert('Error: ' + error.message);
     }
+  };
+
+  const handlePreviewDocument = (document, title) => {
+    console.log('👁️ Opening document preview:', document);
+    setViewingDocument({
+      url: document.file_url || document,
+      title: title || 'Document Preview'
+    });
   };
 
   const exportAuditReport = async (position) => {
@@ -296,6 +381,8 @@ function StrategyManager() {
   if (loading) {
     return <div className="dashboard-container">Loading...</div>;
   }
+
+  console.log(`🎨 Rendering ${activeTab} tab with ${positions.length} positions`);
 
   return (
     <div className="dashboard-container">
@@ -448,15 +535,13 @@ function StrategyManager() {
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                          <a
-                            href={position.phase_2_strategy_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
                             className="view-strategy-btn"
+                            onClick={() => handlePreviewDocument(position.phase_2_strategy_url, 'Phase 2 Strategy')}
                           >
-                            <Download size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+                            <Eye size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
                             Preview
-                          </a>
+                          </button>
                           <button
                             className="btn-secondary"
                             onClick={() => removeStrategyDocument(position.id, position.phase_2_strategy_url)}
@@ -537,7 +622,7 @@ function StrategyManager() {
             </div>
           ) : (
             positions.map((position) => {
-              const hasInstructions = position.role_instructions_url;
+              const documents = roleInstructions[position.id] || [];
               const sprintStatus = position.first_slate_started_at
                 ? (position.first_slate_completed_at ? 'Completed' : 'Active Sprint')
                 : 'Not Started';
@@ -564,122 +649,145 @@ function StrategyManager() {
                     </div>
                   </div>
 
-                  {/* Role Instructions Section */}
+                  {/* Upload New Instructions - Always show at top */}
                   <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-                    <h3 style={{ color: 'var(--rose-gold)', marginBottom: '0.5rem' }}>
-                      Role Instructions:
+                    <div style={{
+                      padding: '1rem',
+                      background: 'rgba(232, 180, 184, 0.1)',
+                      borderRadius: '8px',
+                      border: '1px solid var(--rose-gold)'
+                    }}>
+                      <h4 style={{
+                        color: 'var(--rose-gold)',
+                        marginBottom: '0.75rem',
+                        fontSize: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}>
+                        <Upload size={18} />
+                        Upload New Role Instructions:
+                      </h4>
+                      <input
+                        type="file"
+                        accept=".docx,.doc"
+                        id={`instructions-new-${position.id}`}
+                        style={{ marginBottom: '0.75rem', width: '100%' }}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const notes = prompt('Optional notes for these instructions:');
+                            uploadRoleInstructions(position.id, file, notes || '');
+                          }
+                        }}
+                      />
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        Accepted formats: .docx, .doc
+                      </div>
+                      {uploadingFile === position.id && (
+                        <div style={{ marginTop: '0.5rem', color: 'var(--accent-blue)' }}>
+                          Uploading...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Uploaded Documents List */}
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <h3 style={{ color: 'var(--rose-gold)', marginBottom: '1rem' }}>
+                      Uploaded Documents ({documents.length}):
                     </h3>
 
-                    {hasInstructions ? (
-                      <div>
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '0.5rem',
-                          fontSize: '0.9rem',
-                          marginBottom: '1rem',
-                          padding: '1rem',
-                          background: 'rgba(232, 180, 184, 0.1)',
-                          borderRadius: '8px',
-                          border: '1px solid var(--rose-gold)'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <CheckCircle size={16} color="var(--mint-cream)" />
-                            <span style={{ fontWeight: 600 }}>Instructions uploaded</span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Calendar size={16} color="var(--text-muted)" />
-                            <span>Uploaded: {formatDateTime(position.role_instructions_uploaded_at)}</span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Eye size={16} color="var(--text-muted)" />
-                            <span>Viewed by: {position.role_instructions_viewed_by?.length || 0} recruiters</span>
-                          </div>
-                          {position.role_instructions_notes && (
-                            <div style={{
-                              marginTop: '0.5rem',
-                              paddingTop: '0.5rem',
-                              borderTop: '1px solid var(--border-color)',
-                              fontStyle: 'italic',
-                              color: 'var(--text-secondary)'
-                            }}>
-                              Notes: {position.role_instructions_notes}
-                            </div>
-                          )}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                          <a
-                            href={position.role_instructions_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="view-strategy-btn"
-                          >
-                            <FileText size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                            Preview
-                          </a>
-                          <button
-                            className="btn-secondary"
-                            onClick={() => removeRoleInstructions(position.id)}
-                            style={{
-                              background: 'linear-gradient(135deg, #F7768E, #E74C3C)',
-                              border: 'none',
-                              borderRadius: '6px',
-                              padding: '0.5rem 1rem',
-                              color: 'white',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <Trash2 size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                            Remove
-                          </button>
-                        </div>
+                    {documents.length === 0 ? (
+                      <div style={{
+                        color: 'var(--text-muted)',
+                        fontSize: '0.9rem',
+                        padding: '1rem',
+                        background: 'var(--secondary-bg)',
+                        borderRadius: '8px',
+                        textAlign: 'center'
+                      }}>
+                        No instructions uploaded yet. Use the upload button above to add documents.
                       </div>
                     ) : (
-                      <div>
-                        <div style={{
-                          color: 'var(--text-muted)',
-                          fontSize: '0.9rem',
-                          marginBottom: '1rem'
-                        }}>
-                          No instructions uploaded yet
-                        </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {documents.map((doc, index) => {
+                          const viewedCount = Array.isArray(doc.viewed_by) ? doc.viewed_by.length : 0;
 
-                        <div style={{
-                          padding: '1rem',
-                          background: 'var(--secondary-bg)',
-                          borderRadius: '8px',
-                          border: '1px solid var(--border-color)'
-                        }}>
-                          <h4 style={{
-                            color: 'var(--rose-gold)',
-                            marginBottom: '0.75rem',
-                            fontSize: '0.95rem'
-                          }}>
-                            Upload Role Instructions:
-                          </h4>
-                          <input
-                            type="file"
-                            accept=".docx,.doc"
-                            id={`instructions-${position.id}`}
-                            style={{ marginBottom: '0.75rem', width: '100%' }}
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                const notes = prompt('Optional notes for these instructions:');
-                                uploadRoleInstructions(position.id, file, notes || '');
-                              }
-                            }}
-                          />
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                            Accepted formats: .docx, .doc
-                          </div>
-                          {uploadingFile === position.id && (
-                            <div style={{ marginTop: '0.5rem', color: 'var(--accent-blue)' }}>
-                              Uploading...
+                          return (
+                            <div key={doc.id} style={{
+                              padding: '1rem',
+                              background: 'var(--secondary-bg)',
+                              borderRadius: '8px',
+                              border: '1px solid var(--border-color)'
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                    <FileText size={16} color="var(--rose-gold)" />
+                                    <strong style={{ color: 'var(--text-primary)' }}>
+                                      {doc.file_name || `Document ${index + 1}`}
+                                    </strong>
+                                  </div>
+                                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                      <Calendar size={14} color="var(--text-muted)" />
+                                      <span>Uploaded: {formatDateTime(doc.uploaded_at)}</span>
+                                    </div>
+                                    {doc.recruiters?.name && (
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span>By: {doc.recruiters.name}</span>
+                                      </div>
+                                    )}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                      <Eye size={14} color="var(--text-muted)" />
+                                      <span>Viewed by {viewedCount} recruiter{viewedCount !== 1 ? 's' : ''}</span>
+                                    </div>
+                                  </div>
+                                  {doc.notes && (
+                                    <div style={{
+                                      marginTop: '0.75rem',
+                                      paddingTop: '0.75rem',
+                                      borderTop: '1px solid var(--border-color)',
+                                      fontStyle: 'italic',
+                                      color: 'var(--text-secondary)',
+                                      fontSize: '0.9rem'
+                                    }}>
+                                      <strong>Manager Notes:</strong> {doc.notes}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                <button
+                                  className="view-strategy-btn"
+                                  onClick={() => handlePreviewDocument(doc, `Role Instructions - ${doc.file_name}`)}
+                                  style={{ flex: 1 }}
+                                >
+                                  <Eye size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+                                  Preview
+                                </button>
+                                <button
+                                  className="btn-secondary"
+                                  onClick={() => removeRoleInstructionsDocument(doc.id, position.id, doc.file_name)}
+                                  style={{
+                                    background: 'linear-gradient(135deg, #F7768E, #E74C3C)',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '0.5rem 1rem',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    flex: 1
+                                  }}
+                                >
+                                  <Trash2 size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+                                  Remove
+                                </button>
+                              </div>
                             </div>
-                          )}
-                        </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -797,6 +905,17 @@ function StrategyManager() {
           )}
         </div>
       )}
+
+      {/* Document Viewer Modal */}
+      <AnimatePresence>
+        {viewingDocument && (
+          <DocumentViewerModal
+            documentUrl={viewingDocument.url}
+            documentTitle={viewingDocument.title}
+            onClose={() => setViewingDocument(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

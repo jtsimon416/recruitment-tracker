@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { supabase } from '../services/supabaseClient';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import mammoth from 'mammoth';
 import {
   ExternalLink, Eye, Edit, Trash2, ChevronUp, ChevronDown,
-  Upload, Search, Filter, X, Star, Clock, Calendar
+  Upload, Search, Filter, X, Star, Clock, Calendar, FileText, Bell, AlertCircle
 } from 'lucide-react';
+import DocumentViewerModal from '../components/DocumentViewerModal';
 import '../styles/RecruiterOutreach.css';
 
 // ===================================
@@ -98,6 +100,335 @@ const StarRatingDisplay = ({ rating }) => {
         />
       ))}
     </div>
+  );
+};
+
+// ===================================
+// COMPONENT: MY ACTIVE ROLES
+// ===================================
+const MyActiveRoles = ({ userProfile }) => {
+  const [activeRoles, setActiveRoles] = useState([]);
+  const [roleInstructions, setRoleInstructions] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [viewingDocument, setViewingDocument] = useState(null);
+
+  useEffect(() => {
+    if (userProfile?.id) {
+      fetchMyActiveRoles();
+    }
+  }, [userProfile]);
+
+  const fetchMyActiveRoles = async () => {
+    console.log('🔍 Fetching active roles for recruiter:', userProfile.id);
+    setLoading(true);
+
+    try {
+      // Fetch positions where the recruiter has pipeline entries
+      const { data: pipelineData, error: pipelineError } = await supabase
+        .from('pipeline')
+        .select('position_id')
+        .eq('recruiter_id', userProfile.id);
+
+      if (pipelineError) throw pipelineError;
+
+      const positionIds = [...new Set(pipelineData.map(p => p.position_id))];
+      console.log('📊 Found pipeline entries for positions:', positionIds);
+
+      if (positionIds.length === 0) {
+        setActiveRoles([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch position details
+      const { data: positionsData, error: positionsError } = await supabase
+        .from('positions')
+        .select('*, clients(company_name)')
+        .in('id', positionIds)
+        .eq('status', 'Open');
+
+      if (positionsError) throw positionsError;
+
+      console.log('✅ Fetched active roles:', positionsData);
+      setActiveRoles(positionsData || []);
+
+      // Fetch role instructions for these positions
+      if (positionIds.length > 0) {
+        await fetchRoleInstructionsForPositions(positionIds);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching active roles:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRoleInstructionsForPositions = async (positionIds) => {
+    console.log('🔍 Fetching role instructions for positions:', positionIds);
+
+    try {
+      const { data, error } = await supabase
+        .from('role_instructions')
+        .select('*')
+        .in('position_id', positionIds)
+        .order('uploaded_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log('✅ Fetched role instructions:', data);
+
+      // Group by position_id
+      const grouped = {};
+      if (data) {
+        data.forEach(doc => {
+          if (!grouped[doc.position_id]) {
+            grouped[doc.position_id] = [];
+          }
+          grouped[doc.position_id].push(doc);
+        });
+      }
+
+      setRoleInstructions(grouped);
+    } catch (error) {
+      console.error('❌ Error fetching role instructions:', error);
+    }
+  };
+
+  const calculateCountdown = (startDate, deadlineDate) => {
+    if (!startDate || !deadlineDate) return null;
+
+    const now = new Date();
+    const deadline = new Date(deadlineDate);
+    const diffMs = deadline - now;
+
+    if (diffMs < 0) {
+      // Overdue
+      const hoursOverdue = Math.floor(Math.abs(diffMs) / 3600000);
+      const minutesOverdue = Math.floor((Math.abs(diffMs) % 3600000) / 60000);
+      return {
+        isOverdue: true,
+        display: `⚠️ OVERDUE by ${hoursOverdue}h ${minutesOverdue}m`
+      };
+    } else {
+      // Remaining time
+      const hours = Math.floor(diffMs / 3600000);
+      const minutes = Math.floor((diffMs % 3600000) / 60000);
+      return {
+        isOverdue: false,
+        display: `⏰ ${hours}h ${minutes}m remaining`
+      };
+    }
+  };
+
+  const hasNewInstructions = (document) => {
+    if (!document) return false;
+    const viewedBy = Array.isArray(document.viewed_by) ? document.viewed_by : [];
+    return !viewedBy.includes(userProfile.id);
+  };
+
+  const handleViewInstructions = async (document, position) => {
+    console.log('👁️ Opening instructions document:', document.id);
+    setViewingDocument({
+      document,
+      position
+    });
+  };
+
+  const handleMarkAsViewed = async (documentId, positionId, fileName) => {
+    try {
+      console.log('✅ Marking document as viewed:', documentId);
+
+      // Fetch current viewed_by array for this document
+      const { data: currentData, error: fetchError } = await supabase
+        .from('role_instructions')
+        .select('viewed_by')
+        .eq('id', documentId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const viewedBy = Array.isArray(currentData.viewed_by) ? currentData.viewed_by : [];
+
+      if (!viewedBy.includes(userProfile.id)) {
+        // Add recruiter to viewed_by array using JSONB array append
+        const { error: updateError } = await supabase
+          .from('role_instructions')
+          .update({
+            viewed_by: [...viewedBy, userProfile.id]
+          })
+          .eq('id', documentId);
+
+        if (updateError) throw updateError;
+
+        // Create audit log
+        await supabase
+          .from('pipeline_audit_log')
+          .insert({
+            position_id: positionId,
+            event_type: 'role_instructions_viewed',
+            performed_by: userProfile.id,
+            notes: `Recruiter viewed role instructions: ${fileName}`,
+            metadata: { document_id: documentId, filename: fileName },
+            created_at: new Date().toISOString()
+          });
+
+        console.log('✅ Document marked as viewed');
+
+        // Refresh active roles and instructions
+        await fetchMyActiveRoles();
+      }
+    } catch (error) {
+      console.error('❌ Error marking document as viewed:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="my-active-roles-section">
+        <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+          Loading your active roles...
+        </p>
+      </div>
+    );
+  }
+
+  if (activeRoles.length === 0) {
+    return null; // Don't show section if no active roles
+  }
+
+  return (
+    <>
+      <div className="my-active-roles-section">
+        <h2 className="active-roles-title">🎯 MY ACTIVE ROLES</h2>
+        <div className="active-roles-grid">
+          {activeRoles.map((position) => {
+            const countdown = calculateCountdown(
+              position.first_slate_started_at,
+              position.first_slate_deadline
+            );
+            const documents = roleInstructions[position.id] || [];
+            const hasActiveSprint = position.first_slate_started_at &&
+                                   !position.first_slate_completed_at;
+            const hasCompletedSprint = position.first_slate_completed_at;
+
+            return (
+              <motion.div
+                key={position.id}
+                className="active-role-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="active-role-header">
+                  <h3 className="active-role-title">{position.title}</h3>
+                  <p className="active-role-company">
+                    @ {position.clients?.company_name || 'N/A'}
+                  </p>
+                </div>
+
+                {/* Countdown Timer */}
+                {hasActiveSprint && countdown && (
+                  <div className={`countdown-timer ${countdown.isOverdue ? 'overdue' : ''}`}>
+                    <Clock size={18} />
+                    <span>{countdown.display}</span>
+                  </div>
+                )}
+
+                {/* Role Instructions - Multiple Documents */}
+                {documents.length > 0 && (
+                  <div className="role-instructions-section">
+                    <h4 className="role-instructions-header">
+                      📋 Role Instructions ({documents.length})
+                    </h4>
+                    <div className="role-instructions-list">
+                      {documents.map((doc) => {
+                        const isNew = hasNewInstructions(doc);
+                        const uploadDate = new Date(doc.uploaded_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        });
+
+                        return (
+                          <div key={doc.id} className="role-instructions-box">
+                            <div className="instructions-header">
+                              <div className="instructions-meta">
+                                <span className="instructions-filename">
+                                  <FileText size={14} />
+                                  {doc.file_name || 'Role Instructions'}
+                                </span>
+                                <span className="instructions-date">
+                                  <Calendar size={12} />
+                                  {uploadDate}
+                                </span>
+                              </div>
+                              {isNew && (
+                                <div className="new-instructions-badge">
+                                  <Bell size={14} />
+                                  <span>NEW</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {doc.notes && (
+                              <div className="instructions-notes">
+                                <strong>Manager Notes:</strong>
+                                <p>{doc.notes}</p>
+                              </div>
+                            )}
+
+                            <button
+                              className="btn-view-instructions"
+                              onClick={() => handleViewInstructions(doc, position)}
+                            >
+                              <Eye size={16} />
+                              View Document
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Phase 2 Strategy (if completed sprint) */}
+                {hasCompletedSprint && position.phase_2_strategy_url && (
+                  <div className="phase2-strategy-box">
+                    <div className="strategy-available-badge">
+                      <span>📋 Phase 2 Strategy Available</span>
+                    </div>
+                    <a
+                      href={position.phase_2_strategy_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-view-strategy"
+                    >
+                      <ExternalLink size={16} />
+                      View Strategy
+                    </a>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Document Viewer Modal */}
+      <AnimatePresence>
+        {viewingDocument && (
+          <DocumentViewerModal
+            documentUrl={viewingDocument.document.file_url}
+            documentTitle={`Role Instructions - ${viewingDocument.document.file_name || 'Document'}`}
+            onClose={() => setViewingDocument(null)}
+            onViewed={() => handleMarkAsViewed(
+              viewingDocument.document.id,
+              viewingDocument.position.id,
+              viewingDocument.document.file_name
+            )}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
@@ -687,6 +1018,9 @@ function RecruiterOutreach() {
         <h1>📊 MY LINKEDIN OUTREACH</h1>
         <p className="outreach-page-subtitle">Track and manage your LinkedIn recruitment activities</p>
       </div>
+
+      {/* MY ACTIVE ROLES Section - NEW */}
+      <MyActiveRoles userProfile={userProfile} />
 
       {/* Calls Dashboard */}
       <MyCallsDashboard outreachActivities={outreachActivities} />

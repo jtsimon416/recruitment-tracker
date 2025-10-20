@@ -465,6 +465,46 @@ const FirstSlateSprintTracker = ({ userProfile, isDirectorOrManager }) => {
     }
   };
 
+  const stopFirstSlateSprint = async (position) => {
+    if (!window.confirm('Mark this sprint as complete? This will stop the countdown timer.')) {
+      return;
+    }
+
+    const now = new Date();
+    const deadline = new Date(position.first_slate_deadline);
+    const isOnTime = now <= deadline;
+    const count = candidateCounts[position.id] || 0;
+
+    console.log('🛑 Manually stopping sprint for position:', position.id);
+
+    const { error } = await supabase
+      .from('positions')
+      .update({
+        first_slate_completed_at: now.toISOString(),
+        first_slate_status: isOnTime ? 'completed_on_time' : 'completed_late',
+        first_slate_final_count: count
+      })
+      .eq('id', position.id);
+
+    if (!error) {
+      await supabase
+        .from('pipeline_audit_log')
+        .insert({
+          position_id: position.id,
+          event_type: 'first_slate_completed',
+          performed_by: userProfile?.id,
+          notes: `Sprint manually stopped by manager with ${count} candidates. Status: ${isOnTime ? 'on time' : 'late'}`,
+          created_at: now.toISOString()
+        });
+
+      alert(`✅ Sprint stopped! Final count: ${count} candidates`);
+      fetchFirstSlatePositions();
+    } else {
+      console.error('❌ Error stopping sprint:', error);
+      alert('Error stopping sprint: ' + error.message);
+    }
+  };
+
   const activeSprintPositions = positions.filter(p =>
     p.first_slate_started_at && !p.first_slate_completed_at
   );
@@ -571,6 +611,40 @@ const FirstSlateSprintTracker = ({ userProfile, isDirectorOrManager }) => {
                 </div>
               </div>
             </div>
+
+            {/* Stop Sprint Button - Only for Managers */}
+            {isDirectorOrManager && (
+              <button
+                className="btn-stop-sprint"
+                onClick={() => stopFirstSlateSprint(position)}
+                style={{
+                  marginTop: '1rem',
+                  width: '100%',
+                  padding: '0.75rem',
+                  background: 'linear-gradient(135deg, var(--rose-gold), #F39C9C)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'var(--main-bg)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(232, 180, 184, 0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                ⏹️ Stop Sprint
+              </button>
+            )}
           </motion.div>
         );
       })}
