@@ -442,13 +442,19 @@
   border: 1px solid #7aa2f7;
 }
 
-.status-badge.cold {
+.status-badge.accepted {
+  background: rgba(115, 218, 202, 0.15);
+  color: #73daca;
+  border: 1px solid #73daca;
+}
+
+.status-badge.declined {
   background: rgba(247, 118, 142, 0.15);
   color: #f7768e;
   border: 1px solid #f7768e;
 }
 
-.status-badge.completed {
+.status-badge.ready-submission {
   background: rgba(187, 154, 247, 0.15);
   color: #bb9af7;
   border: 1px solid #bb9af7;
@@ -870,6 +876,307 @@
 
   .pagination-controls {
     flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* ===================================
+   CALLS DASHBOARD SECTION
+   =================================== */
+
+.calls-dashboard-section {
+  margin-bottom: 2rem;
+}
+
+.calls-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.calls-dashboard-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.calls-dashboard-title {
+  color: var(--rose-gold);
+  font-size: 1.1rem;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.calls-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.calls-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.call-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 0.75rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+  margin-bottom: 0.5rem;
+}
+
+.call-item:hover {
+  background: var(--hover-bg);
+}
+
+.call-info-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.call-time {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--rose-gold);
+  background: rgba(232, 180, 184, 0.15);
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  min-width: 70px;
+  text-align: center;
+}
+
+.call-day-badge {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--peachy-rose);
+  background: rgba(244, 194, 168, 0.15);
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  min-width: 50px;
+  text-align: center;
+}
+
+.call-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.call-details strong {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.call-details span {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.btn-call-linkedin {
+  color: var(--text-muted);
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-call-linkedin:hover {
+  color: var(--rose-gold);
+  background: var(--hover-bg);
+}
+
+.no-calls-message {
+  color: var(--text-secondary);
+  padding: 1.5rem;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ===================================
+   ENHANCED EDIT MODAL
+   =================================== */
+
+.edit-outreach-modal {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close-modal:hover {
+  background: var(--hover-bg);
+  color: var(--rose-gold);
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--rose-gold);
+  box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
+}
+
+.form-input-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Star Rating Input */
+.star-rating-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.star-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: #FFD700;
+  transition: transform 0.2s;
+}
+
+.star-btn:hover {
+  transform: scale(1.2);
+}
+
+.star-btn.filled {
+  color: #FFD700;
+}
+
+.btn-clear-rating {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-clear-rating:hover {
+  border-color: var(--rose-gold);
+  color: var(--rose-gold);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* ===================================
+   QUICK RATING MODAL
+   =================================== */
+
+.quick-rating-modal {
+  max-width: 700px;
+}
+
+.rating-instructions {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.quick-rating-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.quick-rating-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s;
+}
+
+.quick-rating-item:hover {
+  border-color: var(--rose-gold);
+  background: var(--hover-bg);
+}
+
+.quick-rating-item .contact-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* ===================================
+   RESPONSIVE UPDATES
+   =================================== */
+
+@media (max-width: 768px) {
+  .calls-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-rating-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .star-rating-input {
+    width: 100%;
     justify-content: center;
   }
 }

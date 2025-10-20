@@ -4,7 +4,7 @@ import { supabase } from '../services/supabaseClient';
 import { motion } from 'framer-motion';
 import {
   ExternalLink, Eye, Edit, Trash2, ChevronUp, ChevronDown,
-  Upload, Search, Filter, X, Star
+  Upload, Search, Filter, X, Star, Clock, Calendar
 } from 'lucide-react';
 import '../styles/RecruiterOutreach.css';
 
@@ -49,11 +49,12 @@ function extractNameFromLinkedInURL(url) {
 // ===================================
 const getStatusBadge = (status) => {
   const statusMap = {
-    'outreach_sent': { label: 'Outreach Sent', emoji: '🟡', class: 'outreach-sent' },
-    'reply_received': { label: 'Reply Received', emoji: '🟢', class: 'reply-received' },
-    'call_scheduled': { label: 'Call Scheduled', emoji: '🔵', class: 'call-scheduled' },
-    'cold': { label: 'Cold', emoji: '❌', class: 'cold' },
-    'completed': { label: 'Completed', emoji: '✅', class: 'completed' }
+    'outreach_sent': { label: 'Outreach Sent', emoji: '🟡', class: 'outreach-sent', color: '#e0af68' },
+    'reply_received': { label: 'Reply Received', emoji: '🟢', class: 'reply-received', color: '#9ece6a' },
+    'accepted': { label: 'Accepted', emoji: '✅', class: 'accepted', color: '#73daca' },
+    'call_scheduled': { label: 'Call Scheduled', emoji: '🔵', class: 'call-scheduled', color: '#7aa2f7' },
+    'declined': { label: 'Declined', emoji: '❌', class: 'declined', color: '#f7768e' },
+    'ready_for_submission': { label: 'Ready for Submission', emoji: '🚀', class: 'ready-submission', color: '#bb9af7' }
   };
 
   return statusMap[status] || statusMap['outreach_sent'];
@@ -101,6 +102,210 @@ const StarRatingDisplay = ({ rating }) => {
 };
 
 // ===================================
+// COMPONENT: Calls Dashboard
+// ===================================
+const MyCallsDashboard = ({ outreachActivities }) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const endOfToday = new Date(today);
+  endOfToday.setHours(23, 59, 59, 999);
+
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + 7);
+
+  // Filter calls scheduled for today
+  const callsToday = outreachActivities.filter(activity => {
+    if (!activity.scheduled_call_date) return false;
+    const callDate = new Date(activity.scheduled_call_date);
+    return callDate >= today && callDate <= endOfToday;
+  });
+
+  // Filter calls scheduled this week
+  const callsThisWeek = outreachActivities.filter(activity => {
+    if (!activity.scheduled_call_date) return false;
+    const callDate = new Date(activity.scheduled_call_date);
+    return callDate > endOfToday && callDate <= endOfWeek;
+  });
+
+  const formatCallTime = (dateString) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const formatCallDay = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      weekday: 'short'
+    });
+  };
+
+  return (
+    <div className="calls-dashboard-section">
+      <div className="calls-dashboard-grid">
+        {/* Calls Today */}
+        <div className="calls-dashboard-card">
+          <h3 className="calls-dashboard-title">
+            <Clock size={20} /> Calls Scheduled Today
+          </h3>
+          <div className="calls-list">
+            {callsToday.length === 0 ? (
+              <p className="no-calls-message">No calls scheduled for today.</p>
+            ) : (
+              <ul>
+                {callsToday.map(activity => (
+                  <li key={activity.id} className="call-item">
+                    <div className="call-info-main">
+                      <span className="call-time">
+                        {formatCallTime(activity.scheduled_call_date)}
+                      </span>
+                      <div className="call-details">
+                        <strong>{activity.candidate_name}</strong>
+                        <span>{activity.positions?.title || 'N/A'}</span>
+                      </div>
+                    </div>
+                    <a
+                      href={activity.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-call-linkedin"
+                      title="View LinkedIn"
+                    >
+                      <ExternalLink size={16} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* Calls This Week */}
+        <div className="calls-dashboard-card">
+          <h3 className="calls-dashboard-title">
+            <Calendar size={20} /> Calls Scheduled This Week
+          </h3>
+          <div className="calls-list">
+            {callsThisWeek.length === 0 ? (
+              <p className="no-calls-message">No calls scheduled for this week.</p>
+            ) : (
+              <ul>
+                {callsThisWeek.map(activity => (
+                  <li key={activity.id} className="call-item">
+                    <div className="call-info-main">
+                      <span className="call-day-badge">
+                        {formatCallDay(activity.scheduled_call_date)}
+                      </span>
+                      <div className="call-details">
+                        <strong>{activity.candidate_name}</strong>
+                        <span>{activity.positions?.title || 'N/A'}</span>
+                      </div>
+                    </div>
+                    <a
+                      href={activity.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-call-linkedin"
+                      title="View LinkedIn"
+                    >
+                      <ExternalLink size={16} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ===================================
+// COMPONENT: Quick Rating Modal
+// ===================================
+const QuickRatingScreen = ({ contacts, onComplete }) => {
+  const [ratings, setRatings] = useState({});
+  const [processing, setProcessing] = useState(false);
+
+  const updateRating = (contactId, rating) => {
+    setRatings(prev => ({ ...prev, [contactId]: rating }));
+  };
+
+  const saveRatings = async () => {
+    setProcessing(true);
+    try {
+      for (const contactId in ratings) {
+        await supabase
+          .from('recruiter_outreach')
+          .update({ rating: ratings[contactId] })
+          .eq('id', contactId);
+      }
+
+      alert('✅ Ratings saved!');
+      onComplete();
+    } catch (error) {
+      alert('Error saving ratings: ' + error.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onComplete}>
+      <motion.div
+        className="modal-content quick-rating-modal"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+      >
+        <div className="modal-header">
+          <h2>Quick Rating - {contacts.length} Contacts</h2>
+          <button className="btn-close-modal" onClick={onComplete}>
+            <X size={20} />
+          </button>
+        </div>
+        <div className="modal-body">
+          <p className="rating-instructions">
+            Rate these contacts based on their profile quality (optional - you can skip):
+          </p>
+          <div className="quick-rating-list">
+            {contacts.map(contact => (
+              <div key={contact.id} className="quick-rating-item">
+                <span className="contact-name">{contact.candidate_name}</span>
+                <div className="star-rating-input">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      className={`star-btn ${(ratings[contact.id] || 0) >= star ? 'filled' : ''}`}
+                      onClick={() => updateRating(contact.id, star)}
+                    >
+                      <Star size={20} fill={(ratings[contact.id] || 0) >= star ? '#FFD700' : 'none'} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn-secondary" onClick={onComplete}>
+            Skip Ratings
+          </button>
+          <button className="btn-primary" onClick={saveRatings} disabled={processing}>
+            {processing ? 'Saving...' : 'Save Ratings'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// ===================================
 // MAIN COMPONENT
 // ===================================
 function RecruiterOutreach() {
@@ -116,13 +321,18 @@ function RecruiterOutreach() {
   const [bulkPreview, setBulkPreview] = useState(null);
   const [processingBulk, setProcessingBulk] = useState(false);
 
+  // Quick Rating State
+  const [showQuickRating, setShowQuickRating] = useState(false);
+  const [newlyAddedContacts, setNewlyAddedContacts] = useState([]);
+
   // Filter State
   const [filters, setFilters] = useState({
     positionId: '',
     status: '',
     rating: '',
     searchQuery: '',
-    dateRange: ''
+    dateRange: '',
+    followup_needed: false
   });
 
   // Sort State
@@ -209,13 +419,15 @@ function RecruiterOutreach() {
         candidate_name: contact.name,
         activity_status: 'outreach_sent',
         rating: 0,
+        followup_needed: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }));
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('recruiter_outreach')
-        .insert(insertData);
+        .insert(insertData)
+        .select();
 
       if (error) throw error;
 
@@ -226,6 +438,12 @@ function RecruiterOutreach() {
       setBulkPreview(null);
 
       await loadData();
+
+      // Show quick rating screen
+      if (data && data.length > 0) {
+        setNewlyAddedContacts(data);
+        setShowQuickRating(true);
+      }
 
     } catch (error) {
       console.error('Error bulk uploading:', error);
@@ -245,6 +463,12 @@ function RecruiterOutreach() {
         c.id === contactId ? { ...c, name: newName } : c
       )
     );
+  };
+
+  const handleQuickRatingComplete = async () => {
+    setShowQuickRating(false);
+    setNewlyAddedContacts([]);
+    await loadData();
   };
 
   // ===================================
@@ -282,6 +506,10 @@ function RecruiterOutreach() {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       result = result.filter(a => new Date(a.created_at) >= weekAgo);
+    }
+
+    if (filters.followup_needed) {
+      result = result.filter(a => a.followup_needed === true);
     }
 
     return result;
@@ -352,16 +580,16 @@ function RecruiterOutreach() {
   const setQuickFilter = (type) => {
     switch(type) {
       case 'today':
-        setFilters(prev => ({ ...prev, dateRange: 'today' }));
+        setFilters(prev => ({ ...prev, dateRange: 'today', followup_needed: false }));
         break;
       case 'week':
-        setFilters(prev => ({ ...prev, dateRange: 'week' }));
+        setFilters(prev => ({ ...prev, dateRange: 'week', followup_needed: false }));
         break;
       case 'followup':
-        setFilters(prev => ({ ...prev, status: 'reply_received' }));
+        setFilters(prev => ({ ...prev, status: '', followup_needed: true }));
         break;
       case 'hotleads':
-        setFilters(prev => ({ ...prev, rating: '5' }));
+        setFilters(prev => ({ ...prev, rating: '5', followup_needed: false }));
         break;
       case 'clear':
         setFilters({
@@ -369,7 +597,8 @@ function RecruiterOutreach() {
           status: '',
           rating: '',
           searchQuery: '',
-          dateRange: ''
+          dateRange: '',
+          followup_needed: false
         });
         break;
     }
@@ -398,18 +627,34 @@ function RecruiterOutreach() {
   };
 
   const handleEdit = (activity) => {
-    setEditingActivity(activity);
+    setEditingActivity({
+      ...activity,
+      scheduled_call_date: activity.scheduled_call_date || '',
+      candidate_phone: activity.candidate_phone || ''
+    });
   };
 
   const saveEdit = async () => {
     if (!editingActivity) return;
 
-    const { success } = await updateOutreachActivity(editingActivity.id, {
+    const updates = {
       candidate_name: editingActivity.candidate_name,
       activity_status: editingActivity.activity_status,
       rating: editingActivity.rating,
-      notes: editingActivity.notes
-    });
+      notes: editingActivity.notes,
+      scheduled_call_date: editingActivity.scheduled_call_date || null,
+      candidate_phone: editingActivity.candidate_phone || null,
+      updated_at: new Date().toISOString()
+    };
+
+    // Auto-set followup_needed based on status
+    if (editingActivity.activity_status === 'reply_received') {
+      updates.followup_needed = true;
+    } else if (['call_scheduled', 'declined', 'ready_for_submission', 'accepted'].includes(editingActivity.activity_status)) {
+      updates.followup_needed = false;
+    }
+
+    const { success } = await updateOutreachActivity(editingActivity.id, updates);
 
     if (success) {
       setEditingActivity(null);
@@ -442,6 +687,9 @@ function RecruiterOutreach() {
         <h1>📊 MY LINKEDIN OUTREACH</h1>
         <p className="outreach-page-subtitle">Track and manage your LinkedIn recruitment activities</p>
       </div>
+
+      {/* Calls Dashboard */}
+      <MyCallsDashboard outreachActivities={outreachActivities} />
 
       {/* Bulk Upload Card */}
       <div className="bulk-upload-card">
@@ -546,9 +794,10 @@ function RecruiterOutreach() {
               <option value="">All Statuses</option>
               <option value="outreach_sent">Outreach Sent</option>
               <option value="reply_received">Reply Received</option>
+              <option value="accepted">Accepted</option>
               <option value="call_scheduled">Call Scheduled</option>
-              <option value="cold">Cold</option>
-              <option value="completed">Completed</option>
+              <option value="declined">Declined</option>
+              <option value="ready_for_submission">Ready for Submission</option>
             </select>
           </div>
 
@@ -592,7 +841,7 @@ function RecruiterOutreach() {
             This Week
           </button>
           <button
-            className={`quick-filter-btn ${filters.status === 'reply_received' ? 'active' : ''}`}
+            className={`quick-filter-btn ${filters.followup_needed ? 'active' : ''}`}
             onClick={() => setQuickFilter('followup')}
           >
             Needs Follow-up
@@ -834,16 +1083,25 @@ function RecruiterOutreach() {
       {/* Edit Modal */}
       {editingActivity && (
         <div className="modal-overlay" onClick={() => setEditingActivity(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <motion.div
+            className="modal-content edit-outreach-modal"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 20 }}
+          >
             <div className="modal-header">
-              <h2>Edit Outreach Activity</h2>
-              <button className="btn-close" onClick={() => setEditingActivity(null)}>&times;</button>
+              <h2>Edit Outreach</h2>
+              <button className="btn-close-modal" onClick={() => setEditingActivity(null)}>
+                <X size={20} />
+              </button>
             </div>
             <div className="modal-body">
               <div className="form-group">
                 <label>Candidate Name</label>
                 <input
                   type="text"
+                  className="form-input"
                   value={editingActivity.candidate_name || ''}
                   onChange={(e) => setEditingActivity({ ...editingActivity, candidate_name: e.target.value })}
                 />
@@ -851,45 +1109,94 @@ function RecruiterOutreach() {
               <div className="form-group">
                 <label>Status</label>
                 <select
+                  className="form-select"
                   value={editingActivity.activity_status}
                   onChange={(e) => setEditingActivity({ ...editingActivity, activity_status: e.target.value })}
                 >
                   <option value="outreach_sent">Outreach Sent</option>
                   <option value="reply_received">Reply Received</option>
+                  <option value="accepted">Accepted</option>
                   <option value="call_scheduled">Call Scheduled</option>
-                  <option value="cold">Cold</option>
-                  <option value="completed">Completed</option>
+                  <option value="declined">Declined</option>
+                  <option value="ready_for_submission">Ready for Submission</option>
                 </select>
               </div>
               <div className="form-group">
                 <label>Rating</label>
-                <select
-                  value={editingActivity.rating || 0}
-                  onChange={(e) => setEditingActivity({ ...editingActivity, rating: parseInt(e.target.value) })}
-                >
-                  <option value="0">No Rating</option>
-                  <option value="1">1 Star</option>
-                  <option value="2">2 Stars</option>
-                  <option value="3">3 Stars</option>
-                  <option value="4">4 Stars</option>
-                  <option value="5">5 Stars</option>
-                </select>
+                <div className="star-rating-input">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      className={`star-btn ${(editingActivity.rating || 0) >= star ? 'filled' : ''}`}
+                      onClick={() => setEditingActivity({ ...editingActivity, rating: star })}
+                    >
+                      <Star size={24} fill={(editingActivity.rating || 0) >= star ? '#FFD700' : 'none'} />
+                    </button>
+                  ))}
+                  {(editingActivity.rating || 0) > 0 && (
+                    <button
+                      type="button"
+                      className="btn-clear-rating"
+                      onClick={() => setEditingActivity({ ...editingActivity, rating: 0 })}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
+              {editingActivity.activity_status === 'call_scheduled' && (
+                <>
+                  <div className="form-group">
+                    <label>Call Date & Time</label>
+                    <input
+                      type="datetime-local"
+                      className="form-input"
+                      value={editingActivity.scheduled_call_date ?
+                        new Date(editingActivity.scheduled_call_date).toISOString().slice(0, 16) : ''}
+                      onChange={(e) => setEditingActivity({
+                        ...editingActivity,
+                        scheduled_call_date: e.target.value ? new Date(e.target.value).toISOString() : ''
+                      })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Phone Number</label>
+                    <input
+                      type="tel"
+                      className="form-input"
+                      placeholder="(555) 123-4567"
+                      value={editingActivity.candidate_phone || ''}
+                      onChange={(e) => setEditingActivity({ ...editingActivity, candidate_phone: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
               <div className="form-group">
                 <label>Notes</label>
                 <textarea
+                  className="form-textarea"
+                  rows="4"
+                  placeholder="Add notes about this contact..."
                   value={editingActivity.notes || ''}
                   onChange={(e) => setEditingActivity({ ...editingActivity, notes: e.target.value })}
-                  rows={4}
                 />
               </div>
             </div>
-            <div className="modal-actions">
+            <div className="modal-footer">
               <button className="btn-secondary" onClick={() => setEditingActivity(null)}>Cancel</button>
               <button className="btn-primary" onClick={saveEdit}>Save Changes</button>
             </div>
-          </div>
+          </motion.div>
         </div>
+      )}
+
+      {/* Quick Rating Modal */}
+      {showQuickRating && newlyAddedContacts.length > 0 && (
+        <QuickRatingScreen
+          contacts={newlyAddedContacts}
+          onComplete={handleQuickRatingComplete}
+        />
       )}
     </div>
   );
