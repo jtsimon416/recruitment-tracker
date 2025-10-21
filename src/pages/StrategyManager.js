@@ -1,98 +1,329 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useData } from '../contexts/DataContext';
 import { supabase } from '../services/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FileText, Trash2, Eye, Download, Calendar, Clock,
-  CheckCircle, TrendingUp, BarChart, Upload
-} from 'lucide-react';
+  FileText, Trash2, Eye, Calendar, BarChart, Upload, Users, AlertTriangle
+} from 'lucide-react'; // Removed unused icons
 import DocumentViewerModal from '../components/DocumentViewerModal';
-import '../styles/Dashboard.css';
+import '../styles/Dashboard.css'; // Re-using styles for consistency
+import '../styles/RecruiterOutreach.css'; // Re-using styles for cards
 
+// ===================================
+// UTILITY: Format Date/Time
+// ===================================
+const formatDateTime = (dateString) => {
+  if (!dateString) return 'N/A';
+  return new Date(dateString).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+};
+
+// ===================================
+// UTILITY: Validate Filename
+// ===================================
+const isValidFilename = (filename) => {
+  // Allow letters, numbers, spaces, dots, hyphens, underscores
+  // Disallow anything else
+  const validPattern = /^[a-zA-Z0-9 ._\-]+$/;
+  return validPattern.test(filename);
+};
+
+// ===================================
+// COMPONENT: Role Instruction Card
+// ===================================
+const RoleInstructionCard = ({
+  position,
+  instructions,
+  recruiters, // <-- We now pass in the list of recruiters
+  uploadingFile,
+  onUpload,
+  onRemove,
+  onPreview
+}) => {
+  const documents = instructions || [];
+
+  return (
+    <motion.div
+      key={position.id}
+      className="active-role-card" // Re-using style from RecruiterOutreach.css
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{ marginBottom: '1.5rem' }}
+    >
+      <div className="active-role-header">
+        <div>
+          <h3 className="active-role-title">
+            {position.title}
+          </h3>
+          <p className="active-role-company">
+            @ {position.clients?.company_name || 'N/A'}
+          </p>
+          <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+            Status: {position.status}
+          </div>
+        </div>
+      </div>
+
+      {/* Upload New Instructions - Always show at top */}
+      <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
+        <div style={{
+          padding: '1rem',
+          background: 'rgba(232, 180, 184, 0.1)',
+          borderRadius: '8px',
+          border: '1px solid var(--rose-gold)'
+        }}>
+          <h4 style={{
+            color: 'var(--rose-gold)',
+            marginBottom: '0.75rem',
+            fontSize: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <Upload size={18} />
+            Upload New Role Instructions:
+          </h4>
+          <input
+            type="file"
+            accept=".docx,.doc"
+            id={`instructions-new-${position.id}`}
+            style={{ marginBottom: '0.75rem', width: '100%', color: 'var(--text-secondary)' }}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                // *** NEW: Validate filename before proceeding ***
+                if (!isValidFilename(file.name)) {
+                  alert(
+                    "Invalid Filename:\n\nPlease rename the file before uploading.\n\nFilenames can only contain letters (A-Z, a-z), numbers (0-9), spaces, dots (.), hyphens (-), and underscores (_).\n\nRemove any special characters (like $, %, &, (, ), –, etc.)."
+                  );
+                  // Clear the input so the user has to re-select
+                  e.target.value = null;
+                  return; // Stop the function here
+                }
+
+                // Filename is valid, proceed with notes prompt and upload
+                const notes = prompt('Optional notes for these instructions:');
+                // Pass notes, allowing null if prompt is cancelled
+                if (notes !== null) { // Only upload if user didn't cancel prompt
+                    onUpload(position.id, file, notes || '');
+                } else {
+                    console.log('Upload cancelled by user at notes prompt.');
+                }
+              }
+              // Clear the input value *after* processing (or cancelling)
+              // to allow re-selection of the same file if needed after renaming.
+              // Note: This might still clear even if upload starts, depending on browser timing.
+              // A more robust solution might involve resetting state, but this is simpler.
+              if (e.target) e.target.value = null;
+            }}
+            disabled={uploadingFile === position.id}
+          />
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            Accepted formats: .docx, .doc
+          </div>
+          {uploadingFile === position.id && (
+            <div style={{ marginTop: '0.5rem', color: 'var(--accent-blue)' }}>
+              Uploading...
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Uploaded Documents List */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <h3 style={{ color: 'var(--rose-gold)', marginBottom: '1rem' }}>
+          Uploaded Documents ({documents.length}):
+        </h3>
+
+        {documents.length === 0 ? (
+          <div style={{
+            color: 'var(--text-muted)',
+            fontSize: '0.9rem',
+            padding: '1rem',
+            background: 'var(--secondary-bg)',
+            borderRadius: '8px',
+            textAlign: 'center'
+          }}>
+            No instructions uploaded yet. Use the upload button above to add documents.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {documents.map((doc, index) => {
+              const viewedCount = Array.isArray(doc.viewed_by) ? doc.viewed_by.length : 0;
+              
+              // We manually find the uploader's name from the recruiters list
+              // by matching the doc.uploaded_by ID
+              const uploader = recruiters.find(r => r.id === doc.uploaded_by);
+              const uploaderName = uploader ? uploader.name : 'Unknown User';
+
+              return (
+                <div key={doc.id} style={{
+                  padding: '1rem',
+                  background: 'var(--secondary-bg)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <FileText size={16} color="var(--rose-gold)" />
+                        <strong style={{ color: 'var(--text-primary)' }}>
+                          {doc.file_name || `Document ${index + 1}`}
+                        </strong>
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Calendar size={14} color="var(--text-muted)" />
+                          <span>Uploaded: {formatDateTime(doc.uploaded_at)}</span>
+                        </div>
+                        
+                        {/* We use the uploaderName we found above */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Users size={14} color="var(--text-muted)" />
+                          <span>By: {uploaderName}</span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Eye size={14} color="var(--text-muted)" />
+                          <span>Viewed by {viewedCount} recruiter{viewedCount !== 1 ? 's' : ''}</span>
+                        </div>
+                      </div>
+                      {doc.notes && (
+                        <div style={{
+                          marginTop: '0.75rem',
+                          paddingTop: '0.75rem',
+                          borderTop: '1px solid var(--border-color)',
+                          fontStyle: 'italic',
+                          color: 'var(--text-secondary)',
+                          fontSize: '0.9rem'
+                        }}>
+                          <strong>Manager Notes:</strong> {doc.notes}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button
+                      className="btn-view-instructions" // Re-using style
+                      onClick={() => onPreview(doc, `Role Instructions - ${doc.file_name}`)}
+                      style={{ flex: 1 }}
+                    >
+                      <Eye size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+                      Preview
+                    </button>
+                    <button
+                      className="btn-secondary" // Using a generic button style
+                      onClick={() => onRemove(doc.id, position.id, doc.file_name)}
+                      style={{
+                        flex: 1,
+                        background: 'linear-gradient(135deg, #F7768E, #E74C3C)',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '0.5rem 1rem',
+                        color: 'white',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Trash2 size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+
+// ===================================
+// MAIN COMPONENT: StrategyManager
+// ===================================
 function StrategyManager() {
   const { userProfile, isDirectorOrManager } = useData();
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('strategies');
-  const [selectedPosition, setSelectedPosition] = useState(null);
+  const [activeTab, setActiveTab] = useState('role_instructions'); // Default to new tab
   const [uploadingFile, setUploadingFile] = useState(null);
-  const [auditLogs, setAuditLogs] = useState([]);
 
   // Document viewer state
   const [viewingDocument, setViewingDocument] = useState(null);
 
   // Role instructions state (for multiple documents)
   const [roleInstructions, setRoleInstructions] = useState({});
+  
+  // Store the list of all recruiters
+  const [recruiters, setRecruiters] = useState([]);
 
-  useEffect(() => {
-    if (!isDirectorOrManager) {
-      alert('Access Denied: This page is for managers only.');
-      window.location.href = '/';
-      return;
-    }
-    if (activeTab === 'strategies') {
-      fetchCompletedPositions();
-    } else if (activeTab === 'role_instructions') {
-      fetchAllPositions();
-    } else if (activeTab === 'audit') {
-      fetchCompletedPositions(); // Audit tab should also show completed positions
-    }
-  }, [isDirectorOrManager, activeTab]);
-
-  const fetchCompletedPositions = async () => {
-    console.log('🔍 Fetching completed positions...');
-    setLoading(true);
+  // Fetches all recruiters so we can map IDs to names
+  const fetchAllRecruiters = useCallback(async () => {
+    console.log('🔍 Fetching all recruiters for name mapping...');
     const { data, error } = await supabase
-      .from('positions')
-      .select('*, clients(company_name)')
-      .not('first_slate_completed_at', 'is', null)
-      .order('first_slate_completed_at', { ascending: false });
+      .from('recruiters')
+      .select('id, name'); // We only need id and name
 
-    console.log('✅ Completed positions response:', { data, error });
-    if (!error && data) {
-      console.log(`📊 Found ${data.length} completed positions`);
-      setPositions(data);
-    } else if (error) {
-      console.error('❌ Error fetching completed positions:', error);
+    if (error) {
+      console.error('❌ Error fetching recruiters:', error);
+    } else {
+      console.log('✅ Fetched recruiters:', data);
+      setRecruiters(data || []);
     }
-    setLoading(false);
-  };
+  }, []);
 
-  const fetchAllPositions = async () => {
+  const fetchAllPositions = useCallback(async () => {
     console.log('🔍 Fetching all open positions for Role Instructions tab...');
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('positions')
-      .select('*, clients(company_name)')
-      .eq('status', 'Open')
-      .order('created_at', { ascending: false });
+    setLoading(true); // Ensure loading is true at the start
+    setPositions([]); // Clear previous positions
+    setRoleInstructions({}); // Clear previous instructions
 
-    console.log('✅ Open positions response:', { data, error, count: data?.length || 0 });
-    if (!error && data) {
-      console.log(`📊 Found ${data.length} open positions:`, data.map(p => ({ id: p.id, title: p.title, status: p.status })));
-      setPositions(data);
+    try {
+      const { data, error } = await supabase
+        .from('positions')
+        .select('*, clients(company_name)')
+        .eq('status', 'Open')
+        .order('created_at', { ascending: false });
 
-      // Fetch role instructions for each position
-      if (data.length > 0) {
-        await fetchRoleInstructionsForPositions(data.map(p => p.id));
+      if (error) throw error; // Throw error to be caught below
+
+      console.log('✅ Open positions response:', { data, count: data?.length || 0 });
+      if (data) {
+        console.log(`📊 Found ${data.length} open positions:`, data.map(p => ({ id: p.id, title: p.title, status: p.status })));
+        setPositions(data);
+
+        // Fetch role instructions for these positions
+        if (data.length > 0) {
+          await fetchRoleInstructionsForPositions(data.map(p => p.id));
+        }
       }
-    } else if (error) {
-      console.error('❌ Error fetching open positions:', error);
+    } catch (error) {
+        console.error('❌ Error fetching open positions:', error);
+        // Optionally set an error state here to display to the user
+    } finally {
+        setLoading(false); // Ensure loading is false at the end
     }
-    setLoading(false);
-  };
+  }, []); // Removed fetchRoleInstructionsForPositions from deps as it's called internally
 
   const fetchRoleInstructionsForPositions = async (positionIds) => {
     console.log('🔍 Fetching role instructions for positions:', positionIds);
 
     try {
+      // We only select '*', not the broken link
       const { data, error } = await supabase
         .from('role_instructions')
-        .select('*, recruiters(name)')
+        .select('*') // <-- SIMPLIFIED QUERY
         .in('position_id', positionIds)
         .order('uploaded_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) throw error; // Throw error to be caught below
 
       console.log('✅ Fetched role instructions:', data);
 
@@ -106,159 +337,115 @@ function StrategyManager() {
           grouped[doc.position_id].push(doc);
         });
       }
-
       setRoleInstructions(grouped);
-    } catch (error) {
+    } catch (error)
+    {
       console.error('❌ Error fetching role instructions:', error);
+       // Optionally set an error state here
     }
   };
 
-  const fetchAuditLogs = async (positionId) => {
-    const { data, error } = await supabase
-      .from('pipeline_audit_log')
-      .select(`
-        *,
-        candidates(name),
-        recruiters(name)
-      `)
-      .eq('position_id', positionId)
-      .order('created_at', { ascending: false })
-      .limit(1000);
-
-    if (!error && data) {
-      setAuditLogs(data);
-    }
-  };
-
-  const uploadStrategyDocument = async (positionId, file, notes) => {
-    setUploadingFile(positionId);
-
-    try {
-      const fileName = `${positionId}_strategy_${Date.now()}.docx`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('strategy-documents')
-        .upload(fileName, file);
-
-      if (uploadError) {
-        alert('Error uploading file: ' + uploadError.message);
-        setUploadingFile(null);
-        return;
-      }
-
-      const { data: urlData } = supabase.storage
-        .from('strategy-documents')
-        .getPublicUrl(fileName);
-
-      await supabase
-        .from('positions')
-        .update({
-          phase_2_strategy_url: urlData.publicUrl,
-          phase_2_uploaded_at: new Date().toISOString(),
-          strategy_viewed_by: [],
-          strategy_notes: notes
-        })
-        .eq('id', positionId);
-
-      await supabase
-        .from('pipeline_audit_log')
-        .insert({
-          position_id: positionId,
-          event_type: 'strategy_uploaded',
-          performed_by: userProfile.id,
-          notes: `New strategy uploaded: ${file.name}`,
-          metadata: { filename: file.name, notes },
-          created_at: new Date().toISOString()
-        });
-
-      alert('✅ Strategy uploaded! Recruiters will be notified.');
-      fetchCompletedPositions();
-    } catch (error) {
-      alert('Error: ' + error.message);
-    } finally {
-      setUploadingFile(null);
-    }
-  };
-
-  const removeStrategyDocument = async (positionId, filename) => {
-    if (!window.confirm('Are you sure you want to remove this strategy document?')) {
+  useEffect(() => {
+    if (!isDirectorOrManager) {
       return;
     }
-
-    try {
-      await supabase
-        .from('positions')
-        .update({
-          phase_2_strategy_url: null,
-          phase_2_uploaded_at: null,
-          strategy_viewed_by: [],
-          strategy_notes: null
-        })
-        .eq('id', positionId);
-
-      await supabase
-        .from('pipeline_audit_log')
-        .insert({
-          position_id: positionId,
-          event_type: 'strategy_removed',
-          performed_by: userProfile.id,
-          notes: `Strategy document removed`,
-          created_at: new Date().toISOString()
-        });
-
-      alert('Strategy document removed.');
-      fetchCompletedPositions();
-    } catch (error) {
-      alert('Error: ' + error.message);
+    // Only load data for the 'role_instructions' tab for now
+    if (activeTab === 'role_instructions') {
+      // We fetch both recruiters AND positions now
+      fetchAllRecruiters(); 
+      fetchAllPositions(); // fetchAllPositions now also calls fetchRoleInstructionsForPositions
+    } else {
+      // Set loading to false if other tabs are selected but not implemented
+      setLoading(false);
     }
-  };
+  }, [isDirectorOrManager, activeTab, fetchAllPositions, fetchAllRecruiters]);
+
+
+  // Check access on component mount
+  useEffect(() => {
+    if (!isDirectorOrManager) {
+      alert('Access Denied: This page is for managers only.');
+      // A simple redirect; in a real app, you might use navigate() from react-router
+      window.location.href = '/';
+    }
+  }, [isDirectorOrManager]);
+
 
   const uploadRoleInstructions = async (positionId, file, notes) => {
+    // Handle case where user cancels the notes prompt - already handled in onChange now
+
+    if (!userProfile) {
+      alert('Error: User profile not found.');
+      return;
+    }
+    
     setUploadingFile(positionId);
 
     try {
       console.log('📤 Uploading role instructions for position:', positionId);
-      const fileName = `${positionId}_instructions_${Date.now()}.docx`;
 
+      // ** Use the already validated filename for storage path construction **
+      // We still need to create a unique path, so combine user ID, position ID, timestamp, and the *original* file name (as it's now validated)
+      // Replace spaces with underscores just for the storage path for robustness, though spaces might be allowed by Supabase now.
+      const safeFileNameForPath = file.name.replace(/\s/g, '_');
+      const storagePath = `${userProfile.id}/${positionId}_instructions_${Date.now()}_${safeFileNameForPath}`;
+
+
+      console.log(`Attempting to upload to path: ${storagePath}`);
+
+      // 1. Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('role-instructions')
-        .upload(fileName, file);
+        .from('role-instructions') // Bucket name
+        .upload(storagePath, file); // Use the validated name derivative path
 
       if (uploadError) {
-        alert('Error uploading file: ' + uploadError.message);
-        setUploadingFile(null);
-        return;
+        console.error('Supabase Storage Upload Error:', uploadError);
+        let errorMessage = `Storage Error: ${uploadError.message || 'Unknown storage error.'}`;
+         if (uploadError.message.includes('Bucket not found')) {
+            errorMessage = 'Storage Error: The storage bucket "role-instructions" was not found.';
+        }
+        // No need to check for 'Invalid key' here as validation prevents it
+        throw new Error(errorMessage);
       }
 
+      // 2. Get the public URL using the same path
       const { data: urlData } = supabase.storage
         .from('role-instructions')
-        .getPublicUrl(fileName);
+        .getPublicUrl(storagePath);
 
+      if (!urlData || !urlData.publicUrl) {
+        throw new Error("Could not get public URL for the uploaded file.");
+      }
+      
       console.log('✅ File uploaded to storage:', urlData.publicUrl);
 
-      // Insert into role_instructions table
+      // 3. Insert metadata into role_instructions table
       const { error: insertError } = await supabase
         .from('role_instructions')
         .insert({
           position_id: positionId,
           file_url: urlData.publicUrl,
-          file_name: file.name,
-          notes: notes,
+          file_name: file.name, // Keep original file name for display in UI
+          notes: notes, // Use the potentially empty string notes
           uploaded_by: userProfile.id,
           uploaded_at: new Date().toISOString(),
-          viewed_by: []
+          viewed_by: [] // Initialize as empty array JSONB
         });
 
       if (insertError) {
-        console.error('❌ Error inserting role instructions:', insertError);
-        alert('Error saving document info: ' + insertError.message);
-        setUploadingFile(null);
-        return;
+        console.error('❌ Error inserting role instructions record:', insertError);
+        let dbErrorMessage = `Database Error: ${insertError.message || 'Failed to save instruction details.'}`;
+        if (insertError.code === '22P02') { // Invalid text representation (often JSON)
+             dbErrorMessage = `Database Error: There was an issue saving the instruction details, possibly related to data format. ${insertError.details || ''}`;
+        } else if (insertError.code === '42501') { // RLS violation
+             dbErrorMessage = `Database Error: Permission denied. Please check your Row Level Security policies or disable RLS for 'role_instructions'. ${insertError.message}`;
+        }
+        throw new Error(dbErrorMessage);
       }
 
       console.log('✅ Role instructions record created');
 
-      // Create audit log
+      // 4. Create audit log (optional, keep if needed)
       await supabase
         .from('pipeline_audit_log')
         .insert({
@@ -271,32 +458,93 @@ function StrategyManager() {
         });
 
       alert('✅ Role instructions uploaded! Recruiters will see it on their active roles.');
-      fetchAllPositions();
+      fetchAllPositions(); // Refresh data to show the new document
     } catch (error) {
-      console.error('❌ Error uploading role instructions:', error);
-      alert('Error: ' + error.message);
+      console.error('❌ Overall Error uploading role instructions:', error);
+      alert('Upload Failed: ' + error.message);
     } finally {
-      setUploadingFile(null);
+      setUploadingFile(null); // Ensure this always runs
     }
   };
 
+
   const removeRoleInstructionsDocument = async (documentId, positionId, fileName) => {
-    if (!window.confirm(`Remove "${fileName}"? Recruiters will no longer see this document.`)) {
+    if (!window.confirm(`Are you sure you want to remove "${fileName}"? Recruiters will no longer see this document.`)) {
+      return;
+    }
+    if (!userProfile) {
+      alert('Error: User profile not found.');
       return;
     }
 
     try {
       console.log('🗑️ Removing role instructions document:', documentId);
 
-      // Delete from role_instructions table
+      // 1. Find the document to get the file_url for storage deletion
+      const { data: docData, error: fetchError } = await supabase
+        .from('role_instructions')
+        .select('file_url')
+        .eq('id', documentId)
+        .single();
+      
+      if (fetchError || !docData) {
+        throw new Error(`Could not find document record: ${fetchError?.message || 'Not found'}`);
+      }
+
+      // 2. Delete from role_instructions table
       const { error: deleteError } = await supabase
         .from('role_instructions')
         .delete()
         .eq('id', documentId);
 
-      if (deleteError) throw deleteError;
+      // IMPORTANT: Check for RLS errors on delete
+      if (deleteError) {
+         console.error('❌ Error deleting role instructions record:', deleteError);
+         let delErrorMessage = `Database Error: ${deleteError.message || 'Failed to delete instruction details.'}`;
+         if (deleteError.code === '42501') { // RLS violation
+             delErrorMessage = `Database Error: Permission denied. Please check your Row Level Security policies for deleting from role_instructions. ${deleteError.message}`;
+         }
+         throw new Error(delErrorMessage);
+      }
 
-      // Create audit log
+
+      // 3. Delete from Supabase Storage (Only attempt if DB delete was successful)
+      let filePath = '';
+      try {
+        const urlString = docData.file_url;
+        // Find the start of the path after the bucket name
+        const pathStartIndex = urlString.indexOf('/role-instructions/') + '/role-instructions/'.length;
+        if (pathStartIndex > '/role-instructions/'.length - 1) {
+            // Decode the path component AFTER isolating it
+            filePath = decodeURIComponent(urlString.substring(pathStartIndex));
+        } else {
+             throw new Error("Path structure not recognized.");
+        }
+        console.log(`Attempting to delete storage file at path: ${filePath}`);
+      } catch (e) {
+         console.error("Error parsing or decoding file path:", e, `URL: ${docData.file_url}`);
+         filePath = ''; // Ensure filePath is empty if parsing fails
+      }
+
+      if (filePath) {
+        const { error: storageError } = await supabase.storage
+          .from('role-instructions')
+          .remove([filePath]); // Pass filePath as an array element
+        
+        if (storageError) {
+          // Log the error but don't block overall success, as the DB record is more important
+          console.warn(`Storage file deletion failed (path: ${filePath}), but DB record was removed: ${storageError.message}`);
+          // Consider notifying the user that the file might still exist in storage
+          alert(`Document record removed, but there was an issue deleting the file from storage. Path: ${filePath}. Error: ${storageError.message}`);
+        } else {
+           console.log(`✅ Storage file deleted: ${filePath}`);
+        }
+      } else {
+        console.warn(`Could not parse file path from URL for deletion: ${docData.file_url}`);
+         alert(`Document record removed, but could not determine the file path to delete from storage. URL: ${docData.file_url}`);
+      }
+
+      // 4. Create audit log (optional)
       await supabase
         .from('pipeline_audit_log')
         .insert({
@@ -308,81 +556,43 @@ function StrategyManager() {
           created_at: new Date().toISOString()
         });
 
-      console.log('✅ Role instructions document removed');
-      alert('Role instructions removed.');
-      fetchAllPositions();
+      console.log('✅ Role instructions document removed from database.');
+      // Don't show success alert until after storage attempt finishes or fails with warning
+      // The warnings above serve as notifications in case of partial success.
+      if (!filePath || (filePath && !supabase.storage.from('role-instructions').remove([filePath]).error) ) {
+         alert('Role instructions removed successfully.'); // Show success if storage delete worked or wasn't needed
+      }
+      fetchAllPositions(); // Refresh data
     } catch (error) {
-      console.error('❌ Error removing role instructions:', error);
+      console.error('❌ Overall Error removing role instructions:', error);
+      // Show the specific error from DB delete or finding record
       alert('Error: ' + error.message);
     }
   };
 
+
   const handlePreviewDocument = (document, title) => {
     console.log('👁️ Opening document preview:', document);
     setViewingDocument({
-      url: document.file_url || document,
+      url: document.file_url,
       title: title || 'Document Preview'
     });
   };
 
-  const exportAuditReport = async (position) => {
-    await fetchAuditLogs(position.id);
-
-    const headers = ['Date', 'Time', 'Event', 'Candidate', 'Performed By', 'Notes'];
-    const rows = auditLogs.map(row => [
-      new Date(row.created_at).toLocaleDateString(),
-      new Date(row.created_at).toLocaleTimeString(),
-      row.event_type || 'N/A',
-      row.candidates?.name || 'N/A',
-      row.recruiters?.name || 'System',
-      (row.notes || '').replace(/,/g, ';')
-    ]);
-
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `audit_${position.title.replace(/\s/g, '_')}_${Date.now()}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    });
-  };
-
-  const calculateTimeDifference = (completed, deadline) => {
-    const completedDate = new Date(completed);
-    const deadlineDate = new Date(deadline);
-    const diff = deadlineDate - completedDate;
-    const hours = Math.floor(Math.abs(diff) / 3600000);
-    const minutes = Math.floor((Math.abs(diff) % 3600000) / 60000);
-
-    if (diff > 0) {
-      return { early: true, display: `${hours}h ${minutes}m early` };
-    } else {
-      return { early: false, display: `${hours}h ${minutes}m late` };
-    }
-  };
-
   if (!isDirectorOrManager) {
-    return null;
+    return (
+        <div className="dashboard-container">
+          <div className="overview-header">
+            <h1 className="main-title" style={{ color: 'var(--accent-red)' }}>
+                <AlertTriangle size={32} /> Access Denied
+            </h1>
+            <p className="welcome-message">
+              This page is only accessible to users with Director or Manager roles.
+            </p>
+          </div>
+        </div>
+    );
   }
-
-  if (loading) {
-    return <div className="dashboard-container">Loading...</div>;
-  }
-
-  console.log(`🎨 Rendering ${activeTab} tab with ${positions.length} positions`);
 
   return (
     <div className="dashboard-container">
@@ -390,7 +600,7 @@ function StrategyManager() {
         <div>
           <h1 className="main-title">Strategy Manager</h1>
           <p className="welcome-message">
-            Manage Phase 2 strategies and view comprehensive audit trails for completed First Slate sprints.
+            Upload role instructions for recruiters.
           </p>
         </div>
       </div>
@@ -402,23 +612,6 @@ function StrategyManager() {
         marginBottom: '2rem',
         borderBottom: '2px solid var(--border-color)'
       }}>
-        <button
-          className={`tab-button ${activeTab === 'strategies' ? 'active' : ''}`}
-          onClick={() => setActiveTab('strategies')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: activeTab === 'strategies' ? 'linear-gradient(135deg, var(--rose-gold), #F39C9C)' : 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'strategies' ? '3px solid var(--rose-gold)' : '3px solid transparent',
-            color: activeTab === 'strategies' ? 'var(--main-bg)' : 'var(--text-secondary)',
-            cursor: 'pointer',
-            fontWeight: 600,
-            transition: 'all 0.3s'
-          }}
-        >
-          <FileText size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-          Strategy Documents
-        </button>
         <button
           className={`tab-button ${activeTab === 'role_instructions' ? 'active' : ''}`}
           onClick={() => setActiveTab('role_instructions')}
@@ -436,475 +629,83 @@ function StrategyManager() {
           <FileText size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
           Role Instructions
         </button>
+        
+        {/* Placeholder for other tabs if we re-add them later */}
+        <button
+          className={`tab-button ${activeTab === 'strategies' ? 'active' : ''}`}
+          onClick={() => setActiveTab('strategies')}
+          style={{
+            padding: '0.75rem 1.5rem',
+            background: 'transparent',
+            border: 'none',
+            borderBottom: '3px solid transparent',
+            color: 'var(--text-muted)', // Muted color
+            cursor: 'not-allowed', // Not allowed cursor
+            fontWeight: 600,
+            transition: 'all 0.3s',
+            opacity: 0.5
+          }}
+          disabled // Disable the button
+          title="This feature has been removed." // Correctly placed title attribute
+        >
+          <FileText size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
+          Strategy Documents (Removed)
+        </button>
         <button
           className={`tab-button ${activeTab === 'audit' ? 'active' : ''}`}
           onClick={() => setActiveTab('audit')}
-          style={{
+           style={{
             padding: '0.75rem 1.5rem',
-            background: activeTab === 'audit' ? 'linear-gradient(135deg, var(--rose-gold), #F39C9C)' : 'transparent',
+            background: 'transparent',
             border: 'none',
-            borderBottom: activeTab === 'audit' ? '3px solid var(--rose-gold)' : '3px solid transparent',
-            color: activeTab === 'audit' ? 'var(--main-bg)' : 'var(--text-secondary)',
-            cursor: 'pointer',
+            borderBottom: '3px solid transparent',
+            color: 'var(--text-muted)', // Muted color
+            cursor: 'not-allowed', // Not allowed cursor
             fontWeight: 600,
-            transition: 'all 0.3s'
+            transition: 'all 0.3s',
+            opacity: 0.5
           }}
+          disabled // Disable the button
+          title="This feature has been removed." // Correctly placed title attribute
         >
           <BarChart size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-          Audit Trail
+          Audit Trail (Removed)
         </button>
       </div>
-
-      {/* Strategy Documents Tab */}
-      {activeTab === 'strategies' && (
-        <div>
-          {positions.length === 0 ? (
-            <div className="first-slate-sprint-card">
-              <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                No completed First Slate sprints yet.
-              </p>
-            </div>
-          ) : (
-            positions.map((position) => {
-              const timeDiff = calculateTimeDifference(
-                position.first_slate_completed_at,
-                position.first_slate_deadline
-              );
-              const isOnTime = position.first_slate_status === 'completed_on_time';
-
-              return (
-                <motion.div
-                  key={position.id}
-                  className="first-slate-sprint-card"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="first-slate-header">
-                    <div>
-                      <div className="first-slate-position-title">
-                        {position.title}
-                      </div>
-                      <div className="first-slate-company">
-                        @ {position.clients?.company_name || 'N/A'}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* First Slate Performance */}
-                  <div style={{ marginTop: '1rem' }}>
-                    <h3 style={{ color: 'var(--rose-gold)', marginBottom: '0.5rem' }}>
-                      First Slate Performance:
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Calendar size={16} color="var(--text-muted)" />
-                        <span>Completed: {formatDateTime(position.first_slate_completed_at)}</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {isOnTime ? <CheckCircle size={16} color="var(--mint-cream)" /> : <Clock size={16} color="var(--dusty-pink)" />}
-                        <span style={{ color: isOnTime ? 'var(--mint-cream)' : 'var(--dusty-pink)' }}>
-                          Status: {isOnTime ? '✅' : '⚠️'} Delivered {timeDiff.display}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <TrendingUp size={16} color="var(--text-muted)" />
-                        <span>Final Count: {position.first_slate_final_count || 8} candidates</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Current Strategy */}
-                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-                    <h3 style={{ color: 'var(--rose-gold)', marginBottom: '0.5rem' }}>
-                      Current Strategy:
-                    </h3>
-                    {position.phase_2_strategy_url ? (
-                      <div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <FileText size={16} color="var(--accent-blue)" />
-                            <span>Document uploaded</span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Calendar size={16} color="var(--text-muted)" />
-                            <span>Uploaded: {formatDateTime(position.phase_2_uploaded_at)}</span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Eye size={16} color="var(--text-muted)" />
-                            <span>Viewed by: {position.strategy_viewed_by?.length || 0} recruiters</span>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                          <button
-                            className="view-strategy-btn"
-                            onClick={() => handlePreviewDocument(position.phase_2_strategy_url, 'Phase 2 Strategy')}
-                          >
-                            <Eye size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                            Preview
-                          </button>
-                          <button
-                            className="btn-secondary"
-                            onClick={() => removeStrategyDocument(position.id, position.phase_2_strategy_url)}
-                            style={{
-                              background: 'linear-gradient(135deg, #F7768E, #E74C3C)',
-                              border: 'none',
-                              borderRadius: '6px',
-                              padding: '0.5rem 1rem',
-                              color: 'white',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <Trash2 size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                        No strategy document uploaded yet.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Upload New Strategy */}
-                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-                    <h3 style={{ color: 'var(--rose-gold)', marginBottom: '0.5rem' }}>
-                      Upload New Strategy:
-                    </h3>
-                    <input
-                      type="file"
-                      accept=".docx,.doc"
-                      id={`file-${position.id}`}
-                      style={{ marginBottom: '0.5rem' }}
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const notes = prompt('Optional notes for this strategy:');
-                          uploadStrategyDocument(position.id, file, notes || '');
-                        }
-                      }}
-                    />
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Accepted formats: .docx, .doc
-                    </div>
-                    {uploadingFile === position.id && (
-                      <div style={{ marginTop: '0.5rem', color: 'var(--accent-blue)' }}>
-                        Uploading...
-                      </div>
-                    )}
-                  </div>
-
-                  {/* View Audit Report */}
-                  <div style={{ marginTop: '1.5rem' }}>
-                    <button
-                      className="btn-premium"
-                      onClick={() => exportAuditReport(position)}
-                    >
-                      <Download size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                      Export Audit Report (CSV)
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })
-          )}
-        </div>
-      )}
 
       {/* Role Instructions Tab */}
       {activeTab === 'role_instructions' && (
         <div>
-          {positions.length === 0 ? (
+          {loading ? (
+             <div className="first-slate-sprint-card">
+              <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                Loading open positions...
+              </p>
+            </div>
+          ) : positions.length === 0 ? (
             <div className="first-slate-sprint-card">
               <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                No open positions available.
+                No open positions found.
               </p>
             </div>
           ) : (
-            positions.map((position) => {
-              const documents = roleInstructions[position.id] || [];
-              const sprintStatus = position.first_slate_started_at
-                ? (position.first_slate_completed_at ? 'Completed' : 'Active Sprint')
-                : 'Not Started';
-
-              return (
-                <motion.div
-                  key={position.id}
-                  className="first-slate-sprint-card"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{ marginBottom: '1.5rem' }}
-                >
-                  <div className="first-slate-header">
-                    <div>
-                      <div className="first-slate-position-title">
-                        {position.title}
-                      </div>
-                      <div className="first-slate-company">
-                        @ {position.clients?.company_name || 'N/A'}
-                      </div>
-                      <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                        Status: {position.status} | First Slate: {sprintStatus}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Upload New Instructions - Always show at top */}
-                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-                    <div style={{
-                      padding: '1rem',
-                      background: 'rgba(232, 180, 184, 0.1)',
-                      borderRadius: '8px',
-                      border: '1px solid var(--rose-gold)'
-                    }}>
-                      <h4 style={{
-                        color: 'var(--rose-gold)',
-                        marginBottom: '0.75rem',
-                        fontSize: '1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}>
-                        <Upload size={18} />
-                        Upload New Role Instructions:
-                      </h4>
-                      <input
-                        type="file"
-                        accept=".docx,.doc"
-                        id={`instructions-new-${position.id}`}
-                        style={{ marginBottom: '0.75rem', width: '100%' }}
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            const notes = prompt('Optional notes for these instructions:');
-                            uploadRoleInstructions(position.id, file, notes || '');
-                          }
-                        }}
-                      />
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        Accepted formats: .docx, .doc
-                      </div>
-                      {uploadingFile === position.id && (
-                        <div style={{ marginTop: '0.5rem', color: 'var(--accent-blue)' }}>
-                          Uploading...
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Uploaded Documents List */}
-                  <div style={{ marginTop: '1.5rem' }}>
-                    <h3 style={{ color: 'var(--rose-gold)', marginBottom: '1rem' }}>
-                      Uploaded Documents ({documents.length}):
-                    </h3>
-
-                    {documents.length === 0 ? (
-                      <div style={{
-                        color: 'var(--text-muted)',
-                        fontSize: '0.9rem',
-                        padding: '1rem',
-                        background: 'var(--secondary-bg)',
-                        borderRadius: '8px',
-                        textAlign: 'center'
-                      }}>
-                        No instructions uploaded yet. Use the upload button above to add documents.
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {documents.map((doc, index) => {
-                          const viewedCount = Array.isArray(doc.viewed_by) ? doc.viewed_by.length : 0;
-
-                          return (
-                            <div key={doc.id} style={{
-                              padding: '1rem',
-                              background: 'var(--secondary-bg)',
-                              borderRadius: '8px',
-                              border: '1px solid var(--border-color)'
-                            }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                                <div style={{ flex: 1 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                    <FileText size={16} color="var(--rose-gold)" />
-                                    <strong style={{ color: 'var(--text-primary)' }}>
-                                      {doc.file_name || `Document ${index + 1}`}
-                                    </strong>
-                                  </div>
-                                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                      <Calendar size={14} color="var(--text-muted)" />
-                                      <span>Uploaded: {formatDateTime(doc.uploaded_at)}</span>
-                                    </div>
-                                    {doc.recruiters?.name && (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <span>By: {doc.recruiters.name}</span>
-                                      </div>
-                                    )}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                      <Eye size={14} color="var(--text-muted)" />
-                                      <span>Viewed by {viewedCount} recruiter{viewedCount !== 1 ? 's' : ''}</span>
-                                    </div>
-                                  </div>
-                                  {doc.notes && (
-                                    <div style={{
-                                      marginTop: '0.75rem',
-                                      paddingTop: '0.75rem',
-                                      borderTop: '1px solid var(--border-color)',
-                                      fontStyle: 'italic',
-                                      color: 'var(--text-secondary)',
-                                      fontSize: '0.9rem'
-                                    }}>
-                                      <strong>Manager Notes:</strong> {doc.notes}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                <button
-                                  className="view-strategy-btn"
-                                  onClick={() => handlePreviewDocument(doc, `Role Instructions - ${doc.file_name}`)}
-                                  style={{ flex: 1 }}
-                                >
-                                  <Eye size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                                  Preview
-                                </button>
-                                <button
-                                  className="btn-secondary"
-                                  onClick={() => removeRoleInstructionsDocument(doc.id, position.id, doc.file_name)}
-                                  style={{
-                                    background: 'linear-gradient(135deg, #F7768E, #E74C3C)',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    padding: '0.5rem 1rem',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    flex: 1
-                                  }}
-                                >
-                                  <Trash2 size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                                  Remove
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })
+            positions.map((position) => (
+                <RoleInstructionCard
+                    key={position.id}
+                    position={position}
+                    instructions={roleInstructions[position.id] || []}
+                    recruiters={recruiters}
+                    uploadingFile={uploadingFile}
+                    onUpload={uploadRoleInstructions}
+                    onRemove={removeRoleInstructionsDocument}
+                    onPreview={handlePreviewDocument}
+                />
+            ))
           )}
         </div>
       )}
 
-      {/* Audit Trail Tab */}
-      {activeTab === 'audit' && (
-        <div>
-          {positions.length === 0 ? (
-            <div className="first-slate-sprint-card">
-              <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                No completed First Slate sprints yet.
-              </p>
-            </div>
-          ) : (
-            <div className="first-slate-sprint-card">
-              <h3 style={{ color: 'var(--rose-gold)', marginBottom: '1rem' }}>
-                Select a position to view audit trail:
-              </h3>
-              <select
-                value={selectedPosition || ''}
-                onChange={(e) => {
-                  setSelectedPosition(e.target.value);
-                  if (e.target.value) {
-                    fetchAuditLogs(e.target.value);
-                  }
-                }}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  background: 'var(--secondary-bg)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '6px',
-                  color: 'var(--text-primary)',
-                  fontSize: '1rem'
-                }}
-              >
-                <option value="">-- Select Position --</option>
-                {positions.map(pos => (
-                  <option key={pos.id} value={pos.id}>
-                    {pos.title} @ {pos.clients?.company_name}
-                  </option>
-                ))}
-              </select>
-
-              {selectedPosition && auditLogs.length > 0 && (
-                <div style={{ marginTop: '2rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3 style={{ color: 'var(--rose-gold)' }}>
-                      Activity Log ({auditLogs.length} events)
-                    </h3>
-                    <button
-                      className="btn-premium"
-                      onClick={() => {
-                        const pos = positions.find(p => p.id === selectedPosition);
-                        if (pos) exportAuditReport(pos);
-                      }}
-                    >
-                      <Download size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                      Export CSV
-                    </button>
-                  </div>
-
-                  <div style={{
-                    maxHeight: '600px',
-                    overflowY: 'auto',
-                    background: 'var(--secondary-bg)',
-                    borderRadius: '8px',
-                    padding: '1rem'
-                  }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
-                          <th style={{ textAlign: 'left', padding: '0.5rem', color: 'var(--rose-gold)' }}>Date/Time</th>
-                          <th style={{ textAlign: 'left', padding: '0.5rem', color: 'var(--rose-gold)' }}>Event</th>
-                          <th style={{ textAlign: 'left', padding: '0.5rem', color: 'var(--rose-gold)' }}>Candidate</th>
-                          <th style={{ textAlign: 'left', padding: '0.5rem', color: 'var(--rose-gold)' }}>Performed By</th>
-                          <th style={{ textAlign: 'left', padding: '0.5rem', color: 'var(--rose-gold)' }}>Notes</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {auditLogs.map((log, index) => (
-                          <tr key={index} style={{
-                            borderBottom: '1px solid var(--border-color)',
-                            transition: 'background 0.2s'
-                          }}>
-                            <td style={{ padding: '0.75rem', fontSize: '0.85rem' }}>
-                              {formatDateTime(log.created_at)}
-                            </td>
-                            <td style={{ padding: '0.75rem', fontSize: '0.85rem' }}>
-                              {log.event_type || 'N/A'}
-                            </td>
-                            <td style={{ padding: '0.75rem', fontSize: '0.85rem' }}>
-                              {log.candidates?.name || 'N/A'}
-                            </td>
-                            <td style={{ padding: '0.75rem', fontSize: '0.85rem' }}>
-                              {log.recruiters?.name || 'System'}
-                            </td>
-                            <td style={{ padding: '0.75rem', fontSize: '0.85rem', maxWidth: '300px' }}>
-                              {log.notes || 'N/A'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Other tabs are hidden as they are not the active one */}
 
       {/* Document Viewer Modal */}
       <AnimatePresence>
@@ -913,6 +714,7 @@ function StrategyManager() {
             documentUrl={viewingDocument.url}
             documentTitle={viewingDocument.title}
             onClose={() => setViewingDocument(null)}
+            // No onViewed prop here, as managers don't need to track their own views
           />
         )}
       </AnimatePresence>

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import mammoth from 'mammoth';
 import {
   ExternalLink, Eye, Edit, Trash2, ChevronUp, ChevronDown,
-  Upload, Search, Filter, X, Star, Clock, Calendar, FileText, Bell, AlertCircle
+  Upload, Search, Filter, X, Star, Calendar, FileText, Bell, AlertCircle
 } from 'lucide-react';
 import DocumentViewerModal from '../components/DocumentViewerModal';
 import '../styles/RecruiterOutreach.css';
@@ -179,32 +179,6 @@ const MyActiveRoles = ({ userProfile }) => {
     }
   };
 
-  const calculateCountdown = (startDate, deadlineDate) => {
-    if (!startDate || !deadlineDate) return null;
-
-    const now = new Date();
-    const deadline = new Date(deadlineDate);
-    const diffMs = deadline - now;
-
-    if (diffMs < 0) {
-      // Overdue
-      const hoursOverdue = Math.floor(Math.abs(diffMs) / 3600000);
-      const minutesOverdue = Math.floor((Math.abs(diffMs) % 3600000) / 60000);
-      return {
-        isOverdue: true,
-        display: `⚠️ OVERDUE by ${hoursOverdue}h ${minutesOverdue}m`
-      };
-    } else {
-      // Remaining time
-      const hours = Math.floor(diffMs / 3600000);
-      const minutes = Math.floor((diffMs % 3600000) / 60000);
-      return {
-        isOverdue: false,
-        display: `⏰ ${hours}h ${minutes}m remaining`
-      };
-    }
-  };
-
   const hasNewInstructions = (document) => {
     if (!document) return false;
     const viewedBy = Array.isArray(document.viewed_by) ? document.viewed_by : [];
@@ -287,13 +261,7 @@ const MyActiveRoles = ({ userProfile }) => {
         <h2 className="active-roles-title">🎯 MY ACTIVE ROLES</h2>
         <div className="active-roles-grid">
           {activeRoles.map((position) => {
-            const countdown = calculateCountdown(
-              position.first_slate_started_at,
-              position.first_slate_deadline
-            );
             const documents = roleInstructions[position.id] || [];
-            const hasActiveSprint = position.first_slate_started_at &&
-                                   !position.first_slate_completed_at;
             const hasCompletedSprint = position.first_slate_completed_at;
 
             return (
@@ -310,14 +278,6 @@ const MyActiveRoles = ({ userProfile }) => {
                     @ {position.clients?.company_name || 'N/A'}
                   </p>
                 </div>
-
-                {/* Countdown Timer */}
-                {hasActiveSprint && countdown && (
-                  <div className={`countdown-timer ${countdown.isOverdue ? 'overdue' : ''}`}>
-                    <Clock size={18} />
-                    <span>{countdown.display}</span>
-                  </div>
-                )}
 
                 {/* Role Instructions - Multiple Documents */}
                 {documents.length > 0 && (
@@ -372,24 +332,6 @@ const MyActiveRoles = ({ userProfile }) => {
                         );
                       })}
                     </div>
-                  </div>
-                )}
-
-                {/* Phase 2 Strategy (if completed sprint) */}
-                {hasCompletedSprint && position.phase_2_strategy_url && (
-                  <div className="phase2-strategy-box">
-                    <div className="strategy-available-badge">
-                      <span>📋 Phase 2 Strategy Available</span>
-                    </div>
-                    <a
-                      href={position.phase_2_strategy_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-view-strategy"
-                    >
-                      <ExternalLink size={16} />
-                      View Strategy
-                    </a>
                   </div>
                 )}
               </motion.div>
@@ -464,7 +406,7 @@ const MyCallsDashboard = ({ outreachActivities }) => {
         {/* Calls Today */}
         <div className="calls-dashboard-card">
           <h3 className="calls-dashboard-title">
-            <Clock size={20} /> Calls Scheduled Today
+            <AlertCircle size={20} /> Calls Scheduled Today
           </h3>
           <div className="calls-list">
             {callsToday.length === 0 ? (
@@ -852,7 +794,7 @@ function RecruiterOutreach() {
           break;
         case 'rating':
           aValue = a.rating || 0;
-          bValue = b.rating || 0;
+          bValue = a.rating || 0;
           break;
         case 'created_at':
           aValue = new Date(a.created_at);
