@@ -20,6 +20,9 @@ import DirectorReview from './pages/DirectorReview';
 import RecruiterOutreach from './pages/RecruiterOutreach';
 import DirectorOutreachDashboard from './pages/DirectorOutreachDashboard';
 import StrategyManager from './pages/StrategyManager';
+// --- ADDED: Import the new CompanyDocuments page ---
+import CompanyDocuments from './pages/CompanyDocuments';
+// --------------------------------------------------
 import { usePageTransition } from './hooks/usePageTransition';
 import 'nprogress/nprogress.css';
 import './styles/App.css';
@@ -95,7 +98,7 @@ function App() {
         setTimeout(() => setShowTabReturnSplash(false), 2600);
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
@@ -103,26 +106,32 @@ function App() {
   return (
     <SplashScreen>
       <DataProvider>
-        <Router basename="/recruitment-tracker">
+        <Router basename="/recruitment-tracker"> {/* Your basename */}
           <AppContent>
             {/* Global Tab Return Splash - visible on all pages */}
             <AnimatePresence>
               <TabReturnSplash isVisible={showTabReturnSplash} />
             </AnimatePresence>
 
-            <div className="app">
+            <div className="app"> {/* Main app container */}
               <Routes>
                 {/* Public route for Login */}
                 <Route path="/login" element={<Login />} />
 
                 {/* Protected Routes Wrapper: All other paths require login */}
+                {/* Using path="*" ensures this wrapper handles all non-login routes */}
                 <Route path="*" element={
                   <ProtectedRoute>
-                    <ConfirmationProvider>
+                    <ConfirmationProvider> {/* Context for modals */}
+                      {/* Sidebar is rendered inside protected area */}
                       <Sidebar />
+                      {/* Main content area takes remaining space */}
                       <div className="main-content">
+                        {/* Nested Routes define the pages within the main content area */}
                         <Routes>
+                          {/* Default route */}
                           <Route path="/" element={<Dashboard />} />
+                          {/* Specific page routes */}
                           <Route path="/dashboard" element={<Dashboard />} />
                           <Route path="/director-review" element={<DirectorReview />} />
                           <Route path="/director-outreach-dashboard" element={<DirectorOutreachDashboard />} />
@@ -137,6 +146,11 @@ function App() {
                           <Route path="/commissions" element={<Commissions />} />
                           <Route path="/role-history" element={<RoleHistory />} />
                           <Route path="/rubric-generator" element={<RubricGenerator />} />
+                          {/* --- ADDED: Route for the new Company Documents page --- */}
+                          <Route path="/documents" element={<CompanyDocuments />} />
+                          {/* -------------------------------------------------------- */}
+                          {/* Optional: Add a 404 Not Found route */}
+                          {/* <Route path="*" element={<div>Page Not Found</div>} /> */}
                         </Routes>
                       </div>
                     </ConfirmationProvider>
