@@ -1,181 +1,209 @@
-/* Main container for the page */
+/* ===================================
+   DIRECTOR REVIEW STYLES
+   (Rose-Gold Theme - FINAL Row Layout Fix)
+   =================================== */
+
 .director-review-container {
     padding: 2rem;
-    max-width: 1800px;
+    max-width: 1800px; /* Wider for row layout */
     margin: 0 auto;
+    color: var(--text-primary);
 }
 
-/* --- UPDATED STYLES FOR COLLAPSIBLE HEADER --- */
+/* Page Header */
+.director-review-container .page-header {
+  margin-bottom: 1rem;
+}
+
+.director-review-container .page-header h1 {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+}
+
+/* ===================================
+   Collapsible Workflow Header
+   =================================== */
 .review-header-container {
-    background-color: #313152; /* Slightly darker background */
-    border: 1px solid #7a73ec; /* Accent border color */
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    overflow: hidden; /* Key for smooth collapse */
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 2.5rem;
+    overflow: hidden;
     transition: all 0.3s ease-in-out;
+    box-shadow: var(--shadow);
 }
 
 .review-header-title {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 1rem 1.5rem;
     cursor: pointer;
-    background-color: #383860; /* Darker to distinguish it as the clickable bar */
+    background: var(--secondary-bg);
     transition: background-color 0.2s;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .review-header-title:hover {
-    background-color: #404060;
+    background-color: var(--hover-bg);
+}
+
+.review-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .review-header-title h3 {
-    color: #4ed3c1; /* Accent text color */
+    color: var(--rose-gold);
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 1.25rem;
+    font-weight: 600;
 }
 
 .lightbulb-icon {
-    color: #ffd700; /* Gold color for lightbulb */
+    color: var(--accent-orange);
     font-size: 1.5rem;
-    margin-right: 1rem;
 }
 
+.btn-toggle-panel {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.btn-toggle-panel:hover {
+  color: var(--rose-gold);
+}
+
+/* Collapsible Content */
 .review-header-content {
-    padding: 0 1.5rem;
-    max-height: 500px; /* Large initial max-height for expanded state */
-    transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
-    color: #e0e0e0;
-}
-
-/* State for collapsed content */
-.review-header-content.collapsed {
-    max-height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
+    padding: 1.5rem 2rem;
+    color: var(--text-secondary);
+    background: var(--card-bg);
 }
 
 .review-header-content p {
-    font-size: 0.95rem;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    line-height: 1.4;
-    color: #ccc;
+    font-size: 1rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    color: var(--text-primary);
 }
 
 .review-header-content ul {
-    list-style: disc;
+    list-style-type: disc;
     margin-left: 20px;
     padding-left: 0;
-    padding-bottom: 1rem;
-    font-size: 0.9rem;
-    color: #d0d0d0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
 }
 
 .review-header-content ul li {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
 }
 
-/* Ensure strong tags render bold and bright for visibility */
 .review-header-content strong {
     font-weight: 700;
-    color: #ffffff;
+    color: var(--rose-gold);
 }
 
-.review-header-content em {
-    font-style: italic;
-    color: #f0f0f0;
-}
-/* --- END UPDATED STYLES --- */
-
+/* ===================================
+   Review Sections
+   =================================== */
 .review-section {
     margin-bottom: 3rem;
 }
 
-/* H1 is for the main page title */
-.review-section h1 {
-    font-size: 1.8rem;
-    color: #e0e0e0;
-    margin-bottom: 1rem; 
-}
-
-/* H2 is for the queue titles (Screening Queue, Hold Queue) */
 .review-section h2 {
-    font-size: 1.5rem;
-    color: #e0e0e0;
+    font-size: 1.75rem;
+    color: var(--text-primary);
     margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #404060;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
-.review-sub-section {
-    margin-top: 2rem; 
+.review-section h2 svg {
+  color: var(--rose-gold);
 }
-
 
 .no-candidates-message {
-    color: #a0a0a0;
+    color: var(--text-muted);
     text-align: center;
-    padding: 2rem;
+    padding: 3rem;
     font-size: 1rem;
-    background-color: #2c2c4d;
-    border-radius: 4px;
-    border: 1px solid #404060;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px dashed var(--border-color);
 }
 
-/* List of cards */
+/* ===================================
+   Candidate Card (Row Style)
+   =================================== */
 .candidate-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.5rem; /* Small gap between rows */
 }
 
-/* Card style copied from ActiveTracker */
 .candidate-card {
-    background-color: #2c2c4d;
-    border-radius: 4px;
-    padding: 0.5rem 1.5rem;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem; /* Row padding */
     display: grid;
-    grid-template-columns: 2.5fr 2fr 1.5fr 1.5fr 1fr 1fr 2fr; /* 7 columns for fine-tuned layout */
+    /* 7-column layout */
+    grid-template-columns: 2.5fr 2fr 1.5fr 1.5fr 1fr 1fr 2fr;
     gap: 1.5rem;
     align-items: center;
-    border: 1px solid #404060;
+    border: 1px solid var(--border-color);
     transition: background-color 0.2s, border-color 0.2s;
-    min-height: 55px;
+    min-height: 60px; /* Row height */
 }
 
 .candidate-card:hover {
-    background-color: #313152;
-    border-color: #7070a0;
+    background-color: var(--hover-bg);
+    border-color: var(--rose-gold);
 }
 
-/* Card with aging warning */
 .card-aging {
-    border-left: 4px solid #e74c3c;
-    box-shadow: 0 0 15px rgba(231, 76, 60, 0.3);
+    border-left: 4px solid var(--accent-red);
 }
 
-/* Info items within the card */
+/* Info items within the row */
 .card-info-item {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: hidden; /* Prevent text overflow */
+    gap: 0.1rem;
 }
 
 .info-label {
-    font-size: 0.7rem;
-    color: #9090b0;
+    font-size: 0.7rem; /* Small label */
+    color: var(--text-muted);
     text-transform: uppercase;
-    margin-bottom: 0.1rem;
+    font-weight: 600;
 }
 
 .info-value {
     font-size: 0.9rem;
-    color: #e0e0e0;
+    color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+/* Candidate Name section */
 .candidate-name-group {
     display: flex;
     align-items: center;
@@ -185,6 +213,7 @@
 .candidate-name-group .info-value {
     font-weight: 600;
     font-size: 1rem;
+    color: var(--text-primary);
 }
 
 .name-icons {
@@ -193,136 +222,257 @@
     gap: 0.5rem;
 }
 
-/* Actions on the far right */
+/* ========= THIS IS THE FIX ========= */
 .card-actions {
     display: flex;
     justify-content: flex-end;
     align-items: center;
     gap: 0.75rem;
+    /* This tells the grid item to align its children in a row */
+    flex-direction: row; 
+    flex-wrap: nowrap; /* Ensure they don't wrap to the next line */
 }
+/* =================================== */
 
-/* Icon Buttons (Resume, Binoculars) */
+
+/* Icon Buttons (Resume, LinkedIn) */
 .icon-btn {
-    background-color: #404060;
-    color: #d0d0d0;
-    border: none;
-    width: 28px;
-    height: 28px;
+    background-color: var(--secondary-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+    transition: all 0.2s;
     font-size: 0.8rem;
     padding: 0;
 }
 
 .icon-btn:hover {
-    background-color: #505070;
-    color: #ffffff;
+    background-color: var(--hover-bg);
+    color: var(--rose-gold);
+    border-color: var(--rose-gold);
 }
 
 /* Warning icon in actions area */
 .aging-warning-icon {
     font-size: 1.2rem;
-    color: #e74c3c;
+    color: var(--accent-red);
 }
 
-/* --- Base Button Styling (from Talent Pool) --- */
+/* ===================================
+   Standard Button Styles
+   =================================== */
+
 .btn {
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px; /* More rounded corners */
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: center;
-    border: none; /* No explicit border, rely on gradient */
-    transition: all 0.2s ease-in-out;
-    white-space: nowrap;
-    color: #fff; /* Default text color for gradient buttons */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  border: none;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  /* Make buttons in actions smaller */
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
 }
 
 .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* --- Talent Pool Specific Button Styles --- */
-
-/* Comments Button (Image 1: Blue/Purple gradient) */
-.talent-pool-btn-comments {
-    background: linear-gradient(145deg, #7a73ec, #5b54d4);
+/* Primary (Rose Gold) */
+.btn-primary {
+  background: linear-gradient(135deg, var(--rose-gold), #F39C9C);
+  color: var(--main-bg);
+  box-shadow: 0 4px 12px rgba(232, 180, 184, 0.3);
 }
-.talent-pool-btn-comments:hover {
-    background: linear-gradient(145deg, #5b54d4, #7a73ec);
-}
-
-/* Pipeline Button (Image 1: Green/Blue gradient, using for 'Submit') */
-.talent-pool-btn-pipeline {
-    background: linear-gradient(145deg, #4ed3c1, #36a798);
-}
-.talent-pool-btn-pipeline:hover {
-    background: linear-gradient(145deg, #36a798, #4ed3c1);
+.btn-primary:hover {
+  box-shadow: 0 6px 16px rgba(232, 180, 184, 0.5);
 }
 
-/* Edit Button (Image 1: Pink/Purple gradient, using for 'Hold') */
-.talent-pool-btn-edit {
-    background: linear-gradient(145deg, #e67e9b, #d85c80);
+/* Secondary (Dark Outline) */
+.btn-secondary {
+  background: var(--secondary-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
-.talent-pool-btn-edit:hover {
-    background: linear-gradient(145deg, #d85c80, #e67e9b);
+.btn-secondary:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
 }
 
-/* Delete Button (Image 1: Darker/Greyish, using for 'Reject') */
-.talent-pool-btn-delete {
-    background: linear-gradient(145deg, #5a5a7a, #4a4a6a);
-    color: #ccc;
+/* Danger (Red) */
+.btn-danger {
+  background: linear-gradient(135deg, var(--accent-red), #e74c3c);
+  color: white;
 }
-.talent-pool-btn-delete:hover {
-    background: linear-gradient(145deg, #4a4a6a, #5a5a7a);
-    color: #fff;
+
+/* Warning (Yellow/Orange) */
+.btn-warning {
+  background: linear-gradient(135deg, var(--accent-orange), #f39c12);
+  color: var(--main-bg);
 }
 
 
-/* --- Modal styles are largely consistent, with button styles updated --- */
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-.modal-content { background-color: #2a2a4a; color: #e0e0e0; padding: 2rem; border-radius: 8px; width: 90%; max-width: 600px; border: 1px solid #404060; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6); position: relative; max-height: 90vh; overflow-y: auto; }
+/* ===================================
+   Modal Styles (Themed)
+   =================================== */
+.modal-overlay { 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0; 
+  background-color: rgba(0, 0, 0, 0.8); 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
 
-/* Styling for the X close button in the modal */
+.modal-content { 
+  background-color: var(--card-bg); 
+  color: var(--text-primary); 
+  padding: 0;
+  border-radius: 12px; 
+  width: 90%; 
+  max-width: 700px; 
+  border: 1px solid var(--border-color); 
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); 
+  overflow: hidden;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--secondary-bg);
+}
+
+.modal-header h2 {
+  color: var(--rose-gold);
+  margin: 0;
+  font-size: 1.5rem;
+}
+
 .modal-close-btn {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: none;
-    border: none;
-    font-size: 2rem; /* Larger for easy clicking */
-    color: #e0e0e0;
-    cursor: pointer;
-    line-height: 1; /* Align 'X' vertically */
-    padding: 0.2rem 0.5rem; /* Make clickable area larger */
-    border-radius: 5px;
-    transition: background-color 0.2s, color 0.2s;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
 }
 .modal-close-btn:hover {
-    background-color: #404060;
-    color: #ffffff;
+  background-color: var(--hover-bg);
+  color: var(--rose-gold);
 }
 
-.modal-content h2, .modal-content h3 { text-align: left; }
-.modal-comments-history { max-height: 200px; overflow-y: auto; border: 1px solid #404060; border-radius: 4px; padding: 1rem; background-color: #1a1a2e; margin-bottom: 1.5rem; }
-.comment { background-color: #313152; margin-bottom: 0.75rem; padding: 0.75rem; border-radius: 4px; }
-.modal-content textarea { width: 100%; min-height: 120px; padding: 0.8rem; border: 1px solid #5a5a7a; border-radius: 4px; font-size: 1rem; margin-bottom: 1.5rem; resize: vertical; background-color: #1a1a2e; color: #e0e0e0; }
-.modal-decision-buttons { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: flex-end; }
-.modal-decision-buttons .btn { font-size: 0.9rem; padding: 0.6rem 1.3rem; }
+.modal-body {
+  padding: 2rem;
+  overflow-y: auto;
+}
 
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-    .candidate-card { 
-        grid-template-columns: 1fr; /* Stack on smaller screens */
-        gap: 1rem; 
-        padding: 1rem; 
+.modal-comments-history { 
+  max-height: 250px; 
+  overflow-y: auto; 
+  border: 1px solid var(--border-color); 
+  border-radius: 8px; 
+  padding: 1rem; 
+  background-color: var(--main-bg); 
+  margin-bottom: 1.5rem; 
+}
+
+.comment { 
+  background-color: var(--secondary-bg); 
+  margin-bottom: 0.75rem; 
+  padding: 1rem; 
+  border-radius: 6px;
+  border-left: 3px solid var(--rose-gold);
+}
+.comment p { margin: 0 0 0.5rem 0; color: var(--text-primary); }
+.comment small { color: var(--text-muted); }
+
+.no-comments-message { color: var(--text-muted); text-align: center; padding: 1rem; }
+
+/* Form Styles */
+.form-group { margin-bottom: 1.5rem; }
+.form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; }
+.form-textarea { 
+  width: 100%; 
+  min-height: 120px; 
+  padding: 0.75rem; 
+  border: 1px solid var(--border-color); 
+  border-radius: 8px; 
+  font-size: 1rem; 
+  resize: vertical; 
+  background-color: var(--secondary-bg); 
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--rose-gold);
+  box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
+}
+
+.modal-footer { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 0.75rem; 
+  justify-content: flex-end;
+  padding: 1.5rem 2rem;
+  background-color: var(--secondary-bg);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Modal buttons need to be larger than card buttons */
+.modal-footer .btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+}
+
+/* ===================================
+   Responsive
+   =================================== */
+
+@media (max-width: 1400px) {
+  .candidate-card {
+    /* Hide 'Submitted' column */
+    grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1.5fr;
+    gap: 1rem;
+  }
+  .candidate-card .card-info-item:nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+    .candidate-card {
+        grid-template-columns: 1fr; /* Stack into a single column */
+        gap: 1rem;
+        padding: 1rem;
     }
     .candidate-name-group {
         flex-direction: column;
@@ -332,31 +482,41 @@
     .name-icons {
         justify-content: flex-start;
     }
-    .card-actions { 
-        justify-content: flex-start; 
-        padding-top: 0.5rem; 
+    .card-actions {
+        justify-content: flex-start;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-color);
+        margin-top: 1rem;
+    }
+    .info-label {
+        display: block; /* Show labels when stacked */
+    }
+    .info-value {
+        font-size: 0.9rem;
+    }
+    /* Show 'Submitted' column again when stacked */
+    .candidate-card .card-info-item:nth-child(5) {
+      display: flex;
     }
 }
+
 
 @media (max-width: 768px) {
     .director-review-container {
         padding: 1rem;
     }
-    .candidate-card {
-        padding: 0.75rem;
-    }
-    .info-value, .candidate-name-group .info-value {
-        font-size: 0.85rem;
-    }
-    .btn {
-        padding: 0.3rem 0.8rem;
-        font-size: 0.75rem;
-    }
     .modal-content {
-        padding: 1.5rem;
+        padding: 0;
+        width: 95%;
     }
-    .modal-decision-buttons .btn {
-        font-size: 0.8rem;
-        padding: 0.5rem 1rem;
+    .modal-header { padding: 1.25rem 1.5rem; }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer {
+      padding: 1.25rem 1.5rem;
+      flex-direction: column;
+    }
+    /* Make modal buttons full-width on mobile */
+    .modal-footer .btn {
+      width: 100%;
     }
 }

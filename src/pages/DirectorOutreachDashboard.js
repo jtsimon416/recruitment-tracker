@@ -56,7 +56,57 @@ function formatCallDate(dateString) {
 }
 
 // =========================================================================
-// OutreachCard Component
+// NEW: FilterSelection Component (reusable dropdown-to-tag component)
+// =========================================================================
+const FilterSelection = ({ label, items, selectedItems, onToggle }) => {
+  // Create a map for quick lookups (id -> name)
+  const itemMap = useMemo(() => {
+    return items.reduce((map, item) => {
+      map[item.id] = item.name;
+      return map;
+    }, {});
+  }, [items]);
+
+  return (
+    <div className="filter-section">
+      <label className="filter-section-label">{label}</label>
+      <div className="filter-select-wrapper">
+        <select 
+          className="filter-select" 
+          onChange={(e) => {
+            if (e.target.value) onToggle(e.target.value);
+            e.target.value = ''; // Reset select
+          }} 
+          value=""
+        >
+          <option value="">Select {label.toLowerCase()}...</option>
+          {items.map(item => (
+            <option 
+              key={item.id} 
+              value={item.id} 
+              disabled={selectedItems.includes(item.id)}
+            >
+              {item.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      {selectedItems.length > 0 && (
+        <div className="selected-filter-tags">
+          {selectedItems.map(itemId => (
+            <span key={itemId} className="selected-filter-tag">
+              {itemMap[itemId] || itemId}
+              <button onClick={() => onToggle(itemId)}>&times;</button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// =========================================================================
+// OutreachCard Component (Unchanged)
 // =========================================================================
 const OutreachCard = ({ activity, onToggleNotes, isExpanded }) => {
     const statusColor = getStatusColor(activity.activity_status);
@@ -136,7 +186,8 @@ function DirectorOutreachDashboard() {
   const [loading, setLoading] = useState(true);
   const [expandedNotes, setExpandedNotes] = useState({});
   
-  // ** ADDED: Restored state for all filters **
+  // --- NEW FILTER STATE ---
+  const [filterPanelExpanded, setFilterPanelExpanded] = useState(false); // Start collapsed
   const [filterRecruiters, setFilterRecruiters] = useState([]);
   const [filterPositions, setFilterPositions] = useState([]);
   const [filterStatuses, setFilterStatuses] = useState([]);
@@ -156,7 +207,7 @@ function DirectorOutreachDashboard() {
 
   function toggleNotes(activityId) { setExpandedNotes(prev => ({...prev, [activityId]: !prev[activityId]})); }
   
-  // ** ADDED: Logic to filter out managers/directors from the recruiter list **
+  // Filter out managers/directors from the recruiter list
   const recruiterFilterList = useMemo(() => {
     return recruiters.filter(r => {
         const role = r.role?.toLowerCase() || '';
@@ -164,7 +215,7 @@ function DirectorOutreachDashboard() {
     });
   }, [recruiters]);
   
-  // ** ADDED: Restored full filtering logic **
+  // --- UPDATED: Filtering logic ---
   const filteredActivities = useMemo(() => {
     let filtered = [...outreachActivities];
     if (filterRecruiters.length > 0) { filtered = filtered.filter(a => filterRecruiters.includes(a.recruiter_id)); }
@@ -177,87 +228,119 @@ function DirectorOutreachDashboard() {
     return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }, [outreachActivities, filterRecruiters, filterPositions, filterStatuses, dateFilter, customDateStart, customDateEnd]);
 
+  // --- NEW: Filter toggle functions ---
   function toggleRecruiterFilter(id) { setFilterRecruiters(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); }
   function togglePositionFilter(id) { setFilterPositions(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); }
   function toggleStatusFilter(status) { setFilterStatuses(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]); }
   function clearFilters() { setFilterRecruiters([]); setFilterPositions([]); setFilterStatuses([]); setDateFilter('week'); setCustomDateStart(''); setCustomDateEnd(''); }
 
+  // --- NEW: Data for filter dropdowns ---
+  const recruiterItems = useMemo(() => 
+    recruiterFilterList.map(r => ({ id: r.id, name: r.name })),
+  [recruiterFilterList]);
+  
+  const positionItems = useMemo(() =>
+    positions.filter(p => p.status === 'Open').map(p => ({ id: p.id, name: p.title })),
+  [positions]);
+
+  const statusItems = useMemo(() =>
+    outreachStages.map(s => ({ id: s, name: getStatusLabel(s) })),
+  [outreachStages]);
+
+  // --- NEW: Calculate active filter count ---
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filterRecruiters.length > 0) count++;
+    if (filterPositions.length > 0) count++;
+    if (filterStatuses.length > 0) count++;
+    if (dateFilter !== 'week' || customDateStart || customDateEnd) count++; // 'week' is default, so don't count it
+    return count;
+  }, [filterRecruiters, filterPositions, filterStatuses, dateFilter, customDateStart, customDateEnd]);
+
+
   return (
     <div className="page-container director-outreach-container">
       <div className="page-header"> <h1>Team Outreach Dashboard</h1> <p className="subtitle">Real-time visibility into recruiter LinkedIn activity</p> </div>
       
-      <div className="filters-section">
-        <div className="filters-header">
-            <h2><Filter size={20} /> Filters</h2>
-            <button className="btn-clear-filters" onClick={clearFilters}>Clear Filters</button>
-        </div>
-        <div className="filters-grid">
-          <div className="filter-group">
-            <label>Recruiters</label>
-            <div className="filter-chips">
-              {recruiterFilterList.map(recruiter => (
-                <button
-                  key={recruiter.id}
-                  className={`filter-chip ${filterRecruiters.includes(recruiter.id) ? 'active' : ''}`}
-                  onClick={() => toggleRecruiterFilter(recruiter.id)}
-                >
-                  {recruiter.name}
-                  {filterRecruiters.includes(recruiter.id) && <X size={14} />}
-                </button>
-              ))}
-            </div>
+      {/* =================================== */}
+      {/* === NEW: ADVANCED FILTER PANEL ==== */}
+      {/* =================================== */}
+      <div className="advanced-filter-panel">
+        <div className="filter-panel-header" onClick={() => setFilterPanelExpanded(!filterPanelExpanded)}>
+          <div className="filter-header-left">
+            <Filter size={20} />
+            <h3>Filters</h3>
+            {activeFilterCount > 0 && <span className="filter-count-badge">{activeFilterCount}</span>}
           </div>
-
-          {/* ** ADDED: Restored Position Filter ** */}
-          <div className="filter-group">
-            <label>Positions</label>
-            <div className="filter-chips">
-                {positions.filter(p => p.status === 'Open').map(position => (
-                    <button key={position.id} className={`filter-chip ${filterPositions.includes(position.id) ? 'active' : ''}`} onClick={() => togglePositionFilter(position.id)}>
-                        {position.title}
-                        {filterPositions.includes(position.id) && <X size={14} />}
-                    </button>
-                ))}
-            </div>
-          </div>
-          
-          <div className="filter-group">
-            <label>Status</label>
-            <div className="filter-chips">
-              {outreachStages.map(status => (
-                <button
-                  key={status}
-                  className={`filter-chip ${filterStatuses.includes(status) ? 'active' : ''}`}
-                  onClick={() => toggleStatusFilter(status)}
-                  style={{ borderColor: filterStatuses.includes(status) ? getStatusColor(status) : '#414868' }}
-                >
-                  {getStatusLabel(status)}
-                  {filterStatuses.includes(status) && <X size={14} />}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* ** ADDED: Restored Date Filter ** */}
-          <div className="filter-group">
-            <label>Date Range</label>
-            <div className="date-filter-row">
-              <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="custom">Custom Range</option>
-              </select>
-              {dateFilter === 'custom' && (
-                <>
-                  <input type="date" value={customDateStart} onChange={(e) => setCustomDateStart(e.target.value)} />
-                  <input type="date" value={customDateEnd} onChange={(e) => setCustomDateEnd(e.target.value)} />
-                </>
-              )}
-            </div>
+          <div className="filter-header-right">
+            {activeFilterCount > 0 && (
+              <button className="btn-clear-filters" onClick={(e) => { e.stopPropagation(); clearFilters(); }}>
+                Clear All
+              </button>
+            )}
+            <button className="btn-toggle-panel">
+              {filterPanelExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </button>
           </div>
         </div>
+        
+        <AnimatePresence>
+          {filterPanelExpanded && (
+            <motion.div
+              className="filter-panel-content"
+              initial={{ height: 0, opacity: 0, padding: '0 24px' }}
+              animate={{ height: 'auto', opacity: 1, padding: '24px 24px' }}
+              exit={{ height: 0, opacity: 0, padding: '0 24px' }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              <div className="filter-row">
+                <FilterSelection
+                  label="Recruiters"
+                  items={recruiterItems}
+                  selectedItems={filterRecruiters}
+                  onToggle={toggleRecruiterFilter}
+                />
+                <FilterSelection
+                  label="Positions"
+                  items={positionItems}
+                  selectedItems={filterPositions}
+                  onToggle={togglePositionFilter}
+                />
+              </div>
+              <div className="filter-row">
+                <FilterSelection
+                  label="Status"
+                  items={statusItems}
+                  selectedItems={filterStatuses}
+                  onToggle={toggleStatusFilter}
+                />
+                <div className="filter-section">
+                  <label className="filter-section-label">Date Range</label>
+                  <div className="date-range-inputs">
+                    <select className="filter-select" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+                      <option value="today">Today</option>
+                      <option value="week">This Week</option>
+                      <option value="month">This Month</option>
+                      <option value="custom">Custom Range</option>
+                    </select>
+                    {dateFilter === 'custom' && (
+                      <>
+                        <input type="date" className="filter-date-input" value={customDateStart} onChange={(e) => setCustomDateStart(e.target.value)} />
+                        <span className="date-separator">to</span>
+                        <input type="date" className="filter-date-input" value={customDateEnd} onChange={(e) => setCustomDateEnd(e.target.value)} />
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+      {/* =================================== */}
+      {/* === END OF FILTER PANEL ========= */}
+      {/* =================================== */}
+
       
       <div className="activity-feed-section">
         <div className="section-header"> <h2>Live Activity Feed</h2> <span className="activity-count">{filteredActivities.length} activities</span> </div>

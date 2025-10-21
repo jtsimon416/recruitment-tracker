@@ -68,11 +68,17 @@
   transform: rotate(90deg);
 }
 
-/* Body */
+/* ===================================
+   BODY & CONTENT - UPDATED
+   This is where the fix is.
+   ================================== */
+
+/* Body - This is the scrolling container */
 .document-viewer-body {
   flex: 1;
   overflow-y: auto;
   padding: 2rem;
+  /* Apply the dark background to the body */
   background: var(--main-bg, #1a1b26);
 }
 
@@ -150,137 +156,165 @@
   box-shadow: 0 4px 12px rgba(232, 180, 184, 0.4);
 }
 
-/* Document content */
+/* Document content - The actual text from the .doc file */
+/* We set the background here to transparent so it uses the body's background */
 .document-viewer-content {
-  background: white;
-  color: #000;
-  padding: 3rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  line-height: 1.6;
+  background: transparent;
+  color: var(--text-primary, #c0caf5);
+  line-height: 1.7;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* We add .document-viewer-body to make these rules
+  more specific, so they override any default styles. 
+*/
+
 /* Style the converted HTML content */
-.document-viewer-content h1,
-.document-viewer-content h2,
-.document-viewer-content h3,
-.document-viewer-content h4,
-.document-viewer-content h5,
-.document-viewer-content h6 {
-  color: #1a1b26;
+.document-viewer-body .document-viewer-content h1,
+.document-viewer-body .document-viewer-content h2,
+.document-viewer-body .document-viewer-content h3,
+.document-viewer-body .document-viewer-content h4,
+.document-viewer-body .document-viewer-content h5,
+.document-viewer-body .document-viewer-content h6 {
+  color: var(--rose-gold, #E8B4B8);
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
   font-weight: 600;
+  /* Force background to be transparent */
+  background: transparent !important; 
 }
 
-.document-viewer-content h1 {
+.document-viewer-body .document-viewer-content h1 {
   font-size: 2rem;
-  border-bottom: 2px solid #E8B4B8;
+  border-bottom: 2px solid var(--rose-gold, #E8B4B8);
   padding-bottom: 0.5rem;
 }
 
-.document-viewer-content h2 {
+.document-viewer-body .document-viewer-content h2 {
   font-size: 1.75rem;
-  color: #E8B4B8;
+  color: var(--peachy-rose, #F4C2A8);
 }
 
-.document-viewer-content h3 {
+.document-viewer-body .document-viewer-content h3 {
   font-size: 1.5rem;
+  color: var(--soft-lavender, #C5B9D6);
 }
 
-.document-viewer-content p {
+.document-viewer-body .document-viewer-content p {
   margin: 0.75rem 0;
-  color: #333;
+  color: var(--text-primary, #c0caf5);
+  /* Force background to be transparent */
+  background: transparent !important;
 }
 
-.document-viewer-content ul,
-.document-viewer-content ol {
+.document-viewer-body .document-viewer-content ul,
+.document-viewer-body .document-viewer-content ol {
   margin: 1rem 0;
   padding-left: 2rem;
+  /* Force background to be transparent */
+  background: transparent !important;
 }
 
-.document-viewer-content li {
+.document-viewer-body .document-viewer-content li {
   margin: 0.5rem 0;
-  color: #333;
+  color: var(--text-primary, #c0caf5);
+  /* Force background to be transparent */
+  background: transparent !important;
 }
 
-.document-viewer-content table {
+.document-viewer-body .document-viewer-content table {
   border-collapse: collapse;
   width: 100%;
   margin: 1rem 0;
 }
 
-.document-viewer-content table td,
-.document-viewer-content table th {
-  border: 1px solid #ddd;
+.document-viewer-body .document-viewer-content table td,
+.document-viewer-body .document-viewer-content table th {
+  border: 1px solid var(--border-color, #414868);
   padding: 0.5rem;
-  color: #333;
+  color: var(--text-primary, #c0caf5);
+  /* Force background to be transparent */
+  background: transparent !important;
 }
 
-.document-viewer-content table th {
-  background: #E8B4B8;
-  color: white;
+.document-viewer-body .document-viewer-content table th {
+  background: var(--rose-gold, #E8B4B8) !important; /* Force override */
+  color: var(--main-bg, #1a1b26);
   font-weight: 600;
 }
 
-.document-viewer-content a {
-  color: #E8B4B8;
+.document-viewer-body .document-viewer-content a {
+  color: var(--accent-blue, #7aa2f7);
   text-decoration: underline;
+  /* Force background to be transparent */
+  background: transparent !important;
 }
 
-.document-viewer-content a:hover {
-  color: #F39C9C;
+.document-viewer-body .document-viewer-content a:hover {
+  color: var(--accent-cyan, #7dcfff);
 }
 
-.document-viewer-content strong,
-.document-viewer-content b {
+.document-viewer-body .document-viewer-content strong,
+.document-viewer-body .document-viewer-content b {
   font-weight: 700;
-  color: #1a1b26;
+  color: var(--text-primary, #c0caf5);
+  /* Force background to be transparent */
+  background: transparent !important;
 }
 
-.document-viewer-content em,
-.document-viewer-content i {
+.document-viewer-body .document-viewer-content em,
+.document-viewer-body .document-viewer-content i {
   font-style: italic;
+  color: var(--text-secondary, #a9b1d6);
+  /* Force background to be transparent */
+  background: transparent !important;
 }
 
-.document-viewer-content blockquote {
-  border-left: 4px solid #E8B4B8;
+.document-viewer-body .document-viewer-content blockquote {
+  border-left: 4px solid var(--rose-gold, #E8B4B8);
   margin: 1rem 0;
   padding-left: 1rem;
-  color: #555;
+  color: var(--text-secondary, #a9b1d6);
   font-style: italic;
+  /* Force background to be transparent */
+  background: transparent !important;
 }
 
-.document-viewer-content code {
-  background: #f5f5f5;
+.document-viewer-body .document-viewer-content code {
+  background: var(--card-bg, #24283b) !important; /* Force override */
   padding: 0.2rem 0.4rem;
   border-radius: 3px;
   font-family: 'Courier New', monospace;
   font-size: 0.9em;
-  color: #d63384;
+  color: var(--dusty-pink, #F7A9BA);
 }
 
-.document-viewer-content pre {
-  background: #f5f5f5;
+.document-viewer-body .document-viewer-content pre {
+  background: var(--card-bg, #24283b) !important; /* Force override */
   padding: 1rem;
   border-radius: 6px;
   overflow-x: auto;
 }
 
-.document-viewer-content pre code {
-  background: transparent;
+.document-viewer-body .document-viewer-content pre code {
+  background: transparent !important; /* Force override */
   padding: 0;
-  color: #333;
+  color: var(--text-primary, #c0caf5);
 }
 
-.document-viewer-content img {
+.document-viewer-body .document-viewer-content img {
   max-width: 100%;
   height: auto;
   display: block;
   margin: 1rem auto;
   border-radius: 6px;
 }
+
+/* Any other element that might be inside the doc */
+.document-viewer-body .document-viewer-content * {
+  color: inherit;
+}
+
 
 /* Footer */
 .document-viewer-footer {
@@ -352,7 +386,7 @@
   }
 
   .document-viewer-content {
-    padding: 1.5rem;
+    padding: 1rem; /* Adjusted from 1.5rem */
   }
 
   .document-viewer-footer {

@@ -211,7 +211,9 @@ function TalentPool() {
   const [loading, setLoading] = useState(true);
   const [wordDocHtml, setWordDocHtml] = useState('');
   
-  const [filterPanelExpanded, setFilterPanelExpanded] = useState(true);
+  // *** THIS IS THE FIX: Changed from 'true' to 'false' ***
+  const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
+  
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState('');
   const [dateRangeStart, setDateRangeStart] = useState('');

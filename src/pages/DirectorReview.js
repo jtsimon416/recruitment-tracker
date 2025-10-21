@@ -1,73 +1,110 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
-// CHANGED: Added FaLightbulb to imports
 import { FaFileAlt, FaUserTie, FaExclamationCircle, FaLightbulb } from 'react-icons/fa';
+// Import new themed icons
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, Check, X, Archive, Send, MessageSquare, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import '../styles/DirectorReview.css';
 
-// Modal component for comments (No change)
+// Modal component for comments
 const CommentsModal = ({ pipelineEntry, comments, handleCommentChange, handleFinalDecision, onClose }) => {
     return (
         <div className="modal-overlay">
-            <div className="modal-content">
-                <button className="modal-close-btn" onClick={onClose}>&times;</button>
-                <h2>Feedback & History for {pipelineEntry.candidates.name}</h2>
-                <div className="modal-comments-history">
-                    {pipelineEntry.comments && pipelineEntry.comments.length > 0 ? (
-                        pipelineEntry.comments.map(comment => (
-                            <div key={comment.id} className="comment">
-                                <p><strong>{comment.author_name}:</strong> {comment.comment_text}</p>
-                                <small>{new Date(comment.created_at).toLocaleString()}</small>
-                            </div>
-                        ))
-                    ) : <p>No comments yet.</p>}
+            <motion.div 
+              className="modal-content"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+            >
+                <div className="modal-header">
+                  <h2>Feedback for {pipelineEntry.candidates.name}</h2>
+                  <button className="modal-close-btn" onClick={onClose}><X size={24} /></button>
                 </div>
-                <h3>Your Decision & Comment</h3>
-                <textarea
-                    value={comments[pipelineEntry.id] || ''}
-                    onChange={e => handleCommentChange(pipelineEntry.id, e.target.value)}
-                    placeholder="Provide your feedback here... (Required for Hold/Reject)"
-                    rows="5"
-                />
-                <div className="modal-decision-buttons">
-                    {/* Applying Talent Pool button styling */}
-                    <button onClick={() => handleFinalDecision(pipelineEntry, 'Hold', comments[pipelineEntry.id] || '')} className="btn talent-pool-btn-edit">Hold & Notify</button>
-                    <button onClick={() => handleFinalDecision(pipelineEntry, 'Reject', comments[pipelineEntry.id] || '')} className="btn talent-pool-btn-delete">Reject & Notify</button>
-                    <button onClick={() => handleFinalDecision(pipelineEntry, 'Submit to Client', comments[pipelineEntry.id] || '')} className="btn talent-pool-btn-pipeline">Submit to Client</button>
-                    <button onClick={() => handleFinalDecision(pipelineEntry, 'Comment Only', comments[pipelineEntry.id] || '')} className="btn talent-pool-btn-comments">Save Comment Only</button>
+                
+                <div className="modal-body">
+                  <div className="modal-comments-history">
+                      {pipelineEntry.comments && pipelineEntry.comments.length > 0 ? (
+                          pipelineEntry.comments.map(comment => (
+                              <div key={comment.id} className="comment">
+                                  <p><strong>{comment.author_name}:</strong> {comment.comment_text}</p>
+                                  <small>{new Date(comment.created_at).toLocaleString()}</small>
+                              </div>
+                          ))
+                      ) : <p className="no-comments-message">No comment history for this candidate.</p>}
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="decision-comments">Your Decision & Comment</label>
+                    <textarea
+                        id="decision-comments"
+                        value={comments[pipelineEntry.id] || ''}
+                        onChange={e => handleCommentChange(pipelineEntry.id, e.target.value)}
+                        placeholder="Provide your feedback here... (Required for Hold/Reject)"
+                        rows="5"
+                        className="form-textarea"
+                    />
+                  </div>
                 </div>
-            </div>
+
+                <div className="modal-footer">
+                    {/* Using new, standard button classes */}
+                    <button onClick={() => handleFinalDecision(pipelineEntry, 'Hold', comments[pipelineEntry.id] || '')} className="btn btn-warning">
+                      <Archive size={16} /> Hold & Notify
+                    </button>
+                    <button onClick={() => handleFinalDecision(pipelineEntry, 'Reject', comments[pipelineEntry.id] || '')} className="btn btn-danger">
+                      <X size={16} /> Reject & Notify
+                    </button>
+                    <button onClick={() => handleFinalDecision(pipelineEntry, 'Submit to Client', comments[pipelineEntry.id] || '')} className="btn btn-primary">
+                      <Send size={16} /> Submit to Client
+                    </button>
+                    <button onClick={() => handleFinalDecision(pipelineEntry, 'Comment Only', comments[pipelineEntry.id] || '')} className="btn btn-secondary">
+                      <MessageSquare size={16} /> Save Comment Only
+                    </button>
+                </div>
+            </motion.div>
         </div>
     );
 };
 
-// --- UPDATED: Collapsible Header Component ---
+// Collapsible Header Component (Themed)
 const ReviewHeader = () => {
-    // State to manage the dropdown's expanded/collapsed status
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false); // Start collapsed
     const toggleExpand = () => setIsExpanded(!isExpanded);
 
     return (
         <div className="review-header-container">
-            {/* Clickable Title Bar */}
             <div className="review-header-title" onClick={toggleExpand}>
-                <FaLightbulb className="lightbulb-icon" />
-                <h3>Director Review Workflow</h3>
+                <div className="review-header-left">
+                  <FaLightbulb className="lightbulb-icon" />
+                  <h3>Director Review Workflow</h3>
+                </div>
+                <button className="btn-toggle-panel">
+                  {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
             </div>
             
-            {/* Collapsible Content */}
-            <div className={`review-header-content ${isExpanded ? 'expanded' : 'collapsed'}`}>
-                <p>This dashboard is your <strong>action center</strong> for all candidates entering or needing a decision before client submission.</p>
-                <ul>
-                    <li><strong>Screening Queue:</strong> Candidates submitted by Recruiters and awaiting your initial <strong>Go/No-Go</strong> decision.</li>
-                    <li><strong>Hold Queue:</strong> Candidates previously marked <strong>Hold</strong> that require re-review or further action.</li>
-                    <li><strong>Key Actions:</strong> Use <strong>Submit</strong> to move a candidate to the client pipeline. Use <strong>Hold/Reject</strong> <em>with a comment</em> to notify the Recruiter with feedback.</li>
-                </ul>
-            </div>
+            <AnimatePresence>
+            {isExpanded && (
+                <motion.div 
+                  className="review-header-content"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                >
+                    <p>This dashboard is your <strong>action center</strong> for all candidates entering or needing a decision before client submission.</p>
+                    <ul>
+                        <li><strong>Screening Queue:</strong> Candidates submitted by Recruiters and awaiting your initial <strong>Go/No-Go</strong> decision.</li>
+                        <li><strong>Hold Queue:</strong> Candidates previously marked <strong>Hold</strong> that require re-review or further action.</li>
+                        <li><strong>Key Actions:</strong> Use <strong>Submit</strong> to move a candidate to the client pipeline. Use <strong>Hold/Reject</strong> <em>with a comment</em> to notify the Recruiter with feedback.</li>
+                    </ul>
+                </motion.div>
+            )}
+            </AnimatePresence>
         </div>
     );
 };
-// --- END UPDATED HEADER COMPONENT ---
 
 
 function DirectorReview() {
@@ -84,9 +121,10 @@ function DirectorReview() {
     const fetchCandidatesForReview = useCallback(async () => {
         setLoading(true);
         try {
+            // Restore original query to get all fields needed for the row layout
             const { data: pipelineData, error: pipelineError } = await supabase
                 .from('pipeline')
-                .select(`id, candidates ( id, name, email, phone, resume_url, comments ( id, comment_text, author_name, created_at, user_id ) ), positions ( id, title, client_id ), recruiters ( id, name, email ), stage, status, created_at`)
+                .select(`id, candidates ( id, name, email, phone, resume_url, linkedin_url, document_type, comments ( id, comment_text, author_name, created_at, user_id ) ), positions ( id, title, client_id ), recruiters ( id, name, email ), stage, status, created_at`)
                 .or('stage.eq.Screening,status.eq.Hold')
                 .order('created_at', { ascending: false });
 
@@ -108,11 +146,7 @@ function DirectorReview() {
     const handleCommentChange = (id, text) => setComments(prev => ({ ...prev, [id]: text }));
     const displayAlert = (message) => { setAlertMessage(message); setShowAlert(true); setTimeout(() => setShowAlert(false), 3000); };
     
-    // -------------------------------------------------------------------
-    // 🟢 FINAL FIX: Role check updated to use userProfile?.role
     const handleFinalDecision = async (pipelineEntry, action, comment) => {
-        // --- NEW DEBUG LOG AT THE VERY START ---
-        // Note: user.role is still 'authenticated'. We need to check userProfile.role.
         console.log(`--- DR DEBUG START: user exists=${!!user}, user profile role=${userProfile?.role}, action=${action}`);
         
         if (!user) { displayAlert("User data not available."); return; }
@@ -145,12 +179,9 @@ function DirectorReview() {
             if (error) { displayAlert(`Error updating status: ${error.message}`); setLoading(false); return; }
         }
         
-        // Notification logic (remains similar)
-        // CHANGED: Use optional chaining and .toLowerCase() for safer, case-insensitive role check
         if (userProfile?.role?.toLowerCase() === 'director') {
             let shouldNotify = false, notificationMessage = '', notificationType = 'status_change';
             
-            // Check for Hold/Reject with Comment, OR Submit to Client
             if ((isHold || isReject) && comment.trim()) {
                 shouldNotify = true;
                 notificationMessage = `Director action on **${pipelineEntry.candidates.name}**: ${action}. Feedback: "${comment.substring(0, 50)}..."`;
@@ -159,11 +190,9 @@ function DirectorReview() {
                 notificationMessage = `Director moved **${pipelineEntry.candidates.name}** to **Submit to Client** for ${pipelineEntry.positions.title}.`;
             }
             
-            // --- PREVIOUS DEBUG LOG ---
             console.log(`--- DR DEBUG: shouldNotify=${shouldNotify}, action=${action}, comment.trim()=${comment.trim() !== ''}, message length=${notificationMessage.length}, recipient=${pipelineEntry.recruiters.email}`);
             
             if (shouldNotify) {
-                // IMPORTANT: createNotification function in DataContext must also be fixed.
                 await createNotification({ type: notificationType, message: notificationMessage, recipient: pipelineEntry.recruiters.email });
             }
         }
@@ -174,15 +203,12 @@ function DirectorReview() {
         setLoading(false);
         closeCommentsModal();
     };
-    // -------------------------------------------------------------------
     const openCommentsModal = (p) => { setSelectedCandidateForComments(p); setShowCommentsModal(true); };
     const closeCommentsModal = () => { setSelectedCandidateForComments(null); setShowCommentsModal(false); };
 
-    // Filtering candidates into separate lists
     const screeningCandidates = candidatesForReview.filter(p => p.stage === 'Screening' && p.status !== 'Hold');
     const holdCandidates = candidatesForReview.filter(p => p.status === 'Hold');
 
-    // Helper to calculate days old for warnings
     const calculateDaysOld = (dateString) => {
         const date = new Date(dateString);
         const today = new Date();
@@ -190,30 +216,52 @@ function DirectorReview() {
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
 
+    // RESTORED: Original CandidateCard component from your file
     const CandidateCard = ({ p }) => {
         const daysOld = calculateDaysOld(p.created_at);
         const isAging = daysOld > 7; // Warning threshold: 7 days
+        const candidate = p.candidates; // Get candidate object
+        const documentType = candidate.document_type || 'Resume'; // Get doc type
 
         return (
+            // Use the 'candidate-card' class from the new CSS
             <div className={`candidate-card ${isAging ? 'card-aging' : ''}`}>
+                {/* Column 1: Name and Icons */}
                 <div className="card-info-item candidate-name-group">
-                    <span className="info-value">{p.candidates.name}</span>
+                    <span className="info-value">{candidate.name}</span>
                     <div className="name-icons">
-                        <a href={p.candidates.resume_url} target="_blank" rel="noopener noreferrer" className="icon-btn" title="View Resume"><FaFileAlt /></a>
-                        <button className="icon-btn" title="View Candidate Profile"><FaUserTie /></button>
+                        {candidate.resume_url && (
+                            <a href={candidate.resume_url} target="_blank" rel="noopener noreferrer" className="icon-btn" title={`View ${documentType}`}>
+                                <FaFileAlt />
+                            </a>
+                        )}
+                        {candidate.linkedin_url && (
+                            <a href={candidate.linkedin_url} target="_blank" rel="noopener noreferrer" className="icon-btn" title="View LinkedIn">
+                                <ExternalLink size={14} />
+                            </a>
+                        )}
                     </div>
                 </div>
+                {/* Column 2: Position */}
                 <div className="card-info-item"><span className="info-label">Position</span><span className="info-value">{p.positions.title}</span></div>
+                {/* Column 3: Client */}
                 <div className="card-info-item"><span className="info-label">Client</span><span className="info-value">{p.positions.clients.name}</span></div>
+                {/* Column 4: Recruiter */}
                 <div className="card-info-item"><span className="info-label">Recruiter</span><span className="info-value">{p.recruiters.name}</span></div>
+                {/* Column 5: Submitted Date */}
                 <div className="card-info-item"><span className="info-label">Submitted</span><span className="info-value">{new Date(p.created_at).toLocaleDateString()}</span></div>
-                {/* Status will now just be plain text as per feedback */}
+                {/* Column 6: Status */}
                 <div className="card-info-item"><span className="info-label">Status</span><span className="info-value">{p.status}</span></div>
+                {/* Column 7: Actions */}
                 <div className="card-actions">
-                    {/* Applying Talent Pool button styling */}
-                    <button onClick={() => handleFinalDecision(p, 'Submit to Client', '')} className="btn talent-pool-btn-pipeline">Submit</button>
-                    <button className="btn talent-pool-btn-comments" onClick={() => openCommentsModal(p)}>Comments</button>
-                    {isAging && <FaExclamationCircle className="aging-warning-icon" title={`This candidate has been in queue for ${daysOld} days.`} />}
+                    {/* UPDATED: Using new, standard button classes */}
+                    <button onClick={() => handleFinalDecision(p, 'Submit to Client', '')} className="btn btn-primary">
+                      <Send size={16} /> Submit
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => openCommentsModal(p)}>
+                      <MessageSquare size={16} /> Comments
+                    </button>
+                    {isAging && <FaExclamationCircle className="aging-warning-icon" title={`In queue for ${daysOld} days`} />}
                 </div>
             </div>
         );
@@ -225,26 +273,27 @@ function DirectorReview() {
         <div className="director-review-container">
             {showAlert && <div className="alert-popup">{alertMessage}</div>}
             
+            <div className="page-header">
+              <h1>Director Review: Action Center</h1>
+            </div>
+            
+            <ReviewHeader />
+
             <div className="review-section">
-                <h1>Director Review: Action Center</h1> 
-                <ReviewHeader /> {/* INSERTED NEW HEADER COMPONENT HERE */}
-                <div className="review-sub-section">
-                    <h2>Screening Queue</h2>
-                    <div className="candidate-list">
-                        {screeningCandidates.length > 0 ? screeningCandidates.map(p => <CandidateCard key={p.id} p={p} />) : <p className="no-candidates-message">No candidates are currently in screening.</p>}
-                    </div>
+                <h2><Check size={24} /> Screening Queue ({screeningCandidates.length})</h2>
+                <div className="candidate-list">
+                    {screeningCandidates.length > 0 ? screeningCandidates.map(p => <CandidateCard key={p.id} p={p} />) : <p className="no-candidates-message">No candidates are currently in screening.</p>}
                 </div>
             </div>
 
             <div className="review-section">
-                <div className="review-sub-section">
-                    <h2>Hold Queue</h2>
-                    <div className="candidate-list">
-                        {holdCandidates.length > 0 ? holdCandidates.map(p => <CandidateCard key={p.id} p={p} />) : <p className="no-candidates-message">No candidates are currently on hold.</p>}
-                    </div>
+                <h2><Archive size={24} /> Hold Queue ({holdCandidates.length})</h2>
+                <div className="candidate-list">
+                    {holdCandidates.length > 0 ? holdCandidates.map(p => <CandidateCard key={p.id} p={p} />) : <p className="no-candidates-message">No candidates are currently on hold.</p>}
                 </div>
             </div>
 
+            <AnimatePresence>
             {showCommentsModal && selectedCandidateForComments && (
                 <CommentsModal
                     pipelineEntry={selectedCandidateForComments}
@@ -254,6 +303,7 @@ function DirectorReview() {
                     onClose={closeCommentsModal}
                 />
             )}
+            </AnimatePresence>
         </div>
     );
 }

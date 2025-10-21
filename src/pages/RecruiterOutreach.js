@@ -116,6 +116,7 @@ const MyActiveRoles = ({ userProfile }) => {
     if (userProfile?.id) {
       fetchMyActiveRoles();
     }
+    // Add userProfile as a dependency
   }, [userProfile]);
 
   const fetchMyActiveRoles = async () => {
@@ -127,13 +128,13 @@ const MyActiveRoles = ({ userProfile }) => {
       const { data: positionsData, error: positionsError } = await supabase
         .from('positions')
         .select('*, clients(company_name)')
-        .eq('status', 'Open');
+        .eq('status', 'Open'); // No ordering here, we sort later
 
       if (positionsError) throw positionsError;
       
       const openPositions = positionsData || [];
       console.log('✅ Fetched all open roles:', openPositions);
-      setActiveRoles(openPositions);
+      setActiveRoles(openPositions); // Set unsorted roles first
 
       // If there are open positions, get their IDs to fetch instructions
       if (openPositions.length > 0) {
@@ -156,7 +157,7 @@ const MyActiveRoles = ({ userProfile }) => {
         .from('role_instructions')
         .select('*')
         .in('position_id', positionIds)
-        .order('uploaded_at', { ascending: false });
+        .order('uploaded_at', { ascending: false }); // Newest instruction first
 
       if (error) throw error;
 
@@ -178,6 +179,27 @@ const MyActiveRoles = ({ userProfile }) => {
       console.error('❌ Error fetching role instructions:', error);
     }
   };
+
+  // NEW: Sort roles by the most recent instruction date
+  const sortedActiveRoles = useMemo(() => {
+    return [...activeRoles].sort((a, b) => {
+      // Find the most recent instruction for each role (it's the first in the list)
+      const mostRecentA = roleInstructions[a.id]?.[0]?.uploaded_at;
+      const mostRecentB = roleInstructions[b.id]?.[0]?.uploaded_at;
+
+      // If both have instructions, sort by date
+      if (mostRecentA && mostRecentB) {
+        return new Date(mostRecentB) - new Date(mostRecentA);
+      }
+      // If only A has instructions, it comes first
+      if (mostRecentA) return -1;
+      // If only B has instructions, it comes first
+      if (mostRecentB) return 1;
+      // If neither has instructions, keep original order
+      return 0; 
+    });
+  }, [activeRoles, roleInstructions]);
+
 
   const hasNewInstructions = (document) => {
     if (!document) return false;
@@ -209,7 +231,7 @@ const MyActiveRoles = ({ userProfile }) => {
       const viewedBy = Array.isArray(currentData.viewed_by) ? currentData.viewed_by : [];
 
       if (!viewedBy.includes(userProfile.id)) {
-        // Add recruiter to viewed_by array using JSONB array append
+        // Add recruiter to viewed_by array
         const { error: updateError } = await supabase
           .from('role_instructions')
           .update({
@@ -259,11 +281,12 @@ const MyActiveRoles = ({ userProfile }) => {
     <>
       <div className="my-active-roles-section">
         <h2 className="active-roles-title">🎯 MY ACTIVE ROLES</h2>
+        {/* THIS IS THE SECTION WE ARE MODIFYING (THE GRID) */}
         <div className="active-roles-grid">
-          {activeRoles.map((position) => {
+          {/* UPDATED: Map over sortedActiveRoles instead of activeRoles */}
+          {sortedActiveRoles.map((position) => {
             const documents = roleInstructions[position.id] || [];
-            const hasCompletedSprint = position.first_slate_completed_at;
-
+            
             return (
               <motion.div
                 key={position.id}
@@ -285,6 +308,7 @@ const MyActiveRoles = ({ userProfile }) => {
                     <h4 className="role-instructions-header">
                       📋 Role Instructions ({documents.length})
                     </h4>
+                    {/* THIS IS THE LIST WE WILL MAKE SCROLLABLE */}
                     <div className="role-instructions-list">
                       {documents.map((doc) => {
                         const isNew = hasNewInstructions(doc);
@@ -946,7 +970,7 @@ function RecruiterOutreach() {
         <p className="outreach-page-subtitle">Track and manage your LinkedIn recruitment activities</p>
       </div>
 
-      {/* MY ACTIVE ROLES Section - NEW */}
+      {/* MY ACTIVE ROLES Section */}
       <MyActiveRoles userProfile={userProfile} />
 
       {/* Calls Dashboard */}
