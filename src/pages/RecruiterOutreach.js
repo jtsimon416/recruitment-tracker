@@ -6,10 +6,15 @@ import mammoth from 'mammoth';
 import {
   ExternalLink, Eye, Edit, Trash2, ChevronUp, ChevronDown,
   Upload, Search, Filter, X, Star, Calendar, FileText, Bell, AlertCircle,
-  // --- ADDED: Icon for the new quick stage change button ---
   ArrowRightLeft
 } from 'lucide-react';
 import DocumentViewerModal from '../components/DocumentViewerModal';
+
+// --- ADDED: Imports for the new Date/Time Picker ---
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+// ---------------------------------------------------
+
 import '../styles/RecruiterOutreach.css';
 
 // ===================================
@@ -250,7 +255,7 @@ const MyActiveRoles = ({ userProfile }) => {
             position_id: positionId,
             event_type: 'role_instructions_viewed',
             performed_by: userProfile.id,
-            notes: `Recruiter viewed role instructions: ${fileName}`,
+            notes: `Recruiter viewed instructions: ${fileName}`,
             metadata: { document_id: documentId, filename: fileName },
             created_at: new Date().toISOString()
           });
@@ -401,6 +406,11 @@ const MyCallsDashboard = ({ outreachActivities }) => {
   // Filter calls scheduled for today
   const callsToday = outreachActivities.filter(activity => {
     if (!activity.scheduled_call_date) return false;
+
+    // --- MODIFIED: Added check for activity status ---
+    if (activity.activity_status !== 'call_scheduled') return false;
+    // -------------------------------------------------
+
     const callDate = new Date(activity.scheduled_call_date);
     return callDate >= today && callDate <= endOfToday;
   });
@@ -408,6 +418,11 @@ const MyCallsDashboard = ({ outreachActivities }) => {
   // Filter calls scheduled this week
   const callsThisWeek = outreachActivities.filter(activity => {
     if (!activity.scheduled_call_date) return false;
+    
+    // --- MODIFIED: Added check for activity status ---
+    if (activity.activity_status !== 'call_scheduled') return false;
+    // -------------------------------------------------
+    
     const callDate = new Date(activity.scheduled_call_date);
     return callDate > endOfToday && callDate <= endOfWeek;
   });
@@ -995,8 +1010,46 @@ function RecruiterOutreach() {
     }
   };
 
-  // --- ADDED: Handler for the new quick stage-change button ---
-  const handleQuickStageChange = async (activity, newStage) => {
+  // --- MODIFIED: Handler for the quick stage-change button ---
+  const handleQuickStageChange = async (activityId, newStage) => {
+    // If the new stage is 'Call Scheduled', open the edit modal instead of saving directly
+    if (newStage === 'call_scheduled') {
+      // Find the activity details first
+      const activityToEdit = outreachActivities.find(act => act.id === activityId);
+      if (activityToEdit) {
+        
+        // --- ADDED: Immediately update status before opening modal ---
+        try {
+            const updates = {
+                activity_status: newStage,
+                updated_at: new Date().toISOString(),
+                // Auto-set followup needed
+                followup_needed: false 
+            };
+            const { success } = await updateOutreachActivity(activityId, updates);
+            if (!success) {
+                throw new Error("Failed to pre-update status.");
+            }
+            // Update the local state immediately for the modal
+            setOutreachActivities(prev => prev.map(act => act.id === activityId ? {...act, ...updates} : act));
+             
+            // Open the edit modal
+            handleEdit({...activityToEdit, ...updates}); // Pass updated activity to modal
+        } catch (error) {
+             console.error("Error pre-updating status:", error);
+             alert("Could not update status before opening modal. Please try again.");
+        }
+        // ------------------------------------------------------------------
+
+      } else {
+        console.error("Could not find activity to edit:", activityId);
+        alert("Error finding candidate details to open the modal.");
+      }
+      setQuickEditingStageId(null); // Close the dropdown regardless
+      return; // Stop execution here for call_scheduled
+    }
+
+    // --- Existing logic for other statuses ---
     const updates = {
       activity_status: newStage,
       updated_at: new Date().toISOString()
@@ -1005,12 +1058,12 @@ function RecruiterOutreach() {
     // Auto-set followup_needed based on status, just like in the modal
     if (newStage === 'reply_received') {
       updates.followup_needed = true;
-    } else if (['call_scheduled', 'declined', 'ready_for_submission', 'accepted'].includes(newStage)) {
+    } else if (['declined', 'ready_for_submission', 'accepted'].includes(newStage)) { // Excluded call_scheduled
       updates.followup_needed = false;
     }
 
     // Call the update function from DataContext
-    const { success } = await updateOutreachActivity(activity.id, updates);
+    const { success } = await updateOutreachActivity(activityId, updates); // Use activityId directly
 
     if (success) {
       // Close the dropdown
@@ -1315,14 +1368,15 @@ function RecruiterOutreach() {
                         <td onClick={(e) => e.stopPropagation()}>
                           <div className="actions-cell">
                             
-                            {/* --- ADDED: Quick Stage-Change Button/Dropdown --- */}
+                            {/* --- MODIFIED: Quick Stage-Change Button/Dropdown --- */}
                             {quickEditingStageId === activity.id ? (
                               <select
                                 value={activity.activity_status}
                                 onClick={(e) => e.stopPropagation()} // Prevent row click
                                 onChange={(e) => {
                                   e.stopPropagation(); // Prevent row click
-                                  handleQuickStageChange(activity, e.target.value);
+                                  // Pass activity.id instead of the full activity object
+                                  handleQuickStageChange(activity.id, e.target.value); 
                                 }}
                                 onBlur={(e) => { // Close when clicking away
                                   e.stopPropagation();
@@ -1554,17 +1608,23 @@ function RecruiterOutreach() {
                 <>
                   <div className="form-group">
                     <label>Call Date & Time</label>
-                    <input
-                      type="datetime-local"
-                      className="form-input"
-                      value={editingActivity.scheduled_call_date ?
-                        new Date(editingActivity.scheduled_call_date).toISOString().slice(0, 16) : ''}
-                      onChange={(e) => setEditingActivity({
+                    {/* --- MODIFIED: Replaced <input> with <DatePicker> --- */}
+                    <DatePicker
+                      selected={editingActivity.scheduled_call_date ? new Date(editingActivity.scheduled_call_date) : null}
+                      onChange={(date) => setEditingActivity({
                         ...editingActivity,
-                        scheduled_call_date: e.target.value ? new Date(e.target.value).toISOString() : ''
+                        scheduled_call_date: date ? date.toISOString() : ''
                       })}
+                      showTimeSelect
+                      timeFormat="p" // e.g., "4:00 PM"
+                      timeIntervals={15} // 15 minute increments
+                      dateFormat="MM/dd/yyyy h:mm aa"
+                      className="form-input" // Use existing class
+                      placeholderText="Click to select a date and time"
+                      autoComplete="off"
                     />
                   </div>
+                  {/* --------------------------------------------------- */}
                   <div className="form-group">
                     <label>Phone Number</label>
                     <input
@@ -1584,6 +1644,7 @@ function RecruiterOutreach() {
                   rows="4"
                   placeholder="Add notes about this contact..."
                   value={editingActivity.notes || ''}
+                  // --- THIS IS THE LINE THAT WAS FIXED ---
                   onChange={(e) => setEditingActivity({ ...editingActivity, notes: e.target.value })}
                 />
               </div>

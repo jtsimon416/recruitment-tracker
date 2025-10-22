@@ -1683,3 +1683,117 @@
     padding: 1rem;
   }
 }
+
+
+/* =================================== */
+/* DARK THEME FOR REACT-DATEPICKER (More Specific) */
+/* Apply only inside the edit modal */
+/* =================================== */
+
+/* Make the input field fill the modal width */
+.edit-outreach-modal .react-datepicker-wrapper,
+.edit-outreach-modal .react-datepicker-wrapper .form-input {
+  width: 100%;
+}
+
+/* Main calendar container */
+.edit-outreach-modal .react-datepicker {
+  font-family: 'Inter', sans-serif;
+  background-color: #1e1e2e !important; /* Dark background */
+  border: 1px solid #3b3b5b !important;
+  border-radius: 8px !important;
+  color: #c0caf5 !important; /* Light text */
+}
+
+/* Calendar header */
+.edit-outreach-modal .react-datepicker__header {
+  background-color: #24243e !important; /* Slightly lighter header */
+  border-bottom: 1px solid #3b3b5b !important;
+  border-top-left-radius: 8px !important; /* Match container radius */
+  border-top-right-radius: 8px !important;
+}
+
+/* Month/Year text, Day names */
+.edit-outreach-modal .react-datepicker__current-month,
+.edit-outreach-modal .react-datepicker-time__header,
+.edit-outreach-modal .react-datepicker__day-name {
+  color: #c0caf5 !important;
+  font-weight: 600 !important;
+}
+
+/* Navigation arrows */
+.edit-outreach-modal .react-datepicker__navigation-icon::before {
+  border-color: #c0caf5 !important; /* Light arrows */
+  border-width: 2px 2px 0 0 !important;
+}
+
+/* Individual days */
+.edit-outreach-modal .react-datepicker__day {
+  color: #c0caf5 !important;
+  border-radius: 4px !important; /* Add radius for hover consistency */
+  transition: background-color 0.2s ease;
+}
+
+.edit-outreach-modal .react-datepicker__day:hover {
+  background-color: #3b3b5b !important;
+  color: #ffffff !important; /* Brighter text on hover */
+}
+
+/* Selected day */
+.edit-outreach-modal .react-datepicker__day--selected,
+.edit-outreach-modal .react-datepicker__day--keyboard-selected {
+  background-color: #7aa2f7 !important; /* Your app's blue color */
+  color: #1a1b26 !important;
+  font-weight: 600 !important;
+}
+.edit-outreach-modal .react-datepicker__day--selected:hover, /* Keep hover consistent */
+.edit-outreach-modal .react-datepicker__day--keyboard-selected:hover {
+    background-color: #6a92e7 !important; /* Slightly darker blue on hover */
+}
+
+
+/* Days outside the current month */
+.edit-outreach-modal .react-datepicker__day--outside-month {
+  color: #545c7e !important;
+  pointer-events: none; /* Make them unclickable */
+}
+
+/* Time selection container */
+.edit-outreach-modal .react-datepicker__time-container {
+  background-color: #1e1e2e !important;
+  border-left: 1px solid #3b3b5b !important;
+}
+
+.edit-outreach-modal .react-datepicker__time-list {
+  background-color: #1e1e2e !important;
+}
+
+/* Individual time list items */
+.edit-outreach-modal .react-datepicker__time-list-item {
+  color: #c0caf5 !important;
+  background-color: transparent !important; /* Let container handle bg */
+  padding: 8px 12px !important; /* Add some padding */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.edit-outreach-modal .react-datepicker__time-list-item:hover {
+  background-color: #3b3b5b !important; /* Hover background */
+  color: #ffffff !important; /* Brighter text on hover */
+}
+
+/* Selected time */
+.edit-outreach-modal .react-datepicker__time-list-item--selected {
+  background-color: #7aa2f7 !important; /* Blue color */
+  color: #1a1b26 !important;
+  font-weight: 600 !important;
+}
+
+.edit-outreach-modal .react-datepicker__time-list-item--selected:hover {
+    background-color: #6a92e7 !important; /* Slightly darker blue on hover */
+}
+
+/* Popper arrow color */
+.edit-outreach-modal .react-datepicker__triangle::before,
+.edit-outreach-modal .react-datepicker__triangle::after {
+    border-bottom-color: #24243e !important; /* Match header background */
+}
