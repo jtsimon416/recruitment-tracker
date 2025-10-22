@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+// --- REMOVED: 'motion' and 'AnimatePresence' imports are no longer needed ---
 import { DataProvider, useData } from './contexts/DataContext';
 import { ConfirmationProvider } from './contexts/ConfirmationContext';
 import SplashScreen from './components/SplashScreen';
@@ -27,40 +27,7 @@ import { usePageTransition } from './hooks/usePageTransition';
 import 'nprogress/nprogress.css';
 import './styles/App.css';
 
-// Tab Visibility Splash Screen Component
-const TabReturnSplash = ({ isVisible }) => {
-  if (!isVisible) return null;
-
-  return (
-    <motion.div
-      className="splash-screen"
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 1.1 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-      style={{ zIndex: 9999 }}
-    >
-      <div className="splash-content">
-        <motion.h1
-          className="splash-logo"
-          initial={{ opacity: 0.5 }}
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          HIRE LOGIC
-        </motion.h1>
-        <motion.div
-          className="splash-tagline"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          Recruitment Excellence
-        </motion.div>
-      </div>
-    </motion.div>
-  );
-};
+// --- REMOVED: The entire 'TabReturnSplash' component that was here is now gone. ---
 
 // Component to protect application routes
 const ProtectedRoute = ({ children }) => {
@@ -86,32 +53,16 @@ const AppContent = ({ children }) => {
 };
 
 function App() {
-  const [showTabReturnSplash, setShowTabReturnSplash] = useState(false);
-
-  // Detect tab visibility changes - show splash when returning
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // User just came back to the tab - show splash screen
-        setShowTabReturnSplash(true);
-        // Hide splash after 2.6 seconds (same as SplashScreen component)
-        setTimeout(() => setShowTabReturnSplash(false), 2600);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  // --- REMOVED: The 'showTabReturnSplash' state has been removed. ---
+  
+  // --- REMOVED: The 'useEffect' hook that listened for tab visibility changes is gone. ---
 
   return (
     <SplashScreen>
       <DataProvider>
         <Router basename="/recruitment-tracker"> {/* Your basename */}
           <AppContent>
-            {/* Global Tab Return Splash - visible on all pages */}
-            <AnimatePresence>
-              <TabReturnSplash isVisible={showTabReturnSplash} />
-            </AnimatePresence>
+            {/* --- REMOVED: The 'AnimatePresence' and 'TabReturnSplash' components are gone. --- */}
 
             <div className="app"> {/* Main app container */}
               <Routes>

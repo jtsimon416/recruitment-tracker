@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import mammoth from 'mammoth';
 import {
   ExternalLink, Eye, Edit, Trash2, ChevronUp, ChevronDown,
-  Upload, Search, Filter, X, Star, Calendar, FileText, Bell, AlertCircle
+  Upload, Search, Filter, X, Star, Calendar, FileText, Bell, AlertCircle,
+  // --- ADDED: Icon for the new quick stage change button ---
+  ArrowRightLeft
 } from 'lucide-react';
 import DocumentViewerModal from '../components/DocumentViewerModal';
 import '../styles/RecruiterOutreach.css';
@@ -593,6 +595,17 @@ const QuickRatingScreen = ({ contacts, onComplete }) => {
 function RecruiterOutreach() {
   const { userProfile, fetchMyOutreachActivities, addOutreachActivity, updateOutreachActivity, deleteOutreachActivity, positions, fetchPositions } = useData();
 
+  // --- ADDED: Reusable list of stages for dropdowns ---
+  const outreachStages = [
+    { value: 'outreach_sent', label: 'Outreach Sent' },
+    { value: 'reply_received', label: 'Reply Received' },
+    { value: 'accepted', label: 'Accepted' },
+    { value: 'call_scheduled', label: 'Call Scheduled' },
+    { value: 'declined', label: 'Declined' },
+    { value: 'ready_for_submission', label: 'Ready for Submission' }
+  ];
+  // ----------------------------------------------------
+
   // Data State
   const [outreachActivities, setOutreachActivities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -632,6 +645,10 @@ function RecruiterOutreach() {
 
   // Edit Modal State
   const [editingActivity, setEditingActivity] = useState(null);
+
+  // --- ADDED: State for quick stage-change dropdown ---
+  const [quickEditingStageId, setQuickEditingStageId] = useState(null);
+  // ----------------------------------------------------
 
   // Load Data
   useEffect(() => {
@@ -859,19 +876,48 @@ function RecruiterOutreach() {
     }));
   };
 
+  // --- MODIFIED: Quick filters are now toggleable ---
   const setQuickFilter = (type) => {
     switch(type) {
       case 'today':
-        setFilters(prev => ({ ...prev, dateRange: 'today', followup_needed: false }));
+        setFilters(prev => ({ 
+          ...prev, 
+          // If it's already 'today', toggle it off, otherwise set it to 'today'
+          dateRange: prev.dateRange === 'today' ? '' : 'today', 
+          // Deactivate other quick filters
+          followup_needed: false,
+          rating: '' 
+        }));
         break;
       case 'week':
-        setFilters(prev => ({ ...prev, dateRange: 'week', followup_needed: false }));
+        setFilters(prev => ({ 
+          ...prev, 
+          // If it's already 'week', toggle it off, otherwise set it to 'week'
+          dateRange: prev.dateRange === 'week' ? '' : 'week', 
+          // Deactivate other quick filters
+          followup_needed: false,
+          rating: '' 
+        }));
         break;
       case 'followup':
-        setFilters(prev => ({ ...prev, status: '', followup_needed: true }));
+        setFilters(prev => ({ 
+          ...prev, 
+          // Toggle followup_needed
+          followup_needed: !prev.followup_needed,
+          // Deactivate other quick filters
+          dateRange: '',
+          rating: ''
+        }));
         break;
       case 'hotleads':
-        setFilters(prev => ({ ...prev, rating: '5', followup_needed: false }));
+        setFilters(prev => ({ 
+          ...prev, 
+          // If it's already '5', toggle it off, otherwise set it to '5'
+          rating: prev.rating === '5' ? '' : '5',
+          // Deactivate other quick filters
+          dateRange: '',
+          followup_needed: false
+        }));
         break;
       case 'clear':
         setFilters({
@@ -883,8 +929,11 @@ function RecruiterOutreach() {
           followup_needed: false
         });
         break;
+      default:
+        break;
     }
   };
+  // ----------------------------------------------------
 
   // ===================================
   // ROW ACTIONS
@@ -945,6 +994,36 @@ function RecruiterOutreach() {
       alert('Error updating activity');
     }
   };
+
+  // --- ADDED: Handler for the new quick stage-change button ---
+  const handleQuickStageChange = async (activity, newStage) => {
+    const updates = {
+      activity_status: newStage,
+      updated_at: new Date().toISOString()
+    };
+
+    // Auto-set followup_needed based on status, just like in the modal
+    if (newStage === 'reply_received') {
+      updates.followup_needed = true;
+    } else if (['call_scheduled', 'declined', 'ready_for_submission', 'accepted'].includes(newStage)) {
+      updates.followup_needed = false;
+    }
+
+    // Call the update function from DataContext
+    const { success } = await updateOutreachActivity(activity.id, updates);
+
+    if (success) {
+      // Close the dropdown
+      setQuickEditingStageId(null);
+      // Refresh the data in the table
+      await loadData();
+    } else {
+      alert('Error updating status');
+      // Close dropdown even on error
+      setQuickEditingStageId(null);
+    }
+  };
+  // -----------------------------------------------------------
 
   // ===================================
   // RENDER
@@ -1077,12 +1156,10 @@ function RecruiterOutreach() {
               onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
             >
               <option value="">All Statuses</option>
-              <option value="outreach_sent">Outreach Sent</option>
-              <option value="reply_received">Reply Received</option>
-              <option value="accepted">Accepted</option>
-              <option value="call_scheduled">Call Scheduled</option>
-              <option value="declined">Declined</option>
-              <option value="ready_for_submission">Ready for Submission</option>
+              {/* --- MODIFIED: Using the stages array for consistency --- */}
+              {outreachStages.map(stage => (
+                <option key={stage.value} value={stage.value}>{stage.label}</option>
+              ))}
             </select>
           </div>
 
@@ -1112,6 +1189,7 @@ function RecruiterOutreach() {
           </div>
         </div>
 
+        {/* --- MODIFIED: Buttons are now wired to the updated toggle logic --- */}
         <div className="quick-filters">
           <button
             className={`quick-filter-btn ${filters.dateRange === 'today' ? 'active' : ''}`}
@@ -1236,6 +1314,50 @@ function RecruiterOutreach() {
                         </td>
                         <td onClick={(e) => e.stopPropagation()}>
                           <div className="actions-cell">
+                            
+                            {/* --- ADDED: Quick Stage-Change Button/Dropdown --- */}
+                            {quickEditingStageId === activity.id ? (
+                              <select
+                                value={activity.activity_status}
+                                onClick={(e) => e.stopPropagation()} // Prevent row click
+                                onChange={(e) => {
+                                  e.stopPropagation(); // Prevent row click
+                                  handleQuickStageChange(activity, e.target.value);
+                                }}
+                                onBlur={(e) => { // Close when clicking away
+                                  e.stopPropagation();
+                                  setQuickEditingStageId(null);
+                                }}
+                                autoFocus
+                                style={{ // Inline styles to match theme
+                                  backgroundColor: 'var(--secondary-bg)',
+                                  color: 'var(--text-primary)',
+                                  border: '1px solid var(--border-color)',
+                                  borderRadius: '4px',
+                                  padding: '2px',
+                                  marginRight: '4px'
+                                }}
+                              >
+                                {outreachStages.map(stage => (
+                                  <option key={stage.value} value={stage.value}>
+                                    {stage.label}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <button
+                                className="btn-action"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent row click
+                                  setQuickEditingStageId(activity.id);
+                                }}
+                                title="Change Stage"
+                              >
+                                <ArrowRightLeft size={16} />
+                              </button>
+                            )}
+                            {/* -------------------------------------------------- */}
+                            
                             <a
                               href={activity.linkedin_url}
                               target="_blank"
@@ -1398,12 +1520,10 @@ function RecruiterOutreach() {
                   value={editingActivity.activity_status}
                   onChange={(e) => setEditingActivity({ ...editingActivity, activity_status: e.target.value })}
                 >
-                  <option value="outreach_sent">Outreach Sent</option>
-                  <option value="reply_received">Reply Received</option>
-                  <option value="accepted">Accepted</option>
-                  <option value="call_scheduled">Call Scheduled</option>
-                  <option value="declined">Declined</option>
-                  <option value="ready_for_submission">Ready for Submission</option>
+                  {/* --- MODIFIED: Using the stages array for consistency --- */}
+                  {outreachStages.map(stage => (
+                    <option key={stage.value} value={stage.value}>{stage.label}</option>
+                  ))}
                 </select>
               </div>
               <div className="form-group">

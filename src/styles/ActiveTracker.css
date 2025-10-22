@@ -574,8 +574,7 @@ body {
 }
 
 .modal-large {
-  /* THIS LINE HAS BEEN MODIFIED TO INCREASE MODAL WIDTH FOR THE FUNNEL CHART */
-  max-width: 1200px; 
+  max-width: 800px;
 }
 
 .modal-actions {
@@ -597,11 +596,37 @@ body {
   gap: 25px;
 }
 
+/* FIX: Targeted the form itself and its contents to use dark theme colors */
 .comment-form {
   background: var(--secondary-bg);
   padding: 20px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
+}
+
+.comment-form textarea {
+  /* This is the white box visible in the screenshot */
+  background: var(--card-bg); /* Dark background for input box */
+  border: 1px solid var(--border-color);
+  color: var(--text-primary); /* Light text */
+  padding: 10px;
+  border-radius: 6px;
+  resize: vertical;
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+  min-height: 80px;
+}
+
+.comment-form textarea:focus {
+  border-color: var(--accent-purple);
+  outline: none;
+}
+
+.comment-form button {
+  margin-top: 10px;
+  float: right;
+  padding: 8px 16px;
 }
 
 .comments-list {
@@ -665,26 +690,33 @@ body {
 
 .btn-edit-comment,
 .btn-delete-comment {
-  background: var(--secondary-bg);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  padding: 6px 12px;
-  font-size: 12px;
+  padding: 6px 14px;
+  border: none;
   border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-comment {
+  background: var(--accent-blue);
+  color: white;
 }
 
 .btn-edit-comment:hover {
-  background: var(--accent-blue);
+  background: var(--accent-cyan);
+  transform: translateY(-1px);
+}
+
+.btn-delete-comment {
+  background: var(--accent-pink);
   color: white;
-  border-color: var(--accent-blue);
 }
 
 .btn-delete-comment:hover {
-  background: var(--accent-pink);
-  color: white;
-  border-color: var(--accent-pink);
+  background: var(--accent-orange);
+  transform: translateY(-1px);
 }
 
 .edit-comment-form {
@@ -928,13 +960,13 @@ body {
     flex-direction: column;
   }
   
-  .pipeline-column {
+.pipeline-column {
     min-width: 100%;
-  }
-  
-  .info-sidebar {
+}
+
+.info-sidebar {
     width: 100%;
-  }
+}
 }
 
 /* ========== COMMENT STYLING ========== */
@@ -993,7 +1025,7 @@ body {
   transition: all 0.2s ease;
 }
 
-.btn-edit-comment:hover {
+.btn-edit-comment {
   background: var(--accent-blue);
   color: white;
 }

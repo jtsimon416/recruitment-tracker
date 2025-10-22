@@ -40,7 +40,10 @@ function Positions() {
   const [clients, setClients] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingPosition, setEditingPosition] = useState(null);
-  const [statusFilter, setStatusFilter] = useState('all');
+  
+  // FIX: Changed initial state from 'all' to 'Open'
+  const [statusFilter, setStatusFilter] = useState('Open');
+  
   const [expandedRow, setExpandedRow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: 'title', direction: 'ascending' });
