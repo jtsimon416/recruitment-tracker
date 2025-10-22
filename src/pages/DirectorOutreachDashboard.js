@@ -7,7 +7,7 @@ import {
 import '../styles/DirectorOutreachDashboard.css';
 
 // =========================================================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS (UPDATED for Rose Gold Theme)
 // =========================================================================
 function getTimeAgo(date) {
     if (!date) return '';
@@ -21,13 +21,14 @@ function getTimeAgo(date) {
 }
 
 function getStatusColor(status) {
+    // Custom colors matching the Rose Gold Dark Theme
     switch(status) {
-      case 'outreach_sent': return '#7AA2F7';
-      case 'reply_received': return '#9ECE6A';
-      case 'accepted': return '#73daca';
-      case 'declined': return '#f7768e';
-      case 'call_scheduled': return '#BB9AF7';
-      case 'ready_for_submission': return '#e0af68';
+      case 'outreach_sent': return '#F4C2A8'; // Peachy-Rose (light tone for sent)
+      case 'reply_received': return '#B8D4D0'; // Mint-Cream (soft success)
+      case 'accepted': return '#9ECE6A';       // Existing Green (high success)
+      case 'declined': return '#F7A9BA';       // Dusty-Pink (decline/warning)
+      case 'call_scheduled': return '#C5B9D6'; // Soft-Lavender (scheduled action)
+      case 'ready_for_submission': return '#E8B4B8'; // Rose-Gold (submission)
       default: return '#c0caf5';
     }
 }
@@ -56,7 +57,7 @@ function formatCallDate(dateString) {
 }
 
 // =========================================================================
-// NEW: FilterSelection Component (reusable dropdown-to-tag component)
+// FilterSelection Component (reusable dropdown-to-tag component)
 // =========================================================================
 const FilterSelection = ({ label, items, selectedItems, onToggle }) => {
   // Create a map for quick lookups (id -> name)
@@ -86,7 +87,7 @@ const FilterSelection = ({ label, items, selectedItems, onToggle }) => {
               value={item.id} 
               disabled={selectedItems.includes(item.id)}
             >
-              {item.name}
+              {itemMap[item.id] || item.name}
             </option>
           ))}
         </select>
@@ -106,7 +107,7 @@ const FilterSelection = ({ label, items, selectedItems, onToggle }) => {
 };
 
 // =========================================================================
-// OutreachCard Component (Unchanged)
+// OutreachCard Component (Modified Candidate Name/Info structure)
 // =========================================================================
 const OutreachCard = ({ activity, onToggleNotes, isExpanded }) => {
     const statusColor = getStatusColor(activity.activity_status);
@@ -126,22 +127,23 @@ const OutreachCard = ({ activity, onToggleNotes, isExpanded }) => {
                     {recruiterInitial}
                 </div>
                 <div className="candidate-info">
-                    <div className="candidate-header">
-                        <span className="candidate-name">{activity.candidate_name || 'LinkedIn Contact'}</span>
-                        {activity.rating > 0 && (
-                            <div className="card-rating-display">
-                                <span>{activity.rating}</span>
-                                <Star size={16} className="filled" />
-                            </div>
-                        )}
-                    </div>
+                    {/* Candidate Name is now directly a span in candidate-info for easier left-alignment/stacking */}
+                    <span className="candidate-name">{activity.candidate_name || 'LinkedIn Contact'}</span>
                     <span className="recruiter-name-label">
                         <Users size={14} /> {activity.recruiters?.name || 'Unknown'}
                     </span>
+                    {/* Rating is moved down here to keep the main name column vertical */}
+                    {activity.rating > 0 && (
+                        <div className="card-rating-display">
+                            <span>{activity.rating}</span>
+                            <Star size={14} className="filled" />
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="card-col card-col-position">
                 <span className="position-title">{activity.positions?.title || 'Unknown Position'}</span>
+                {/* The new CSS will make this badge smaller */}
                 <span className="status-badge" style={{ backgroundColor: statusColor }}>
                     {getStatusLabel(activity.activity_status)}
                 </span>
@@ -153,6 +155,9 @@ const OutreachCard = ({ activity, onToggleNotes, isExpanded }) => {
                         {activity.candidate_phone && ( <span className="call-info"><Phone size={14} /> {activity.candidate_phone}</span> )}
                     </>
                 )}
+                <span className="last-activity-label">
+                    Last Update: {getTimeAgo(activity.updated_at || activity.created_at)}
+                </span>
             </div>
             <div className="card-col card-col-actions">
                 <div className="action-buttons">
@@ -186,14 +191,18 @@ function DirectorOutreachDashboard() {
   const [loading, setLoading] = useState(true);
   const [expandedNotes, setExpandedNotes] = useState({});
   
-  // --- NEW FILTER STATE ---
-  const [filterPanelExpanded, setFilterPanelExpanded] = useState(false); // Start collapsed
+  // --- FILTER STATE ---
+  const [filterPanelExpanded, setFilterPanelExpanded] = useState(false); 
   const [filterRecruiters, setFilterRecruiters] = useState([]);
   const [filterPositions, setFilterPositions] = useState([]);
   const [filterStatuses, setFilterStatuses] = useState([]);
   const [dateFilter, setDateFilter] = useState('week');
   const [customDateStart, setCustomDateStart] = useState('');
   const [customDateEnd, setCustomDateEnd] = useState('');
+  
+  // --- PAGINATION STATE ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Display 10 items per page
 
   const outreachStages = [ 'outreach_sent', 'reply_received', 'accepted', 'call_scheduled', 'declined', 'ready_for_submission' ];
   
@@ -215,7 +224,7 @@ function DirectorOutreachDashboard() {
     });
   }, [recruiters]);
   
-  // --- UPDATED: Filtering logic ---
+  // Filtered Activities (Full List)
   const filteredActivities = useMemo(() => {
     let filtered = [...outreachActivities];
     if (filterRecruiters.length > 0) { filtered = filtered.filter(a => filterRecruiters.includes(a.recruiter_id)); }
@@ -228,13 +237,35 @@ function DirectorOutreachDashboard() {
     return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }, [outreachActivities, filterRecruiters, filterPositions, filterStatuses, dateFilter, customDateStart, customDateEnd]);
 
-  // --- NEW: Filter toggle functions ---
+  // PAGINATION LOGIC
+  const totalItems = filteredActivities.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const paginatedActivities = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredActivities.slice(startIndex, endIndex);
+  }, [filteredActivities, currentPage, itemsPerPage]);
+
+  // Reset page number when filters change
+  useEffect(() => {
+      // Only reset if the page is out of bounds of the new total pages, 
+      // or if we are filtering, to ensure the user lands on page 1 of the new results.
+      if (currentPage > totalPages && totalPages > 0) {
+          setCurrentPage(totalPages);
+      } else if (currentPage !== 1 && (filterRecruiters.length > 0 || filterPositions.length > 0 || filterStatuses.length > 0 || dateFilter !== 'week')) {
+        setCurrentPage(1);
+      }
+      
+  }, [totalItems, totalPages, filterRecruiters, filterPositions, filterStatuses, dateFilter]);
+  
+  // Filter toggle functions (keep unchanged)
   function toggleRecruiterFilter(id) { setFilterRecruiters(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); }
   function togglePositionFilter(id) { setFilterPositions(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); }
   function toggleStatusFilter(status) { setFilterStatuses(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]); }
   function clearFilters() { setFilterRecruiters([]); setFilterPositions([]); setFilterStatuses([]); setDateFilter('week'); setCustomDateStart(''); setCustomDateEnd(''); }
 
-  // --- NEW: Data for filter dropdowns ---
+  // Data for filter dropdowns (keep unchanged)
   const recruiterItems = useMemo(() => 
     recruiterFilterList.map(r => ({ id: r.id, name: r.name })),
   [recruiterFilterList]);
@@ -247,13 +278,13 @@ function DirectorOutreachDashboard() {
     outreachStages.map(s => ({ id: s, name: getStatusLabel(s) })),
   [outreachStages]);
 
-  // --- NEW: Calculate active filter count ---
+  // Calculate active filter count (keep unchanged)
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filterRecruiters.length > 0) count++;
     if (filterPositions.length > 0) count++;
     if (filterStatuses.length > 0) count++;
-    if (dateFilter !== 'week' || customDateStart || customDateEnd) count++; // 'week' is default, so don't count it
+    if (dateFilter !== 'week' || customDateStart || customDateEnd) count++; 
     return count;
   }, [filterRecruiters, filterPositions, filterStatuses, dateFilter, customDateStart, customDateEnd]);
 
@@ -263,7 +294,7 @@ function DirectorOutreachDashboard() {
       <div className="page-header"> <h1>Team Outreach Dashboard</h1> <p className="subtitle">Real-time visibility into recruiter LinkedIn activity</p> </div>
       
       {/* =================================== */}
-      {/* === NEW: ADVANCED FILTER PANEL ==== */}
+      {/* === ADVANCED FILTER PANEL ==== */}
       {/* =================================== */}
       <div className="advanced-filter-panel">
         <div className="filter-panel-header" onClick={() => setFilterPanelExpanded(!filterPanelExpanded)}>
@@ -343,10 +374,48 @@ function DirectorOutreachDashboard() {
 
       
       <div className="activity-feed-section">
-        <div className="section-header"> <h2>Live Activity Feed</h2> <span className="activity-count">{filteredActivities.length} activities</span> </div>
-        <div className="activity-cards-container"> 
-          {filteredActivities.length === 0 ? ( <div className="empty-state"> <p>No activities found.</p> </div> ) : ( filteredActivities.map(activity => ( <OutreachCard key={activity.id} activity={activity} onToggleNotes={toggleNotes} isExpanded={expandedNotes[activity.id]} /> )) )}
+        <div className="section-header"> 
+            <h2>Live Activity Feed</h2> 
+            <span className="activity-count">
+                {totalItems} total activities 
+                {totalItems > itemsPerPage && ` (Page ${currentPage} of ${totalPages})`}
+            </span> 
         </div>
+        <div className="activity-cards-container"> 
+          {loading ? (
+             <div className="empty-state"><p>Loading activities...</p></div>
+          ) : (
+            paginatedActivities.length === 0 ? ( <div className="empty-state"> <p>No activities found matching filters.</p> </div> ) : ( paginatedActivities.map(activity => ( <OutreachCard key={activity.id} activity={activity} onToggleNotes={toggleNotes} isExpanded={expandedNotes[activity.id]} /> )) )
+          )}
+        </div>
+
+        {/* =================================== */}
+        {/* === PAGINATION CONTROLS ==== */}
+        {/* =================================== */}
+        {totalPages > 1 && (
+            <div className="pagination-controls-bar">
+                <button
+                    className="btn-page"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                >
+                    ◀ Previous
+                </button>
+                <span className="pagination-info">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <button
+                    className="btn-page"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                >
+                    Next ▶
+                </button>
+            </div>
+        )}
+        {/* =================================== */}
+        {/* === END: PAGINATION CONTROLS ==== */}
+        {/* =================================== */}
       </div>
     </div>
   );

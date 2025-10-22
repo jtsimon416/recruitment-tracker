@@ -2,7 +2,7 @@
    PREMIUM ROSE GOLD + DARK THEME DASHBOARD - HIRE LOGIC
    ========================================================================= */
 
-/* ===== CSS VARIABLES ===== */
+/* ===== CSS VARIABLES (Original) ===== */
 :root {
   /* Premium Rose Gold Palette */
   --rose-gold: #E8B4B8;
@@ -11,12 +11,18 @@
   --soft-lavender: #C5B9D6;
   --mint-cream: #B8D4D0;
   --accent-rose: #F39C9C;
+  --accent-red: #F7768E; /* Added for critical state */
+  --accent-orange: #E0AF68; /* Added for warning state */
+  --accent-green: #9ECE6A; /* Added for success state */
+  --accent-blue: #7AA2F7; /* Added for info state */
+
 
   /* Background Colors */
   --primary-bg: #1a1b26;
   --secondary-bg: #16161E;
   --card-bg: #24283B;
   --hover-bg: #3b4261;
+  --main-bg: var(--primary-bg); /* Alias for clarity in modals */
 
   /* Text Colors */
   --text-primary: #c0caf5;
@@ -740,4 +746,203 @@
 .calls-list::-webkit-scrollbar-thumb:hover,
 .pipeline-table-container::-webkit-scrollbar-thumb:hover {
   background: var(--accent-rose);
+}
+
+
+/* =========================================================================
+   NEW MODAL STYLES FOR ACTIONABLE CARDS (APPENED TO DASHBOARD.CSS)
+   ========================================================================= */
+
+/* --- Utility/Structural Modals --- */
+
+/* Added Modal Header Styles for X button cleanup (Fixes white button issue) */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.btn-close-modal {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.btn-close-modal:hover {
+    color: var(--accent-red);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 15px;
+}
+
+
+/* --- Attention List & Outreach Breakdown Modals --- */
+
+.attention-list-container,
+.outreach-breakdown-table-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 15px; 
+}
+
+/* Attention List Styles - Improved Spacing */
+.attention-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Better spacing between items */
+}
+
+.attention-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.attention-item:hover {
+    background: var(--hover-bg);
+    border-color: var(--rose-gold);
+}
+
+.attention-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-right: 1rem;
+}
+
+.attention-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.health-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.attention-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.attention-stats {
+    display: flex;
+    gap: 1rem; /* Spacing between stats */
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.btn-drill-down-themed {
+    /* Themed button style to replace white button */
+    background: linear-gradient(135deg, var(--soft-lavender), var(--mint-cream));
+    color: var(--main-bg);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-drill-down-themed:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(197, 185, 214, 0.4); 
+}
+
+/* Outreach Breakdown Table Styles - Improved Spacing/Layout */
+
+.outreach-breakdown-table {
+    width: 100%;
+    border-collapse: separate; 
+    border-spacing: 0 8px; 
+    min-width: 700px; /* Ensures space usage even if modal is small */
+}
+
+.outreach-breakdown-table th {
+    background: var(--secondary-bg);
+    padding: 1rem 0.5rem;
+    font-size: 0.8rem;
+    text-align: left;
+    color: var(--rose-gold);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.outreach-breakdown-table td {
+    padding: 1rem 0.5rem;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+
+.outreach-breakdown-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.outreach-breakdown-table tbody tr:hover {
+    background: var(--hover-bg);
+}
+
+.status-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid currentColor;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .attention-stats {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .attention-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .btn-drill-down-themed {
+        width: 100%;
+    }
+    .outreach-breakdown-table th, 
+    .outreach-breakdown-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    .outreach-breakdown-table {
+        min-width: 600px;
+        display: table;
+    }
 }

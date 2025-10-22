@@ -574,7 +574,8 @@ body {
 }
 
 .modal-large {
-  max-width: 800px;
+  /* THIS LINE HAS BEEN MODIFIED TO INCREASE MODAL WIDTH FOR THE FUNNEL CHART */
+  max-width: 1200px; 
 }
 
 .modal-actions {
@@ -992,7 +993,7 @@ body {
   transition: all 0.2s ease;
 }
 
-.btn-edit-comment {
+.btn-edit-comment:hover {
   background: var(--accent-blue);
   color: white;
 }
