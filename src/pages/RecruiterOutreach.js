@@ -55,6 +55,35 @@ function extractNameFromLinkedInURL(url) {
 }
 
 // ===================================
+// UTILITY: Normalize LinkedIn URL
+// ===================================
+function normalizeLinkedInURL(url) {
+  try {
+    if (!url) return null;
+
+    // Convert to lowercase
+    let normalized = url.toLowerCase().trim();
+
+    // Remove protocol (http://, https://)
+    normalized = normalized.replace(/^https?:\/\//, '');
+
+    // Remove www.
+    normalized = normalized.replace(/^www\./, '');
+
+    // Remove trailing slash
+    normalized = normalized.replace(/\/$/, '');
+
+    // Remove query parameters and fragments
+    normalized = normalized.split('?')[0].split('#')[0];
+
+    return normalized;
+  } catch (error) {
+    console.error('Error normalizing URL:', error);
+    return url;
+  }
+}
+
+// ===================================
 // UTILITY: Get Status Badge Info
 // ===================================
 const getStatusBadge = (status) => {
@@ -64,7 +93,8 @@ const getStatusBadge = (status) => {
     'accepted': { label: 'Accepted', emoji: '✅', class: 'accepted', color: '#73daca' },
     'call_scheduled': { label: 'Call Scheduled', emoji: '🔵', class: 'call-scheduled', color: '#7aa2f7' },
     'declined': { label: 'Declined', emoji: '❌', class: 'declined', color: '#f7768e' },
-    'ready_for_submission': { label: 'Ready for Submission', emoji: '🚀', class: 'ready-submission', color: '#bb9af7' }
+    'ready_for_submission': { label: 'Ready for Submission', emoji: '🚀', class: 'ready-submission', color: '#bb9af7' },
+    'gone_cold': { label: 'Gone Cold', emoji: '❄️', class: 'gone-cold', color: '#64748b' }
   };
 
   return statusMap[status] || statusMap['outreach_sent'];
@@ -620,7 +650,8 @@ function RecruiterOutreach() {
     { value: 'accepted', label: 'Accepted' },
     { value: 'call_scheduled', label: 'Call Scheduled' },
     { value: 'declined', label: 'Declined' },
-    { value: 'ready_for_submission', label: 'Ready for Submission' }
+    { value: 'ready_for_submission', label: 'Ready for Submission' },
+    { value: 'gone_cold', label: 'Gone Cold' }
   ];
   // ----------------------------------------------------
 
@@ -673,6 +704,16 @@ function RecruiterOutreach() {
   const [quickEditingStageId, setQuickEditingStageId] = useState(null);
   // ----------------------------------------------------
 
+  // --- ADDED: State for notification banner ---
+  const [showGoneColdBanner, setShowGoneColdBanner] = useState(true);
+  // ----------------------------------------------------
+
+  // --- ADDED: State for duplicate detection ---
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
+  const [duplicatesFound, setDuplicatesFound] = useState([]);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  // ----------------------------------------------------
+
   // Load Data
   useEffect(() => {
     if (userProfile?.id) {
@@ -688,6 +729,106 @@ function RecruiterOutreach() {
       setOutreachActivities(activities);
     }
     setLoading(false);
+  };
+
+  // ===================================
+  // DUPLICATE CHECK FUNCTION
+  // ===================================
+
+  const checkForDuplicates = async (urls) => {
+    try {
+      // Normalize all URLs for comparison
+      const normalizedUrls = urls.map(url => normalizeLinkedInURL(url)).filter(url => url);
+
+      if (normalizedUrls.length === 0) {
+        return [];
+      }
+
+      // Query all three data sources in parallel
+      const [outreachResults, candidatesResults, pipelineResults] = await Promise.all([
+        // 1. Check recruiter_outreach table (all recruiters)
+        supabase
+          .from('recruiter_outreach')
+          .select('linkedin_url, candidate_name, recruiter_id, recruiters(name)')
+          .in('linkedin_url', urls), // Supabase will handle normalization on their end
+
+        // 2. Check candidates table (talent pool)
+        supabase
+          .from('candidates')
+          .select('linkedin_url, name')
+          .in('linkedin_url', urls),
+
+        // 3. Check pipeline table (active tracker)
+        supabase
+          .from('pipeline')
+          .select('candidate_id, position_id, candidates(linkedin_url, name), positions(title)')
+          .eq('status', 'Active')
+      ]);
+
+      const duplicates = [];
+
+      // Process recruiter_outreach duplicates
+      if (outreachResults.data) {
+        outreachResults.data.forEach(record => {
+          const normalizedRecord = normalizeLinkedInURL(record.linkedin_url);
+          if (normalizedUrls.includes(normalizedRecord)) {
+            duplicates.push({
+              url: record.linkedin_url,
+              candidateName: record.candidate_name || 'Unknown',
+              location: `Already in ${record.recruiters?.name || 'another recruiter'}'s outreach`,
+              source: 'outreach'
+            });
+          }
+        });
+      }
+
+      // Process candidates (talent pool) duplicates
+      if (candidatesResults.data) {
+        candidatesResults.data.forEach(record => {
+          const normalizedRecord = normalizeLinkedInURL(record.linkedin_url);
+          if (normalizedUrls.includes(normalizedRecord)) {
+            // Check if not already added from outreach
+            const alreadyAdded = duplicates.some(d => normalizeLinkedInURL(d.url) === normalizedRecord);
+            if (!alreadyAdded) {
+              duplicates.push({
+                url: record.linkedin_url,
+                candidateName: record.name || 'Unknown',
+                location: 'Already in Talent Pool',
+                source: 'talent_pool'
+              });
+            }
+          }
+        });
+      }
+
+      // Process pipeline (active tracker) duplicates
+      if (pipelineResults.data) {
+        pipelineResults.data.forEach(record => {
+          if (record.candidates?.linkedin_url) {
+            const normalizedRecord = normalizeLinkedInURL(record.candidates.linkedin_url);
+            if (normalizedUrls.includes(normalizedRecord)) {
+              // Check if not already added
+              const alreadyAdded = duplicates.some(d => normalizeLinkedInURL(d.url) === normalizedRecord);
+              if (!alreadyAdded) {
+                duplicates.push({
+                  url: record.candidates.linkedin_url,
+                  candidateName: record.candidates.name || 'Unknown',
+                  location: `Already in Active Tracker for "${record.positions?.title || 'Unknown Position'}" position`,
+                  source: 'pipeline'
+                });
+              }
+            }
+          }
+        });
+      }
+
+      return duplicates;
+
+    } catch (error) {
+      console.error('Error checking for duplicates:', error);
+      alert('Error checking for duplicates. Please try again.');
+      return [];
+    }
   };
 
   // ===================================
@@ -731,9 +872,25 @@ function RecruiterOutreach() {
   const confirmBulkUpload = async () => {
     if (!bulkPreview || bulkPreview.length === 0) return;
 
-    setProcessingBulk(true);
+    // --- ADDED: Duplicate check before upload ---
+    setCheckingDuplicates(true);
 
     try {
+      const urlsToCheck = bulkPreview.map(contact => contact.url);
+      const duplicates = await checkForDuplicates(urlsToCheck);
+
+      setCheckingDuplicates(false);
+
+      if (duplicates.length > 0) {
+        // Duplicates found - block upload and show modal
+        setDuplicatesFound(duplicates);
+        setShowDuplicateModal(true);
+        return; // Stop the upload process
+      }
+
+      // No duplicates - proceed with upload
+      setProcessingBulk(true);
+
       const insertData = bulkPreview.map(contact => ({
         recruiter_id: userProfile.id,
         position_id: selectedBulkPosition,
@@ -770,6 +927,7 @@ function RecruiterOutreach() {
     } catch (error) {
       console.error('Error bulk uploading:', error);
       alert('Error adding contacts: ' + error.message);
+      setCheckingDuplicates(false);
     } finally {
       setProcessingBulk(false);
     }
@@ -887,6 +1045,19 @@ function RecruiterOutreach() {
   }, [sortedOutreach, currentPage]);
 
   const totalPages = Math.ceil(sortedOutreach.length / itemsPerPage);
+
+  // --- ADDED: Identify outreach items going cold (4+ days old with status 'outreach_sent') ---
+  const goingColdOutreach = useMemo(() => {
+    const fourDaysAgo = new Date();
+    fourDaysAgo.setDate(fourDaysAgo.getDate() - 4);
+
+    return outreachActivities.filter(activity => {
+      if (activity.activity_status !== 'outreach_sent') return false;
+      const createdDate = new Date(activity.created_at);
+      return createdDate <= fourDaysAgo;
+    });
+  }, [outreachActivities]);
+  // ----------------------------------------------------
 
   useEffect(() => {
     setCurrentPage(1);
@@ -1177,6 +1348,35 @@ function RecruiterOutreach() {
       {/* MY ACTIVE ROLES Section */}
       <MyActiveRoles userProfile={userProfile} />
 
+      {/* --- ADDED: Gone Cold Notification Banner --- */}
+      {showGoneColdBanner && goingColdOutreach.length > 0 && (
+        <div className="gone-cold-notification-banner">
+          <div className="banner-content">
+            <div className="banner-icon">⚠️</div>
+            <div className="banner-message">
+              <strong>The following contacts will be moved to 'Gone Cold' (no response in 4+ days):</strong>
+              <span className="banner-names">
+                {goingColdOutreach.map((activity, index) => (
+                  <span key={activity.id}>
+                    {activity.candidate_name || 'Unknown'}
+                    {index < goingColdOutreach.length - 1 ? ', ' : ''}
+                  </span>
+                ))}
+              </span>
+              <p className="banner-note">Don't worry - if they reply later, you can still update their status!</p>
+            </div>
+          </div>
+          <button
+            className="banner-close-btn"
+            onClick={() => setShowGoneColdBanner(false)}
+            title="Dismiss notification"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      )}
+      {/* -------------------------------------------- */}
+
       {/* Calls Dashboard */}
       <MyCallsDashboard outreachActivities={outreachActivities} />
 
@@ -1241,8 +1441,8 @@ function RecruiterOutreach() {
               ))}
             </ul>
             <div className="bulk-upload-actions">
-              <button className="btn-confirm-bulk" onClick={confirmBulkUpload} disabled={processingBulk}>
-                {processingBulk ? 'Adding...' : '✅ Confirm & Add All'}
+              <button className="btn-confirm-bulk" onClick={confirmBulkUpload} disabled={processingBulk || checkingDuplicates}>
+                {checkingDuplicates ? 'Checking for duplicates...' : processingBulk ? 'Adding...' : '✅ Confirm & Add All'}
               </button>
               <button className="btn-cancel-bulk" onClick={cancelBulkUpload}>
                 ❌ Cancel
@@ -1771,6 +1971,56 @@ function RecruiterOutreach() {
           </div>
         </div>
       )}
+
+      {/* --- ADDED: Duplicate Detection Modal --- */}
+      {showDuplicateModal && (
+        <div className="modal-overlay" onClick={() => setShowDuplicateModal(false)}>
+          <motion.div
+            className="modal-content duplicate-alert-modal"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 20 }}
+          >
+            <div className="modal-header duplicate-modal-header">
+              <h2>⚠️ Duplicate Candidates Detected</h2>
+              <button className="btn-close-modal" onClick={() => setShowDuplicateModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="duplicate-alert-message">
+                Found <strong>{duplicatesFound.length}</strong> duplicate(s) out of <strong>{bulkPreview?.length || 0}</strong> total URLs.
+                Please remove these from your list before uploading:
+              </p>
+              <div className="duplicates-list">
+                {duplicatesFound.map((duplicate, index) => (
+                  <div key={index} className="duplicate-item">
+                    <div className="duplicate-number">{index + 1}</div>
+                    <div className="duplicate-details">
+                      <div className="duplicate-name">{duplicate.candidateName}</div>
+                      <div className="duplicate-url">{duplicate.url}</div>
+                      <div className="duplicate-location">→ {duplicate.location}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  setShowDuplicateModal(false);
+                  setDuplicatesFound([]);
+                }}
+              >
+                OK, I'll Update My List
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+      {/* -------------------------------------------- */}
 
     </div>
   );

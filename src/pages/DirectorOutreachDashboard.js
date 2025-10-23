@@ -29,6 +29,7 @@ function getStatusColor(status) {
       case 'declined': return '#F7A9BA';       // Dusty-Pink (decline/warning)
       case 'call_scheduled': return '#C5B9D6'; // Soft-Lavender (scheduled action)
       case 'ready_for_submission': return '#E8B4B8'; // Rose-Gold (submission)
+      case 'gone_cold': return '#64748b';      // Slate-Gray (inactive/stalled)
       default: return '#c0caf5';
     }
 }
@@ -41,6 +42,7 @@ function getStatusLabel(status) {
       case 'declined': return 'Declined';
       case 'call_scheduled': return 'Call Scheduled';
       case 'ready_for_submission': return 'Ready for Submission';
+      case 'gone_cold': return 'Gone Cold';
       default: return status;
     }
 }
@@ -204,7 +206,7 @@ function DirectorOutreachDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Display 10 items per page
 
-  const outreachStages = [ 'outreach_sent', 'reply_received', 'accepted', 'call_scheduled', 'declined', 'ready_for_submission' ];
+  const outreachStages = [ 'outreach_sent', 'reply_received', 'accepted', 'call_scheduled', 'declined', 'ready_for_submission', 'gone_cold' ];
   
   useEffect(() => { loadData(); }, []);
 

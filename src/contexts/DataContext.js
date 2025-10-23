@@ -181,8 +181,8 @@ export function DataProvider({ children }) {
     const { data, error } = await supabase
       .from('recruiter_outreach')
       .select('*, positions(title, clients(company_name))')
-      .eq('recruiter_id', recruiterId) 
-      .neq('activity_status', 'cold')
+      .eq('recruiter_id', recruiterId)
+      .not('activity_status', 'in', '(cold,gone_cold)')
       .order('created_at', { ascending: false });
 
     if (!error) return data;

@@ -34,6 +34,110 @@
 }
 
 /* ===================================
+   GONE COLD NOTIFICATION BANNER
+   =================================== */
+
+.gone-cold-notification-banner {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(245, 158, 11, 0.1));
+  border: 2px solid rgba(234, 179, 8, 0.5);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
+  animation: slideInDown 0.4s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.banner-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+}
+
+.banner-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.banner-message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.banner-message strong {
+  color: #eab308;
+  font-size: 1rem;
+  font-weight: 700;
+  display: block;
+}
+
+.banner-names {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.banner-note {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-style: italic;
+  margin: 0.5rem 0 0 0;
+}
+
+.banner-close-btn {
+  background: transparent;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  color: #eab308;
+  padding: 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+}
+
+.banner-close-btn:hover {
+  background: rgba(234, 179, 8, 0.15);
+  border-color: #eab308;
+  transform: scale(1.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .gone-cold-notification-banner {
+    flex-direction: column;
+  }
+
+  .banner-close-btn {
+    align-self: flex-end;
+  }
+}
+
+/* ===================================
    BULK UPLOAD CARD
    =================================== */
 
@@ -460,6 +564,12 @@
   border: 1px solid #bb9af7;
 }
 
+.status-badge.gone-cold {
+  background: rgba(100, 116, 139, 0.15);
+  color: #64748b;
+  border: 1px solid #64748b;
+}
+
 /* ===================================
    RATING STARS
    =================================== */
@@ -821,6 +931,146 @@
   border-color: var(--rose-gold);
   color: var(--rose-gold);
   background: rgba(232, 180, 184, 0.1);
+}
+
+/* ===================================
+   DUPLICATE ALERT MODAL
+   =================================== */
+
+.duplicate-alert-modal {
+  max-width: 700px;
+  width: 90%;
+}
+
+.duplicate-modal-header {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(245, 158, 11, 0.1));
+  border-bottom: 2px solid rgba(234, 179, 8, 0.3);
+}
+
+.duplicate-modal-header h2 {
+  color: #eab308;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.duplicate-alert-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.duplicate-alert-message strong {
+  color: #eab308;
+  font-weight: 700;
+}
+
+.duplicates-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Scrollbar styling for duplicates list */
+.duplicates-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.duplicates-list::-webkit-scrollbar-track {
+  background: var(--secondary-bg);
+  border-radius: 5px;
+}
+
+.duplicates-list::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 5px;
+  border: 2px solid var(--secondary-bg);
+}
+
+.duplicates-list::-webkit-scrollbar-thumb:hover {
+  background-color: var(--rose-gold);
+}
+
+.duplicate-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s;
+}
+
+.duplicate-item:hover {
+  border-color: #eab308;
+  background: rgba(234, 179, 8, 0.05);
+  transform: translateX(4px);
+}
+
+.duplicate-number {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #eab308, #f59e0b);
+  color: var(--main-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.duplicate-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.duplicate-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.duplicate-url {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+}
+
+.duplicate-location {
+  color: #eab308;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Responsive adjustments for duplicate modal */
+@media (max-width: 768px) {
+  .duplicate-alert-modal {
+    max-width: 95%;
+  }
+
+  .duplicate-item {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .duplicate-number {
+    align-self: flex-start;
+  }
+
+  .duplicates-list {
+    max-height: 300px;
+  }
 }
 
 /* ===================================
