@@ -5,7 +5,8 @@
 
 .page-title {
   color: var(--text-primary);
-  border-bottom: 2px solid var(--rose-gold);
+  /* Use rose gold border */
+  border-bottom: 2px solid var(--rose-gold-main); 
   padding-bottom: 10px;
   margin-bottom: 10px;
 }
@@ -16,7 +17,7 @@
   font-size: 0.95em;
 }
 
-/* --- View Selector Tabs (FIX for White Buttons) --- */
+/* --- View Selector Tabs (FIXED: No White Buttons) --- */
 .view-selector-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -27,12 +28,12 @@
   align-items: center;
 }
 
-/* This is the fix for the white buttons */
+/* Default Tab Button Style */
 .view-selector-tabs button {
-  background: var(--card-bg); 
+  background: var(--secondary-bg); /* Darker background */
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-polished); /* Using polished variable */
   padding: 8px 15px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -44,40 +45,41 @@
 }
 
 .view-selector-tabs button:hover {
-  border-color: var(--rose-gold);
-  color: var(--rose-gold);
-  background: var(--secondary-bg);
+  border-color: var(--rose-gold-main);
+  color: var(--rose-gold-main);
+  background: #3c3c69; /* Slightly lighter dark for hover effect */
 }
 
-/* This is the style for the ACTIVE button */
+/* Active Tab Button Style (Rose Gold) */
 .view-selector-tabs button.active {
-  background: var(--rose-gold);
-  color: var(--main-bg); /* Use dark text on the light button */
-  border-color: var(--rose-gold);
-  box-shadow: 0 2px 8px rgba(232, 180, 184, 0.3);
+  background: var(--rose-gold-main);
+  color: var(--primary-bg); /* Use dark text on the light rose gold button */
+  border-color: var(--rose-gold-main);
+  box-shadow: 0 2px 8px rgba(235, 188, 186, 0.5); /* Rose Gold shadow */
 }
 
 .view-selector-tabs button.active svg {
-  color: var(--main-bg);
+  color: var(--primary-bg); /* Dark icon on active button */
 }
 
 .view-selector-tabs button svg {
-  color: var(--text-secondary); /* Icon color */
+  color: var(--text-secondary); /* Default dark icon color */
   transition: color 0.2s ease;
 }
 
 .view-selector-tabs button:hover svg {
-  color: var(--rose-gold);
+  color: var(--rose-gold-main);
 }
 
 .view-selector-tabs button.active:hover {
-  background: var(--peachy-rose);
-  border-color: var(--peachy-rose);
+  background: var(--rose-gold-shine); /* Use a lighter rose gold on active hover */
+  border-color: var(--rose-gold-shine);
+  color: var(--primary-bg);
 }
 
 .tab-badge {
-  background-color: var(--accent-red); /* Red for alerts */
-  color: white;
+  background-color: var(--status-red); /* Red for alerts */
+  color: var(--text-primary); /* Use a light text color */
   font-size: 0.7em;
   padding: 2px 7px;
   border-radius: 12px;
@@ -87,50 +89,50 @@
   font-weight: bold;
 }
 
-/* This targets the "+ Schedule New Interview" button */
+/* "+ Schedule New Interview" button (FIXED: No White Button) */
 .view-selector-tabs .btn-primary {
-  background: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+  background: var(--rose-gold-gradient);
+  border-color: var(--rose-gold-main);
+  color: var(--primary-bg); /* Use dark text (primary-bg) instead of white */
   margin-left: auto; /* Pushes it to the right */
 }
 
 .view-selector-tabs .btn-primary:hover {
-  background: var(--rose-gold);
-  border-color: var(--rose-gold);
-  color: var(--main-bg);
+  background: var(--rose-gold-gradient-hover);
+  border-color: var(--rose-gold-shine);
+  color: var(--primary-bg);
 }
 
 
-/* --- Interview List (FIX for Huge Cards) --- */
+/* --- Interview List --- */
 .interview-list {
-  display: flex; /* Changed from grid */
-  flex-direction: column; /* Stack them vertically */
-  gap: 15px; /* Space between cards */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
   width: 100%;
 }
 
 .interview-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
+  border-radius: var(--border-radius-polished);
+  box-shadow: var(--shadow-polished);
   padding: 20px;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 100%; /* Ensure it spans the full width of the list */
-  box-sizing: border-box; /* Include padding in the width */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .interview-card.feedback-pending {
-  border-left: 4px solid var(--accent-red); /* Highlight for pending feedback */
+  border-left: 4px solid var(--status-red); /* Highlight for pending feedback */
 }
 
 .interview-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  border-color: var(--rose-gold);
+  box-shadow: var(--shadow-polished-hover);
+  border-color: var(--rose-gold-main);
 }
 
 .card-header {
@@ -144,10 +146,11 @@
 
 .card-header h3 {
   margin: 0;
-  color: var(--text-primary);
+  color: var(--rose-gold-main); /* Rose Gold Accent */
   font-size: 1.2em;
 }
 
+/* Interview Status Badges (FIXED: Removing White/Light Text on Light BG) */
 .interview-status {
   padding: 4px 8px;
   border-radius: 6px;
@@ -157,9 +160,9 @@
   background-color: var(--secondary-bg);
 }
 
-.interview-status.pending { background-color: var(--text-muted); color: var(--text-primary); }
-.interview-status.positive, .interview-status.strongly-positive { background-color: var(--accent-green); color: var(--main-bg); }
-.interview-status.negative, .interview-status.strongly-negative { background-color: var(--accent-red); color: white; }
+.interview-status.pending { background-color: var(--secondary-bg); color: var(--text-primary); }
+.interview-status.positive, .interview-status.strongly-positive { background-color: var(--status-green); color: var(--primary-bg); } /* Dark text on bright green */
+.interview-status.negative, .interview-status.strongly-negative { background-color: var(--status-red); color: var(--primary-bg); } /* Dark text on bright red (FIX: was 'white') */
 
 .interview-card p {
   color: var(--text-secondary);
@@ -171,14 +174,14 @@
 }
 
 .interview-card p svg {
-  color: var(--rose-gold);
+  color: var(--rose-gold-main);
   flex-shrink: 0;
 }
 
 .interview-notes {
   font-style: italic;
-  color: var(--text-muted);
-  border-left: 3px solid var(--border-color);
+  color: var(--text-secondary);
+  border-left: 3px solid var(--rose-gold-main); /* Rose Gold Accent */
   padding-left: 10px;
   margin-top: 10px;
   font-size: 0.9em;
@@ -191,7 +194,7 @@
 }
 
 .feedback-display h4 {
-  color: var(--rose-gold);
+  color: var(--rose-gold-main);
   margin-top: 0;
   margin-bottom: 8px;
   font-size: 0.9em;
@@ -213,12 +216,35 @@
   border-top: 1px solid var(--border-color);
 }
 
+/* Update & View History Buttons (FIXED: The white-looking buttons) */
+.interview-actions .btn-update {
+    background: var(--rose-gold-gradient);
+    color: var(--primary-bg); /* Dark text */
+    border: none;
+    border-radius: var(--border-radius-polished);
+    padding: 8px 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.interview-actions .btn-secondary {
+    background: var(--secondary-bg);
+    color: var(--rose-gold-main); /* Rose Gold text on dark background */
+    border: 1px solid var(--rose-gold-main);
+    border-radius: var(--border-radius-polished);
+    padding: 8px 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
 /* --- Dashboard Specific Styles --- */
 .dashboard-view h2,
 .dashboard-section-title {
   color: var(--text-primary);
   font-size: 1.5em;
-  border-bottom: 2px solid var(--rose-gold);
+  border-bottom: 2px solid var(--rose-gold-main);
   padding-bottom: 10px;
   margin-top: 30px;
   margin-bottom: 20px;
@@ -228,19 +254,19 @@
 }
 
 .dashboard-section-title .feedback-count {
-  background-color: var(--accent-red);
-  color: white;
+  background-color: var(--status-red);
+  color: var(--text-primary); /* Ensuring light text on the red badge */
   font-size: 0.7em;
   padding: 4px 10px;
   border-radius: 15px;
   font-weight: bold;
 }
 
-/* --- Modal Specific Styles --- */
-/* (Assuming you have global .modal-overlay and .modal-content styles) */
+/* --- Modal Specific Styles (Decision Buttons FIX) --- */
+/* Assuming modal content is styled elsewhere, focus on button groups */
 
 .feedback-section-title {
-  color: var(--rose-gold);
+  color: var(--rose-gold-main);
   font-size: 1.2em;
   margin-top: 30px;
   margin-bottom: 15px;
@@ -255,25 +281,105 @@
   margin-top: 15px;
 }
 
+/* Custom styling for checkboxes to ensure they are not bright white */
 .checkbox-group input[type="checkbox"] {
-  width: auto;
-  margin: 0;
   height: 18px;
   width: 18px;
+  /* Appearance override for dark theme */
+  background-color: var(--secondary-bg);
+  border: 1px solid var(--rose-gold-main);
+  border-radius: 4px;
+  appearance: none;
+  cursor: pointer;
 }
+
+.checkbox-group input[type="checkbox"]:checked {
+  background-color: var(--rose-gold-main);
+  border-color: var(--rose-gold-main);
+}
+
+.checkbox-group input[type="checkbox"]:checked::after {
+  content: '✓'; /* Or use an icon font */
+  color: var(--primary-bg); /* Dark checkmark on rose gold */
+  display: block;
+  text-align: center;
+  line-height: 18px;
+  font-size: 14px;
+}
+
 
 .checkbox-group label {
   font-size: 0.9em;
   color: var(--text-secondary);
 }
 
+/* Decision Button Grid (The 'Advance/Hold/Reject' set) */
+.decision-buttons-grid {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.decision-btn,
+.decision-buttons-grid button {
+    flex: 1;
+    border-radius: var(--border-radius-polished);
+    padding: 12px 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* 1. Advance (Positive Status - Green) */
+.btn-advance {
+    background: var(--status-green);
+    color: var(--primary-bg); /* Dark text on bright status color */
+    border: none;
+}
+
+/* 2. Hold (Neutral Status - Yellow/Dark) */
+.btn-hold {
+    background: var(--secondary-bg);
+    color: var(--status-yellow);
+    border: 1px solid var(--status-yellow);
+}
+
+/* 3. Reject (Negative Status - Red/Dark) */
+.btn-reject {
+    background: var(--secondary-bg);
+    color: var(--status-red);
+    border: 1px solid var(--status-red);
+}
+
+/* 4. Save/Submit/Other Primary Modal Button */
+.modal-footer .btn-primary,
+.btn-save-feedback {
+    background: var(--rose-gold-gradient);
+    color: var(--primary-bg); /* Dark text on rose gold */
+    border: none;
+}
+
+/* Secondary/Cancel Modal Button */
+.modal-footer .btn-secondary {
+    background: var(--primary-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+
 /* --- React Big Calendar Styles --- */
 .calendar-view {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-polished);
+  box-shadow: var(--shadow-polished);
   padding: 15px;
-  box-shadow: var(--shadow);
   color: var(--text-primary);
 }
 
@@ -297,6 +403,7 @@
   border-color: var(--border-color) !important;
 }
 
+/* Calendar Toolbar Buttons (FIXED: No White Buttons) */
 .rbc-toolbar button {
   background: var(--secondary-bg);
   color: var(--text-secondary);
@@ -307,35 +414,35 @@
 
 .rbc-toolbar button:hover,
 .rbc-toolbar button:focus {
-  background: var(--hover-bg);
-  color: var(--text-primary);
-  border-color: var(--rose-gold);
+  background: #3c3c69; /* Dark hover */
+  color: var(--rose-gold-main);
+  border-color: var(--rose-gold-main);
 }
 
 .rbc-toolbar button.rbc-active {
-  background: var(--rose-gold);
-  color: var(--main-bg);
-  border-color: var(--rose-gold);
+  background: var(--rose-gold-main);
+  color: var(--primary-bg); /* Dark text on rose gold */
+  border-color: var(--rose-gold-main);
 }
 
 .rbc-event {
-  background-color: var(--accent-blue);
-  color: white;
+  background-color: var(--status-blue);
+  color: var(--primary-bg); /* Dark text on the blue event */
   border: none;
   border-radius: 4px;
 }
 
 .rbc-event-content {
-  color: white;
+  color: var(--primary-bg);
   font-size: 0.8em;
 }
 
 .rbc-day-bg.rbc-off-range-bg {
-  background: var(--main-bg); /* Darker for off-range */
+  background: var(--primary-bg);
 }
 
 .rbc-today {
-  background-color: var(--secondary-bg); /* Highlight today */
+  background-color: #38385a; /* A slight highlight color */
 }
 
 .rbc-date-cell {
@@ -343,11 +450,11 @@
 }
 
 .rbc-off-range .rbc-date-cell {
-  color: var(--text-muted); /* Muted for off-range dates */
+  color: var(--text-secondary);
 }
 
 .rbc-current-time-indicator {
-  background-color: var(--rose-gold);
+  background-color: var(--rose-gold-main);
 }
 
 .rbc-time-gutter,
