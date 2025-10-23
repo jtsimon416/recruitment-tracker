@@ -1,419 +1,356 @@
-.interview-hub-page {
-  padding: 30px;
-  max-width: 1400px;
-  margin: 0 auto;
+/* --- Base Page Layout --- */
+.interview-hub-container {
+  /* No styles needed, uses page-container from App.css */
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid var(--border-color);
-}
-
-.page-header h1 {
-  margin: 0;
-  font-size: 32px;
+.page-title {
   color: var(--text-primary);
-  font-weight: 700;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 12px rgba(122, 162, 247, 0.3);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(122, 162, 247, 0.4);
-}
-
-.interview-form {
-  background: var(--card-bg);
-  padding: 30px;
-  border-radius: 12px;
-  margin-bottom: 30px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
-}
-
-.interview-form h2 {
-  margin-top: 0;
-  margin-bottom: 25px;
-  color: var(--accent-cyan);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  margin-bottom: 8px;
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  padding: 12px;
-  background: var(--secondary-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: var(--accent-blue);
-  background: var(--hover-bg);
-  box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.1);
-}
-
-.form-group textarea {
-  resize: vertical;
-  font-family: inherit;
-  line-height: 1.6;
-}
-
-.field-helper {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin: -5px 0 10px 0;
-  font-style: italic;
-}
-
-.interviews-section {
-  margin-bottom: 50px;
-}
-
-.interviews-section h2 {
-  color: var(--text-primary);
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: 600;
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 2px solid var(--rose-gold);
   padding-bottom: 10px;
+  margin-bottom: 10px;
 }
 
-.interviews-list {
-  display: grid;
-  gap: 20px;
+.page-description {
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  font-size: 0.95em;
+}
+
+/* --- View Selector Tabs (FIX for White Buttons) --- */
+.view-selector-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 20px;
+  align-items: center;
+}
+
+/* This is the fix for the white buttons */
+.view-selector-tabs button {
+  background: var(--card-bg); 
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  position: relative;
+}
+
+.view-selector-tabs button:hover {
+  border-color: var(--rose-gold);
+  color: var(--rose-gold);
+  background: var(--secondary-bg);
+}
+
+/* This is the style for the ACTIVE button */
+.view-selector-tabs button.active {
+  background: var(--rose-gold);
+  color: var(--main-bg); /* Use dark text on the light button */
+  border-color: var(--rose-gold);
+  box-shadow: 0 2px 8px rgba(232, 180, 184, 0.3);
+}
+
+.view-selector-tabs button.active svg {
+  color: var(--main-bg);
+}
+
+.view-selector-tabs button svg {
+  color: var(--text-secondary); /* Icon color */
+  transition: color 0.2s ease;
+}
+
+.view-selector-tabs button:hover svg {
+  color: var(--rose-gold);
+}
+
+.view-selector-tabs button.active:hover {
+  background: var(--peachy-rose);
+  border-color: var(--peachy-rose);
+}
+
+.tab-badge {
+  background-color: var(--accent-red); /* Red for alerts */
+  color: white;
+  font-size: 0.7em;
+  padding: 2px 7px;
+  border-radius: 12px;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  font-weight: bold;
+}
+
+/* This targets the "+ Schedule New Interview" button */
+.view-selector-tabs .btn-primary {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: white;
+  margin-left: auto; /* Pushes it to the right */
+}
+
+.view-selector-tabs .btn-primary:hover {
+  background: var(--rose-gold);
+  border-color: var(--rose-gold);
+  color: var(--main-bg);
+}
+
+
+/* --- Interview List (FIX for Huge Cards) --- */
+.interview-list {
+  display: flex; /* Changed from grid */
+  flex-direction: column; /* Stack them vertically */
+  gap: 15px; /* Space between cards */
+  width: 100%;
 }
 
 .interview-card {
   background: var(--card-bg);
-  border-radius: 12px;
-  padding: 24px;
-  border-left: 4px solid var(--accent-green);
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
-  border-left-width: 4px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%; /* Ensure it spans the full width of the list */
+  box-sizing: border-box; /* Include padding in the width */
+}
+
+.interview-card.feedback-pending {
+  border-left: 4px solid var(--accent-red); /* Highlight for pending feedback */
 }
 
 .interview-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-color: var(--rose-gold);
 }
 
-.interview-card.past {
-  border-left-color: var(--text-muted);
-  opacity: 0.85;
-}
-
-.interview-header {
+.card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
-  gap: 20px;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
 }
 
-.interview-header h3 {
-  margin: 0 0 8px 0;
-  color: var(--accent-cyan);
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.position-info {
-  color: var(--text-secondary);
+.card-header h3 {
   margin: 0;
-  font-size: 15px;
+  color: var(--text-primary);
+  font-size: 1.2em;
 }
 
-.interview-type {
-  background: linear-gradient(135deg, var(--accent-green), #7dcfff);
-  color: white;
-  padding: 8px 16px;
+.interview-status {
+  padding: 4px 8px;
   border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(158, 206, 106, 0.3);
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--text-primary);
+  background-color: var(--secondary-bg);
 }
 
-.interview-card.past .interview-type {
-  background: linear-gradient(135deg, var(--text-muted), #666);
-}
+.interview-status.pending { background-color: var(--text-muted); color: var(--text-primary); }
+.interview-status.positive, .interview-status.strongly-positive { background-color: var(--accent-green); color: var(--main-bg); }
+.interview-status.negative, .interview-status.strongly-negative { background-color: var(--accent-red); color: white; }
 
-.interview-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 30px;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
-  border-bottom: 1px dashed var(--border-color);
-  line-height: 1.2;
-}
-
-.interview-details p {
-  margin: 0;
-  font-size: 14px;
-  color: var(--text-secondary); 
-}
-
-.interview-details strong {
-  display: inline; 
-  color: var(--accent-cyan);
-  font-weight: 700;
-  margin-right: 8px;
-}
-
-.feedback-box {
-  background: var(--secondary-bg);
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  white-space: pre-wrap;
-  line-height: 1.8;
-  border-left: 4px solid var(--accent-purple);
-  border: 1px solid var(--border-color);
-  border-left-width: 4px;
-}
-
-.interview-card.past .feedback-box {
-  border-left-color: var(--text-muted);
-}
-
-.feedback-box strong {
-  display: block;
-  margin-bottom: 12px;
-  color: var(--accent-cyan);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.feedback-box p {
-  margin: 0;
+.interview-card p {
   color: var(--text-secondary);
-  line-height: 1.8;
+  font-size: 0.9em;
+  margin: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.interview-card p svg {
+  color: var(--rose-gold);
+  flex-shrink: 0;
+}
+
+.interview-notes {
+  font-style: italic;
+  color: var(--text-muted);
+  border-left: 3px solid var(--border-color);
+  padding-left: 10px;
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+.feedback-display {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.feedback-display h4 {
+  color: var(--rose-gold);
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+  text-transform: uppercase;
+}
+
+.feedback-display p {
+  color: var(--text-secondary);
+  font-size: 0.9em;
+  line-height: 1.4;
+  margin: 0;
 }
 
 .interview-actions {
-  margin-top: auto; /* Pushes buttons to the bottom of the card */
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
   display: flex;
   gap: 10px;
-}
-
-.btn-update {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(122, 162, 247, 0.3);
-}
-
-.btn-update:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(187, 154, 247, 0.4);
-}
-
-.btn-secondary {
-  background: var(--secondary-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  padding: 10px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-.btn-secondary:hover {
-  background: var(--hover-bg);
-  border-color: var(--accent-blue);
-}
-
-.btn-delete {
-  background: linear-gradient(135deg, var(--accent-pink), var(--accent-orange));
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(247, 162, 198, 0.3);
-}
-
-.btn-delete:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(247, 162, 198, 0.4);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-muted);
-  font-size: 16px;
-  background: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
-}
-
-.loading {
-  text-align: center;
-  padding: 100px 20px;
-  color: var(--text-primary);
-  font-size: 20px;
-}
-
-.outcome-badge {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: white;
-  text-transform: uppercase;
-}
-.outcome-badge.passed { background: linear-gradient(135deg, var(--accent-green), #7dcfff); }
-.outcome-badge.failed { background: linear-gradient(135deg, var(--accent-pink), var(--accent-orange)); }
-.outcome-badge.hold { background: linear-gradient(135deg, var(--accent-orange), #ffcc80); }
-
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-  padding: 20px;
-}
-
-.modal-content {
-  background: var(--card-bg);
-  padding: 30px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 600px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--border-color);
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-content h2 { margin: 0 0 10px 0; color: var(--accent-cyan); }
-.modal-candidate-info { color: var(--text-secondary); font-weight: 600; margin-bottom: 25px; }
-
-.decision-buttons-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  margin-top: 25px;
+  margin-top: 20px;
+  padding-top: 15px;
   border-top: 1px solid var(--border-color);
-  padding-top: 25px;
 }
 
-.decision-btn {
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background: var(--secondary-bg);
+/* --- Dashboard Specific Styles --- */
+.dashboard-view h2,
+.dashboard-section-title {
   color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-}
-.decision-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-
-.btn-advance { border-color: var(--accent-green); color: var(--accent-green); }
-.btn-advance:hover { background: var(--accent-green); color: white; }
-
-.btn-hold { border-color: var(--accent-orange); color: var(--accent-orange); }
-.btn-hold:hover { background: var(--accent-orange); color: white; }
-
-.btn-reject { border-color: var(--accent-pink); color: var(--accent-pink); }
-.btn-reject:hover { background: var(--accent-pink); color: white; }
-
-.btn-save-feedback { border-color: var(--text-muted); color: var(--text-muted); grid-column: 1 / -1; }
-.btn-save-feedback:hover { background: var(--text-muted); color: white; }
-
-.modal-actions { display: flex; gap: 10px; margin-top: 25px; justify-content: flex-end; }
-.modal-actions-centered { justify-content: center; }
-
-/* History Modal */
-.history-modal-content {
-  max-width: 700px;
-}
-.history-item {
-  background: var(--secondary-bg);
-  padding: 18px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  border-left: 4px solid var(--accent-purple);
-}
-.history-item-header {
+  font-size: 1.5em;
+  border-bottom: 2px solid var(--rose-gold);
+  padding-bottom: 10px;
+  margin-top: 30px;
+  margin-bottom: 20px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  justify-content: space-between;
 }
-.history-item-header h3 { color: var(--accent-cyan); margin: 0; font-size: 18px; }
-.history-item-date { font-size: 12px; color: var(--text-muted); }
-.history-item p { margin: 5px 0; color: var(--text-secondary); }
-.history-item strong { color: var(--text-primary); font-weight: 600; }
-.history-item .feedback-box { margin-top: 10px; padding: 12px; border-left-width: 3px; }
+
+.dashboard-section-title .feedback-count {
+  background-color: var(--accent-red);
+  color: white;
+  font-size: 0.7em;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-weight: bold;
+}
+
+/* --- Modal Specific Styles --- */
+/* (Assuming you have global .modal-overlay and .modal-content styles) */
+
+.feedback-section-title {
+  color: var(--rose-gold);
+  font-size: 1.2em;
+  margin-top: 30px;
+  margin-bottom: 15px;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 8px;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  height: 18px;
+  width: 18px;
+}
+
+.checkbox-group label {
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+/* --- React Big Calendar Styles --- */
+.calendar-view {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 15px;
+  box-shadow: var(--shadow);
+  color: var(--text-primary);
+}
+
+.rbc-calendar {
+  color: var(--text-primary);
+  background-color: var(--card-bg);
+}
+
+.rbc-header {
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 5px;
+}
+
+.rbc-month-view,
+.rbc-time-view,
+.rbc-time-header-content,
+.rbc-month-row,
+.rbc-day-bg,
+.rbc-time-slot {
+  border-color: var(--border-color) !important;
+}
+
+.rbc-toolbar button {
+  background: var(--secondary-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 5px 10px;
+}
+
+.rbc-toolbar button:hover,
+.rbc-toolbar button:focus {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--rose-gold);
+}
+
+.rbc-toolbar button.rbc-active {
+  background: var(--rose-gold);
+  color: var(--main-bg);
+  border-color: var(--rose-gold);
+}
+
+.rbc-event {
+  background-color: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.rbc-event-content {
+  color: white;
+  font-size: 0.8em;
+}
+
+.rbc-day-bg.rbc-off-range-bg {
+  background: var(--main-bg); /* Darker for off-range */
+}
+
+.rbc-today {
+  background-color: var(--secondary-bg); /* Highlight today */
+}
+
+.rbc-date-cell {
+  color: var(--text-primary);
+}
+
+.rbc-off-range .rbc-date-cell {
+  color: var(--text-muted); /* Muted for off-range dates */
+}
+
+.rbc-current-time-indicator {
+  background-color: var(--rose-gold);
+}
+
+.rbc-time-gutter,
+.rbc-allday-cell {
+  background: var(--secondary-bg);
+}

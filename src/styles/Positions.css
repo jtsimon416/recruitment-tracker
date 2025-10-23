@@ -24,7 +24,7 @@
 
 /* ========== FORM CARD ========== */
 .form-card {
-  background: var(--card-bg);
+  background: var(--secondary-bg);
   border-radius: 12px;
   padding: 25px;
   margin-bottom: 25px;
@@ -34,7 +34,7 @@
 
 .form-card h2 {
   margin: 0 0 20px 0;
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   font-size: 20px;
 }
 
@@ -61,7 +61,7 @@
 .form-group select,
 .form-group textarea {
   padding: 10px 14px;
-  border-radius: 6px;
+  border-radius: var(--border-radius-polished);
   border: 1px solid var(--border-color);
   background: var(--secondary-bg);
   color: var(--text-primary);
@@ -73,8 +73,8 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.1);
+  border-color: var(--rose-gold-main);
+  box-shadow: 0 0 0 3px rgba(235, 188, 186, 0.2);
 }
 
 .form-group textarea {
@@ -91,7 +91,7 @@
 
 .filter-select {
   padding: 10px 14px;
-  border-radius: 6px;
+  border-radius: var(--border-radius-polished);
   border: 1px solid var(--border-color);
   background: var(--secondary-bg);
   color: var(--text-primary);
@@ -102,22 +102,20 @@
 }
 
 .filter-select:hover {
-  border-color: var(--accent-blue);
+  border-color: var(--rose-gold-main);
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.1);
+  border-color: var(--rose-gold-main);
+  box-shadow: 0 0 0 3px rgba(235, 188, 186, 0.2);
 }
 
 /* ========== TABLE CONTAINER ========== */
 .positions-table-container {
-  background: var(--card-bg);
-  border-radius: 12px;
+  background: transparent;
+  border-radius: var(--border-radius-polished);
   overflow: hidden;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
 }
 
 /* ========== TABLE HEADER ========== */
@@ -126,10 +124,9 @@
   grid-template-columns: 2fr 1.5fr 0.8fr 1fr 0.6fr 0.6fr 0.8fr 0.8fr 0.6fr 0.6fr 1.2fr;
   gap: 15px;
   padding: 15px 20px;
-  background: var(--secondary-bg);
-  border-bottom: 2px solid var(--border-color);
+  background: none;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 0.9em;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-secondary);
@@ -144,7 +141,7 @@
 }
 
 .positions-table-header > div:hover {
-  color: var(--accent-cyan);
+  color: var(--rose-gold-shine);
 }
 
 /* ========== TABLE BODY ========== */
@@ -159,18 +156,21 @@
   grid-template-columns: 2fr 1.5fr 0.8fr 1fr 0.6fr 0.6fr 0.8fr 0.8fr 0.6fr 0.6fr 1.2fr;
   gap: 15px;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border-color);
   align-items: center;
   transition: all 0.2s;
   border-left: 4px solid transparent;
+  background: var(--secondary-bg);
+  border-radius: var(--border-radius-polished);
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .position-row:hover {
-  background: var(--hover-bg);
+  background: var(--border-color);
 }
 
 .position-row.expanded {
-  background: var(--hover-bg);
+  background: var(--border-color);
 }
 
 /* Priority Border Colors */
@@ -179,11 +179,11 @@
 }
 
 .position-row.priority-orange {
-  border-left-color: var(--accent-orange);
+  border-left-color: var(--status-yellow);
 }
 
 .position-row.priority-green {
-  border-left-color: var(--accent-green);
+  border-left-color: var(--status-green);
 }
 
 /* ========== COLUMN CONTENT STYLES ========== */
@@ -221,9 +221,9 @@
 }
 
 .status-badge.open {
-  background: rgba(158, 206, 106, 0.15);
-  color: var(--accent-green);
-  border: 1px solid var(--accent-green);
+  background: rgba(158, 206, 106, 0.15); /* status-green */
+  color: var(--status-green);
+  border: 1px solid var(--status-green);
 }
 
 .status-badge.closed {
@@ -244,28 +244,28 @@
 }
 
 .health-badge.priority-red {
-  background: rgba(247, 118, 142, 0.15);
-  color: var(--accent-pink);
-  border: 1px solid var(--accent-pink);
+  background: rgba(247, 118, 142, 0.15); /* status-red */
+  color: var(--status-red);
+  border: 1px solid var(--status-red);
 }
 
 .health-badge.priority-orange {
-  background: rgba(224, 175, 104, 0.15);
-  color: var(--accent-orange);
-  border: 1px solid var(--accent-orange);
+  background: rgba(224, 175, 104, 0.15); /* status-yellow */
+  color: var(--status-yellow);
+  border: 1px solid var(--status-yellow);
 }
 
 .health-badge.priority-green {
-  background: rgba(158, 206, 106, 0.15);
-  color: var(--accent-green);
-  border: 1px solid var(--accent-green);
+  background: rgba(158, 206, 106, 0.15); /* status-green */
+  color: var(--status-green);
+  border: 1px solid var(--status-green);
 }
 
 /* ========== METRIC VALUES ========== */
 .metric-value {
   font-size: 16px;
   font-weight: 700;
-  color: var(--accent-cyan);
+  color: var(--text-primary);
   text-align: center;
 }
 
@@ -279,7 +279,7 @@
 .btn-expand {
   background: var(--secondary-bg);
   border: 1px solid var(--border-color);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   padding: 6px 8px;
   border-radius: 6px;
   cursor: pointer;
@@ -290,15 +290,15 @@
 }
 
 .btn-expand:hover {
-  background: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+  background: var(--border-color);
+  border-color: var(--rose-gold-main);
+  color: var(--rose-gold-main);
 }
 
 .btn-edit {
   background: var(--secondary-bg);
   border: 1px solid var(--border-color);
-  color: var(--accent-blue);
+  color: var(--text-primary);
   padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
@@ -309,15 +309,15 @@
 }
 
 .btn-edit:hover {
-  background: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
+  background: var(--border-color);
+  border-color: var(--rose-gold-main);
+  color: var(--rose-gold-main);
 }
 
 .btn-delete {
   background: var(--secondary-bg);
   border: 1px solid var(--border-color);
-  color: var(--accent-pink);
+  color: var(--status-red);
   padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
@@ -328,17 +328,17 @@
 }
 
 .btn-delete:hover {
-  background: var(--accent-pink);
-  border-color: var(--accent-pink);
+  background: var(--status-red);
+  border-color: var(--status-red);
   color: white;
 }
 
 /* ========== EXPANDED CONTENT ========== */
 .position-expanded-content {
   padding: 20px 40px;
-  background: var(--secondary-bg);
+  background: var(--primary-bg);
   border-bottom: 1px solid var(--border-color);
-  border-left: 4px solid var(--accent-purple);
+  border-left: 4px solid var(--status-purple);
 }
 
 .expanded-section {
@@ -351,7 +351,7 @@
 
 .expanded-section h4 {
   margin: 0 0 12px 0;
-  color: var(--accent-purple);
+  color: var(--status-purple);
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -368,7 +368,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
+  padding: 10px 15px;  background: var(--secondary-bg);
   background: var(--card-bg);
   border-radius: 8px;
   border: 1px solid var(--border-color);
@@ -381,7 +381,7 @@
 }
 
 .breakdown-value {
-  color: var(--accent-cyan);
+  color: var(--text-primary);
   font-size: 16px;
   font-weight: 700;
 }
@@ -421,7 +421,7 @@
 /* ========== TIPTAP RICH TEXT EDITOR STYLES ========== */
 
 .tiptap-editor-wrapper {
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color);  background: var(--primary-bg);
   border-radius: 8px;
   background: var(--secondary-bg);
   overflow: hidden;
@@ -431,7 +431,7 @@
   display: flex;
   gap: 4px;
   padding: 8px;
-  background: var(--card-bg);
+  background: var(--secondary-bg);
   border-bottom: 1px solid var(--border-color);
   flex-wrap: wrap;
 }
@@ -450,15 +450,15 @@
 }
 
 .tiptap-toolbar button:hover {
-  background: var(--hover-bg);
-  color: var(--accent-blue);
-  border-color: var(--accent-blue);
+  background: var(--border-color);
+  color: var(--rose-gold-main);
+  border-color: var(--rose-gold-main);
 }
 
 .tiptap-toolbar button.is-active {
-  background: var(--accent-blue);
+  background: var(--rose-gold-gradient);
   color: white;
-  border-color: var(--accent-blue);
+  border-color: var(--rose-gold-main);
 }
 
 .tiptap-editor-content {
@@ -493,7 +493,7 @@
 .tiptap-editor-content .ProseMirror h1,
 .tiptap-editor-content .ProseMirror h2,
 .tiptap-editor-content .ProseMirror h3 {
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   margin: 16px 0 8px 0;
   font-weight: 600;
   line-height: 1.3;
@@ -544,12 +544,12 @@
 }
 
 .tiptap-editor-content .ProseMirror a {
-  color: var(--accent-blue);
+  color: var(--rose-gold-main);
   text-decoration: underline;
 }
 
 .tiptap-editor-content .ProseMirror code {
-  background: var(--card-bg);
+  background: var(--primary-bg);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: monospace;
@@ -557,7 +557,7 @@
 }
 
 .tiptap-editor-content .ProseMirror blockquote {
-  border-left: 3px solid var(--accent-purple);
+  border-left: 3px solid var(--status-purple);
   padding-left: 16px;
   margin: 12px 0;
   color: var(--text-secondary);
@@ -570,7 +570,7 @@
 }
 
 .tiptap-editor-content::-webkit-scrollbar-track {
-  background: var(--card-bg);
+  background: var(--primary-bg);
 }
 
 .tiptap-editor-content::-webkit-scrollbar-thumb {
@@ -592,7 +592,7 @@
 .job-description-content h1,
 .job-description-content h2,
 .job-description-content h3 {
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   margin: 16px 0 8px 0;
   font-weight: 600;
 }
@@ -631,12 +631,12 @@
 }
 
 .job-description-content a {
-  color: var(--accent-blue);
+  color: var(--rose-gold-main);
   text-decoration: underline;
 }
 
 .job-description-content a:hover {
-  color: var(--accent-cyan);
+  color: var(--rose-gold-shine);
 }
 
 /* Ensure bullets and numbering display properly */

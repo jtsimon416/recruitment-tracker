@@ -21,25 +21,26 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-  color: white;
+  background: var(--rose-gold-gradient);
+  color: var(--primary-bg);
   border: none;
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: var(--border-radius-polished);
   cursor: pointer;
   font-size: 14px;
-  font-weight: 600;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 12px rgba(122, 162, 247, 0.3);
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-polished);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(122, 162, 247, 0.4);
+  box-shadow: var(--shadow-polished-hover);
+  background: var(--rose-gold-gradient-hover);
 }
 
 .form-card {
-  background: var(--card-bg);
+  background: var(--secondary-bg);
   padding: 25px;
   border-radius: 12px;
   box-shadow: var(--shadow);
@@ -50,7 +51,7 @@
 .form-card h2 {
   margin-top: 0;
   margin-bottom: 20px;
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   font-size: 24px;
 }
 
@@ -80,10 +81,9 @@
 .form-group select,
 .form-group textarea {
   padding: 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border: 1px solid var(--border-color);  border-radius: var(--border-radius-polished);
   font-size: 14px;
-  background: var(--secondary-bg);
+  background: var(--primary-bg);
   color: var(--text-primary);
   transition: border-color 0.2s;
 }
@@ -92,7 +92,7 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--accent-blue);
+  border-color: var(--rose-gold-main);
 }
 
 .form-group textarea {
@@ -108,23 +108,22 @@
 }
 
 .client-card {
-  background: var(--card-bg);
+  background: var(--card-bg);  border-radius: var(--border-radius-polished);
   padding: 20px;
-  border-radius: 12px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-polished);
   transition: all 0.2s;
   border: 1px solid var(--border-color);
 }
 
 .client-card:hover {
-  box-shadow: 0 6px 20px rgba(122, 162, 247, 0.3);
+  box-shadow: var(--shadow-polished-hover);
   transform: translateY(-4px);
-  border-color: var(--accent-blue);
+  border-color: var(--rose-gold-main);
 }
 
 .client-card h3 {
   margin: 0 0 15px 0;
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   font-size: 20px;
   font-weight: 700;
 }
@@ -160,46 +159,43 @@
 
 .btn-edit {
   flex: 1;
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
-  color: white;
-  border: none;
+  background: var(--secondary-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: var(--border-radius-polished);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(187, 154, 247, 0.3);
+  transition: all 0.3s ease;
 }
 
 .btn-edit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(187, 154, 247, 0.4);
+  background: var(--border-color);
 }
 
 .btn-delete {
-  background: linear-gradient(135deg, var(--accent-pink), var(--accent-orange));
-  color: white;
+  background: var(--secondary-bg);
+  color: var(--status-red);
   border: none;
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: var(--border-radius-polished);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(247, 162, 198, 0.3);
+  transition: all 0.3s ease;
 }
 
 .btn-delete:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(247, 162, 198, 0.4);
+  background: var(--status-red);
+  color: var(--white);
 }
 
 .empty-state {
   text-align: center;
   padding: 80px 20px;
   color: var(--text-muted);
-  background: var(--card-bg);
+  background: var(--secondary-bg);
   border-radius: 12px;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
@@ -214,4 +210,90 @@
 .empty-state p {
   margin: 0;
   color: var(--text-secondary);
+}
+
+/* Make cards more distinct using theme variables */
+.client-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.client-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-color: var(--rose-gold); /* Rose gold border on hover */
+}
+
+.client-card h3 {
+  border-bottom: 2px solid var(--rose-gold); /* Rose gold accent */
+  padding-bottom: 10px;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--text-primary);
+}
+
+.client-info {
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.client-info p {
+  margin: 4px 0;
+}
+
+/* --- NEW STATS STYLES (THEMED) --- */
+.client-stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--secondary-bg); /* Use theme's secondary bg */
+  border-radius: 6px;
+  padding: 15px 10px;
+  margin-bottom: 20px;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-secondary);
+  flex-basis: 0;
+  flex-grow: 1;
+  text-align: center;
+}
+
+.stat-item svg {
+  color: var(--rose-gold); /* Rose gold accent */
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 1.6em;
+  font-weight: 600;
+  color: var(--text-primary); /* Use theme's primary text */
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 0.8em;
+  text-transform: uppercase;
+  color: var(--text-muted); /* Use theme's muted text */
+}
+/* --- END NEW STATS STYLES --- */
+
+.client-actions {
+  display: flex;
+  gap: 10px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 15px;
+  margin-top: auto; /* Pushes actions to the bottom */
 }

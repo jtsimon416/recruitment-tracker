@@ -237,7 +237,7 @@
 
 .candidates-header {
   display: grid;
-  grid-template-columns: 1.5fr 2fr 1fr 1fr 1fr 1.8fr;
+  grid-template-columns: 2.5fr 2fr 1.2fr 1fr 1.8fr;
   gap: 15px;
   padding: 15px 20px;
   background: var(--secondary-bg);
@@ -251,7 +251,7 @@
 
 .candidate-row {
   display: grid;
-  grid-template-columns: 1.5fr 2fr 1fr 1fr 1fr 1.8fr;
+  grid-template-columns: 2.5fr 2fr 1.2fr 1fr 1.8fr;
   gap: 15px;
   padding: 20px;
   border-bottom: 1px solid var(--border-color);
@@ -1306,4 +1306,65 @@
   .date-separator {
     text-align: center;
   }
+}
+
+/* Styles for the buttons INSIDE the text inputs */
+.input-with-button {
+  position: relative;
+  display: flex;
+}
+
+.input-with-button input {
+  width: 100%;
+  padding-right: 40px; /* Make room for the button */
+}
+
+.btn-paste {
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  bottom: 1px;
+  width: 38px;
+  border-radius: 0 5px 5px 0;
+  border: 1px solid #ccc;
+  border-left: 1px solid #eee;
+  background: #f9f9f9;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-paste:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Styles for the button NEXT TO the textarea/TagInput label */
+.form-group-with-button label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Pushes label and button apart */
+  width: 100%;
+  margin-bottom: 4px; /* Adds a little space above the input */
+}
+
+.btn-paste-label {
+  background: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  color: #666;
+  font-size: 0.8em;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-paste-label:hover {
+  background: #f0f0f0;
+  color: #333;
 }

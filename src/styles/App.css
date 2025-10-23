@@ -1,25 +1,25 @@
 /* src/styles/App.css */
 :root {
-  --primary-bg: #1a1b26;
-  --secondary-bg: #16161E;
-  --card-bg: #24283B;
-  --hover-bg: #3b4261;
-  --border-color: #414868;
-  --text-primary: #c0caf5;
-  --text-secondary: #a9b1d6;
-  --text-muted: #787c99;
-  --accent-blue: #7aa2f7;
-  --accent-purple: #bb9af7;
-  --accent-cyan: #7dcfff;
-  --accent-green: #9ece6a;
-  --accent-orange: #ff9e64;
-  --accent-pink: #f7768e;
-  --accent-red: #f7768e;
-  --accent-green-faded: rgba(158, 206, 106, 0.1);
-  --accent-red-faded: rgba(247, 118, 142, 0.1);
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  --border-radius: 8px;
-  --border-radius-lg: 12px;
+  /* Core Backgrounds */
+  --primary-bg: #1a1a2e;        /* Dark, deep navy/purple */
+  --secondary-bg: #2a2a4e;      /* Lighter bg for sidebars, headers */
+  --card-bg: linear-gradient(145deg, #2e2e54, #242444); /* Subtle gradient for cards */
+
+  /* Text Colors */
+  --text-primary: #f0f0f0;       /* Bright main text */
+  --text-secondary: #a0a0c0;    /* Muted secondary text (labels, etc.) */
+
+  /* Rose Gold Gradient (The "Shiny" Accent) */
+  --rose-gold-main: #ebbcba;
+  --rose-gold-shine: #f7d4d4;
+  --rose-gold-gradient: linear-gradient(135deg, var(--rose-gold-shine) 0%, var(--rose-gold-main) 100%);
+  --rose-gold-gradient-hover: linear-gradient(135deg, var(--rose-gold-main) 0%, var(--rose-gold-shine) 100%);
+
+  /* Borders & Polish */
+  --border-color: #4a4a70;       /* Muted border for inputs and cards */
+  --border-radius-polished: 8px; /* Soft rounded corners */
+  --shadow-polished: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-polished-hover: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 body {

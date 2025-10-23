@@ -1044,3 +1044,65 @@ body {
   background: var(--accent-orange);
   transform: translateY(-1px);
 }
+
+.pipeline-card .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Adds spacing between rows */
+  padding-top: 10px; /* Adds a bit of space below the card header */
+}
+
+.card-info-row {
+  display: grid;
+  grid-template-columns: 70px 1fr; /* 70px label column, value takes the rest */
+  gap: 8px; /* Space between label and value */
+  align-items: start;
+}
+
+.card-label {
+  font-weight: bold;
+  font-size: 0.9em;
+  color: #555;
+  white-space: nowrap;
+}
+
+.card-value {
+  font-size: 0.9em;
+  word-break: break-word; /* Prevents long values from overflowing */
+}
+
+/* Ensures the status select aligns nicely */
+.pipeline-card .status-select {
+  margin-top: 4px; 
+}
+
+.pipeline-card .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Adds spacing between rows */
+  padding-top: 10px; /* Adds a bit of space below the card header */
+}
+
+.card-info-row {
+  display: grid;
+  grid-template-columns: 70px 1fr; /* 70px label column, value takes the rest */
+  gap: 8px; /* Space between label and value */
+  align-items: start;
+}
+
+.card-label {
+  font-weight: bold;
+  font-size: 0.9em;
+  color: #555;
+  white-space: nowrap;
+}
+
+.card-value {
+  font-size: 0.9em;
+  word-break: break-word; /* Prevents long values from overflowing */
+}
+
+/* Ensures the status select aligns nicely */
+.pipeline-card .status-select {
+  margin-top: 4px; 
+}

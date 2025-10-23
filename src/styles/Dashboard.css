@@ -2,37 +2,6 @@
    PREMIUM ROSE GOLD + DARK THEME DASHBOARD - HIRE LOGIC
    ========================================================================= */
 
-/* ===== CSS VARIABLES (Original) ===== */
-:root {
-  /* Premium Rose Gold Palette */
-  --rose-gold: #E8B4B8;
-  --peachy-rose: #F4C2A8;
-  --dusty-pink: #F7A9BA;
-  --soft-lavender: #C5B9D6;
-  --mint-cream: #B8D4D0;
-  --accent-rose: #F39C9C;
-  --accent-red: #F7768E; /* Added for critical state */
-  --accent-orange: #E0AF68; /* Added for warning state */
-  --accent-green: #9ECE6A; /* Added for success state */
-  --accent-blue: #7AA2F7; /* Added for info state */
-
-
-  /* Background Colors */
-  --primary-bg: #1a1b26;
-  --secondary-bg: #16161E;
-  --card-bg: #24283B;
-  --hover-bg: #3b4261;
-  --main-bg: var(--primary-bg); /* Alias for clarity in modals */
-
-  /* Text Colors */
-  --text-primary: #c0caf5;
-  --text-secondary: #a9b1d6;
-  --text-muted: #565f89;
-
-  /* Border */
-  --border-color: #414868;
-}
-
 /* ===== BASE CONTAINER ===== */
 .dashboard-container {
   padding: 2rem;
@@ -64,10 +33,10 @@
 
 .main-title {
   font-size: 2.25rem;
-  color: var(--rose-gold);
+  color: var(--rose-gold-main);
   margin: 0 0 0.5rem 0;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--rose-gold), var(--accent-rose));
+  background: var(--rose-gold-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -98,11 +67,11 @@
 }
 
 .executive-card {
-  background: linear-gradient(135deg, var(--card-bg) 0%, var(--secondary-bg) 100%);
-  border-radius: 12px;
+  background: var(--card-bg);
+  border-radius: var(--border-radius-polished);
   padding: 1.75rem;
-  border: 1px solid rgba(232, 180, 184, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-polished);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
@@ -115,7 +84,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at top right, rgba(232, 180, 184, 0.1), transparent 70%);
+  background: radial-gradient(circle at top right, rgba(235, 188, 186, 0.1), transparent 70%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -130,8 +99,8 @@
 
 .executive-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(232, 180, 184, 0.3);
-  border-color: var(--rose-gold);
+  box-shadow: var(--shadow-polished-hover);
+  border-color: var(--rose-gold-main);
 }
 
 .executive-card-icon {
@@ -158,15 +127,14 @@
   font-size: 0.85rem;
   margin-top: 0.75rem;
   font-weight: 600;
-  padding: 0.4rem 0.8rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
+  padding: 0.4rem 0.8rem;  background: var(--primary-bg);
+  border-radius: var(--border-radius-polished);
   display: inline-block;
 }
 
 /* ===== INTELLIGENT ALERTS ===== */
 .intelligent-alerts-section {
-  background: var(--card-bg);
+  background: var(--secondary-bg);
   border-radius: 12px;
   margin-bottom: 2.5rem;
   border: 1px solid var(--border-color);
@@ -184,7 +152,7 @@
 }
 
 .alerts-header:hover {
-  background: var(--hover-bg);
+  background: var(--border-color);
 }
 
 .section-title {
@@ -198,7 +166,7 @@
 }
 
 .alert-badge {
-  background: linear-gradient(135deg, var(--dusty-pink), var(--peachy-rose));
+  background: var(--rose-gold-gradient);
   color: white;
   padding: 0.25rem 0.65rem;
   border-radius: 12px;
@@ -212,8 +180,8 @@
 }
 
 .alert-card {
-  background: var(--secondary-bg);
-  border-left: 4px solid var(--dusty-pink);
+  background: var(--primary-bg);
+  border-left: 4px solid var(--rose-gold-main);
   border-radius: 8px;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1rem;
@@ -226,7 +194,7 @@
 }
 
 .alert-card:hover {
-  background: var(--hover-bg);
+  background: var(--secondary-bg);
   transform: translateX(4px);
 }
 
@@ -258,7 +226,7 @@
 
 /* ===== ACTIVITY TIMELINE ===== */
 .activity-timeline-section {
-  background: var(--card-bg);
+  background: var(--secondary-bg);
   border-radius: 12px;
   margin-bottom: 2.5rem;
   border: 1px solid var(--border-color);
@@ -276,7 +244,7 @@
 }
 
 .timeline-header:hover {
-  background: var(--hover-bg);
+  background: var(--border-color);
 }
 
 .timeline-container {
@@ -287,8 +255,7 @@
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1rem;
-  background: var(--secondary-bg);
+  padding: 1rem;  background: var(--primary-bg);
   border-radius: 8px;
   margin-bottom: 0.75rem;
   transition: all 0.2s ease;
@@ -299,7 +266,7 @@
 }
 
 .timeline-item:hover {
-  background: var(--hover-bg);
+  background: var(--secondary-bg);
   transform: translateX(4px);
 }
 
@@ -309,7 +276,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--rose-gold), var(--accent-rose));
+  background: var(--rose-gold-gradient);
   border-radius: 50%;
   color: white;
   flex-shrink: 0;
@@ -354,7 +321,7 @@
 
 /* ===== ENHANCED PIPELINE TABLE ===== */
 .hiring-pipeline-section {
-  background-color: var(--card-bg);
+  background: var(--card-bg);
   padding: 1.5rem;
   border-radius: 12px;
   margin-bottom: 2.5rem;
@@ -370,23 +337,24 @@
 }
 
 .btn-premium {
-  background: linear-gradient(135deg, var(--rose-gold), var(--accent-rose));
+  background: var(--rose-gold-gradient);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--border-radius-polished);
   padding: 0.75rem 1.5rem;
-  color: var(--primary-bg);
-  font-weight: 600;
+  color: var(--primary-bg); /* Dark text on light gradient */
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 8px rgba(232, 180, 184, 0.3);
+  box-shadow: var(--shadow-polished);
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .btn-premium:hover {
+  background: var(--rose-gold-gradient-hover);
+  box-shadow: var(--shadow-polished-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(232, 180, 184, 0.5);
 }
 
 .btn-premium.btn-small {
@@ -400,14 +368,14 @@
 
 .pipeline-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0 8px;
 }
 
 .pipeline-table th,
 .pipeline-table td {
   padding: 0.875rem;
   text-align: center;
-  border-bottom: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: 0.9rem;
 }
@@ -417,17 +385,18 @@
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.8rem;
-  border-bottom: 2px solid var(--border-color);
-  background: var(--secondary-bg);
+  background: none;
 }
 
 .pipeline-row-enhanced {
   cursor: pointer;
   transition: all 0.2s ease;
+  background: var(--secondary-bg);
+  border-radius: var(--border-radius-polished);
 }
 
 .pipeline-row-enhanced:hover {
-  background-color: var(--hover-bg);
+  background-color: var(--border-color);
 }
 
 .pipeline-table td:first-child,
@@ -464,43 +433,43 @@
 }
 
 .pipeline-table td:nth-child(3) .stage-count {
-  border-color: #565f89;
-  color: #565f89;
+  border-color: var(--status-purple);
+  color: var(--status-purple);
 }
 
 .pipeline-table td:nth-child(4) .stage-count {
-  border-color: #bb9af7;
-  color: #bb9af7;
+  border-color: var(--status-blue);
+  color: var(--status-blue);
 }
 
 .pipeline-table td:nth-child(5) .stage-count {
-  border-color: #7aa2f7;
-  color: #7aa2f7;
+  border-color: var(--status-yellow);
+  color: var(--status-yellow);
 }
 
 .pipeline-table td:nth-child(6) .stage-count {
-  border-color: #73daca;
-  color: #73daca;
+  border-color: var(--rose-gold-main);
+  color: var(--rose-gold-main);
 }
 
 .pipeline-table td:nth-child(7) .stage-count {
-  border-color: #e0af68;
-  color: #e0af68;
+  border-color: var(--rose-gold-shine);
+  color: var(--rose-gold-shine);
 }
 
 .pipeline-table td:nth-child(8) .stage-count {
-  border-color: #a9b1d6;
-  color: #a9b1d6;
+  border-color: var(--status-green);
+  color: var(--status-green);
 }
 
 .pipeline-table td:nth-child(9) .stage-count {
-  border-color: #9ece6a;
-  color: #9ece6a;
+  border-color: var(--status-green);
+  color: var(--status-green);
 }
 
 .pipeline-table td:nth-child(10) .stage-count {
-  border-color: #f7768e;
-  color: #f7768e;
+  border-color: var(--status-red);
+  color: var(--status-red);
 }
 
 .pipeline-table .arrow {
@@ -509,27 +478,27 @@
 }
 
 .pipeline-table td:nth-child(3) .arrow {
-  color: #bb9af7;
+  color: var(--status-blue);
 }
 
 .pipeline-table td:nth-child(4) .arrow {
-  color: #7aa2f7;
+  color: var(--status-yellow);
 }
 
 .reject-stage .stage-count {
-  color: #f7768e;
-  border-color: #f7768e;
+  color: var(--status-red);
+  border-color: var(--status-red);
 }
 
 .expanded-stats-row {
-  background: var(--secondary-bg) !important;
+  background: var(--primary-bg) !important;
 }
 
 .expanded-stats-content {
   display: flex;
   gap: 2rem;
   padding: 1rem;
-  border-left: 4px solid var(--rose-gold);
+  border-left: 4px solid var(--rose-gold-main);
   border-radius: 6px;
 }
 
@@ -539,7 +508,7 @@
 }
 
 .stat-item strong {
-  color: var(--rose-gold);
+  color: var(--rose-gold-main);
   margin-right: 0.5rem;
 }
 
@@ -558,7 +527,7 @@
 }
 
 .calls-column {
-  background-color: var(--card-bg);
+  background: var(--card-bg);
   padding: 1.5rem;
   border-radius: 12px;
   border: 1px solid var(--border-color);
@@ -589,7 +558,7 @@
 }
 
 .calls-list li:hover {
-  background-color: var(--hover-bg);
+  background-color: var(--secondary-bg);
 }
 
 .call-info-main {
@@ -601,8 +570,8 @@
 .call-time {
   font-size: 0.85rem;
   font-weight: bold;
-  color: var(--rose-gold);
-  background-color: rgba(232, 180, 184, 0.15);
+  color: var(--rose-gold-main);
+  background-color: rgba(235, 188, 186, 0.15);
   padding: 0.35rem 0.65rem;
   border-radius: 6px;
   min-width: 60px;
@@ -634,8 +603,8 @@
 }
 
 .btn-call-linkedin:hover {
-  color: var(--rose-gold);
-  background-color: var(--hover-bg);
+  color: var(--rose-gold-main);
+  background-color: var(--secondary-bg);
 }
 
 .no-calls-message {
@@ -739,13 +708,13 @@
 
 .calls-list::-webkit-scrollbar-thumb,
 .pipeline-table-container::-webkit-scrollbar-thumb {
-  background: var(--rose-gold);
+  background: var(--rose-gold-main);
   border-radius: 4px;
 }
 
 .calls-list::-webkit-scrollbar-thumb:hover,
 .pipeline-table-container::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-rose);
+  background: var(--rose-gold-shine);
 }
 
 
@@ -780,7 +749,7 @@
 }
 
 .btn-close-modal:hover {
-    color: var(--accent-red);
+    color: var(--status-red);
 }
 
 .modal-footer {
@@ -812,7 +781,7 @@
 }
 
 .attention-item {
-    background: var(--card-bg);
+    background: var(--primary-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1rem;
@@ -823,8 +792,8 @@
 }
 
 .attention-item:hover {
-    background: var(--hover-bg);
-    border-color: var(--rose-gold);
+    background: var(--secondary-bg);
+    border-color: var(--rose-gold-main);
 }
 
 .attention-info {
@@ -863,12 +832,12 @@
 
 .btn-drill-down-themed {
     /* Themed button style to replace white button */
-    background: linear-gradient(135deg, var(--soft-lavender), var(--mint-cream));
-    color: var(--main-bg);
+    background: var(--rose-gold-gradient);
+    color: var(--primary-bg);
     border: none;
     padding: 0.6rem 1.2rem;
-    border-radius: 6px;
-    font-weight: 600;
+    border-radius: var(--border-radius-polished);
+    font-weight: bold;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
@@ -877,8 +846,9 @@
 }
 
 .btn-drill-down-themed:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(197, 185, 214, 0.4); 
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-polished-hover);
+    background: var(--rose-gold-gradient-hover);
 }
 
 /* Outreach Breakdown Table Styles - Improved Spacing/Layout */
@@ -895,13 +865,13 @@
     padding: 1rem 0.5rem;
     font-size: 0.8rem;
     text-align: left;
-    color: var(--rose-gold);
+    color: var(--rose-gold-main);
     border-bottom: 2px solid var(--border-color);
 }
 
 .outreach-breakdown-table td {
     padding: 1rem 0.5rem;
-    background: var(--card-bg);
+    background: var(--primary-bg);
     border-bottom: 1px solid var(--border-color);
     font-size: 0.95rem;
 }
@@ -911,7 +881,7 @@
 }
 
 .outreach-breakdown-table tbody tr:hover {
-    background: var(--hover-bg);
+    background: var(--secondary-bg);
 }
 
 .status-pill {

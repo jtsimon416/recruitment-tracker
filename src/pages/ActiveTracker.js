@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Search, ChevronDown, ChevronUp, Binoculars, FileText } from 'lucide-react';
 import { useConfirmation } from '../contexts/ConfirmationContext';
@@ -69,6 +69,7 @@ function ActiveTracker() {
   const { newCommentCandidateIds, clearCommentNotifications, user, createNotification, recruiters } = useData();
   const location = useLocation();
   
+  const navigate = useNavigate();
   const [pipeline, setPipeline] = useState([]);
   const [positions, setPositions] = useState([]);
   const [view, setView] = useState('list');
@@ -326,6 +327,19 @@ function ActiveTracker() {
     updateCandidateStatus(id, newStatus);
   };
   
+  const handleScheduleInterview = (candidateId, candidateName, positionId, positionTitle) => {
+    navigate('/interview-hub', {
+      state: {
+        fromActiveTracker: {
+          candidate_id: candidateId,
+          candidate_name: candidateName,
+          position_id: positionId,
+          position_title: positionTitle,
+          isScheduling: true, // Flag to auto-open modal
+        },
+      },
+    });
+  };
   const handleRemove = (id) => {
     if (confirmDeleteId === id) {
       removeCandidateFromPipeline(id);
@@ -624,6 +638,12 @@ function ActiveTracker() {
                          <div className="comments-button-wrapper">
                             <button className="btn-comments" onClick={(e) => { e.stopPropagation(); openCommentsModal(item); }}>Comments</button>
                          </div>
+                         <button 
+                            className="btn-secondary" 
+                            onClick={(e) => { e.stopPropagation(); handleScheduleInterview(item.candidates.id, item.candidates.name, item.position_id, item.positions.title); }}
+                          >
+                            Schedule Interview
+                          </button>
                          <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={(e) => { e.stopPropagation(); handleRemove(item.id); }}>
                             {confirmDeleteId === item.id ? 'Confirm Delete' : 'Remove'} 
                          </button>
@@ -692,17 +712,31 @@ function ActiveTracker() {
                                       )}
                                       {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small" title="New feedback available"></div>}
                                     </div>
-                                  </div>
-                                  <div className="card-body">
-                                    <p><strong>Position:</strong> {item.positions?.title}</p>
-                                    <p><strong>Recruiter:</strong> {item.recruiters?.name}</p>
-                                    <p><strong>Phone:</strong> {item.candidates?.phone || 'N/A'}</p>
+                                  </div>                                  <div className="card-body">
+                                    <div className="card-info-row">
+                                      <span className="card-label">Position:</span>
+                                      <span className="card-value">{item.positions?.title}</span>
+                                    </div>
+                                    <div className="card-info-row">
+                                      <span className="card-label">Recruiter:</span>
+                                      <span className="card-value">{item.recruiters?.name}</span>
+                                    </div>
+                                    <div className="card-info-row">
+                                      <span className="card-label">Phone:</span>
+                                      <span className="card-value">{item.candidates?.phone || 'N/A'}</span>
+                                    </div>
                                     <select className="status-select" value={item.status || 'Active'} onChange={(e) => handleStatusChange(item.id, e.target.value)}>
                                       {statuses.map(status => <option key={status} value={status}>{status}</option>)}
                                     </select>
                                   </div>
                                   <div className="card-actions">
                                     <button className="btn-comments" onClick={() => openCommentsModal(item)}>Comments</button>
+                                    <button 
+                                      className="btn-secondary" 
+                                      onClick={() => handleScheduleInterview(item.candidate_id, item.candidates.name, item.position_id, item.positions.title)}
+                                    >
+                                      Schedule Interview
+                                    </button>
                                     <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={() => handleRemove(item.id)}>
                                        {confirmDeleteId === item.id ? 'Confirm Delete' : 'Remove'}
                                     </button>

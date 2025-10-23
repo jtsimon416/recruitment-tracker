@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { supabase } from '../services/supabaseClient';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion'; // Keep AnimatePresence
+import { useNavigate } from 'react-router-dom';
 import mammoth from 'mammoth';
 import {
   ExternalLink, Eye, Edit, Trash2, ChevronUp, ChevronDown,
@@ -608,7 +609,9 @@ const QuickRatingScreen = ({ contacts, onComplete }) => {
 // MAIN COMPONENT
 // ===================================
 function RecruiterOutreach() {
-  const { userProfile, fetchMyOutreachActivities, addOutreachActivity, updateOutreachActivity, deleteOutreachActivity, positions, fetchPositions } = useData();
+  const navigate = useNavigate();
+  // showConfirmation is needed for the new functions
+  const { userProfile, fetchMyOutreachActivities, addOutreachActivity, updateOutreachActivity, deleteOutreachActivity, positions, fetchPositions, showConfirmation } = useData();
 
   // --- ADDED: Reusable list of stages for dropdowns ---
   const outreachStages = [
@@ -657,6 +660,11 @@ function RecruiterOutreach() {
 
   // Expanded Row State
   const [expandedRowId, setExpandedRowId] = useState(null);
+
+  // Edit Modal State
+  const [showPipelineModal, setShowPipelineModal] = useState(false);
+  const [selectedOutreach, setSelectedOutreach] = useState(null);
+  const [existingCandidateId, setExistingCandidateId] = useState(null);
 
   // Edit Modal State
   const [editingActivity, setEditingActivity] = useState(null);
@@ -1078,6 +1086,70 @@ function RecruiterOutreach() {
   };
   // -----------------------------------------------------------
 
+  const handleConvertToPipeline = async (outreach) => {
+    // 1. Check if candidate exists based on LinkedIn URL
+    if (!outreach.linkedin_url) { // Changed from candidate_linkedin to linkedin_url
+      showConfirmation({ type: 'error', title: 'Missing URL', message: 'Please add a LinkedIn URL to this outreach log before converting.' });
+      return;
+    }
+
+    const { data: existing, error } = await supabase
+      .from('candidates')
+      .select('id, name')
+      .eq('linkedin_url', outreach.linkedin_url) // Changed from candidate_linkedin to linkedin_url
+      .single();
+
+    if (existing) {
+      // SCENARIO 2: Candidate Exists
+      setExistingCandidateId(existing.id);
+      setSelectedOutreach(outreach);
+      setShowPipelineModal(true);
+    } else {
+      // SCENARIO 1: New Candidate
+      // Redirect to Talent Pool with state
+      navigate('/talent-pool', { 
+        state: { 
+          fromOutreach: {
+            name: outreach.candidate_name,
+            linkedin_url: outreach.linkedin_url,
+            notes: outreach.notes,
+            position_id: outreach.position_id
+          }
+        } 
+      });
+    }
+  };
+
+  const handlePipelineSubmit = async (e) => {
+    e.preventDefault();
+    const positionId = e.target.position_id.value;
+    const stage = e.target.stage.value;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: recruiter } = await supabase.from('recruiters').select('id').eq('email', user.email).single();
+
+    if (!recruiter) {
+      showConfirmation({ type: 'error', title: 'Error', message: 'Could not find your recruiter profile.' });
+      return;
+    }
+
+    const { error } = await supabase.from('pipeline').insert([{
+      candidate_id: existingCandidateId,
+      position_id: positionId,
+      stage: stage,
+      recruiter_id: recruiter.id
+    }]);
+
+    if (error) {
+      showConfirmation({ type: 'error', title: 'Error', message: `Save failed: ${error.message}` });
+    } else {
+      showConfirmation({ type: 'success', title: 'Success!', message: 'Candidate added to pipeline.' });
+      setShowPipelineModal(false);
+      setSelectedOutreach(null);
+      setExistingCandidateId(null);
+    }
+  };
+
   // ===================================
   // RENDER
   // ===================================
@@ -1438,6 +1510,13 @@ function RecruiterOutreach() {
                           </div>
                         </td>
                       </tr>
+                      <tr>
+                        <td colSpan="6" className="convert-to-pipeline-cell">
+                          {activity.activity_status === 'ready_for_submission' && (
+                            <button className="btn-primary" onClick={() => handleConvertToPipeline(activity)}>Convert to Pipeline</button>
+                          )}
+                        </td>
+                      </tr>
 
                       {isExpanded && (
                         <tr className="expanded-row-details">
@@ -1664,6 +1743,35 @@ function RecruiterOutreach() {
           onComplete={handleQuickRatingComplete}
         />
       )}
+
+      {showPipelineModal && selectedOutreach && (
+        <div className="modal-overlay" onClick={() => setShowPipelineModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Add to Pipeline</h2>
+            <form onSubmit={handlePipelineSubmit}>
+              <div className="form-group">
+                <label>Position *</label>
+                <select name="position_id" defaultValue={selectedOutreach.position_id} required>
+                  {positions.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Stage</label>
+                <select name="stage" defaultValue="Screening">
+                  <option>Screening</option>
+                  <option>Submit to Client</option>
+                  {/* Add other stages if needed */}
+                </select>
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="btn-primary">Add to Pipeline</button>
+                <button type="button" className="btn-secondary" onClick={() => setShowPipelineModal(false)}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

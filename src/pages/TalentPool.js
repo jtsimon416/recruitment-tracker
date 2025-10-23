@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../services/supabaseClient';
 import * as mammoth from 'mammoth';
-import { Pen, Trash, ChevronDown, ChevronUp, X, Filter } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Pen, Trash, ChevronDown, ChevronUp, X, Filter, Clipboard } from 'lucide-react';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import WordDocViewerModal from '../components/Worddocviewermodal';
 import '../styles/TalentPool.css';
@@ -197,6 +198,8 @@ const AdvancedFilterPanel = ({
 };
 
 function TalentPool() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { showConfirmation } = useConfirmation();
   const [candidates, setCandidates] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -206,7 +209,6 @@ function TalentPool() {
   const [comments, setComments] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
   const [positions, setPositions] = useState([]);
-  const [recruiters, setRecruiters] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [wordDocHtml, setWordDocHtml] = useState('');
@@ -250,6 +252,7 @@ function TalentPool() {
   const [showWordDocModal, setShowWordDocModal] = useState(false);
   const [wordDocUrl, setWordDocUrl] = useState('');
   const [wordDocCandidateName, setWordDocCandidateName] = useState('');
+  const [positionToAutoAdd, setPositionToAutoAdd] = useState(null);
   
   const [pipelineData, setPipelineData] = useState({
     position_id: '',
@@ -265,6 +268,30 @@ function TalentPool() {
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSkillSearchTerm(skillSearchTerm), 200);
     return () => clearTimeout(timer);
+  }, [skillSearchTerm]);
+
+  useEffect(() => {
+    if (location.state?.fromOutreach) {
+      const { fromOutreach } = location.state;
+
+      // Open the form
+      setShowForm(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Pre-populate the form
+      setCandidateFormData(prevData => ({
+        ...prevData,
+        name: fromOutreach.name || '',
+        linkedin_url: fromOutreach.linkedin_url || '',
+        notes: fromOutreach.notes || '',
+      }));
+
+      // Store the position_id for later
+      setPositionToAutoAdd(fromOutreach.position_id);
+
+      // Clear the state from location to prevent re-trigger
+      navigate(location.pathname, { replace: true, state: {} });
+    }
   }, [skillSearchTerm]);
   
   const BUCKET_NAME = 'resumes'; 
@@ -309,10 +336,6 @@ function TalentPool() {
       (async () => {
         const { data, error } = await supabase.from('positions').select('*').order('title');
         if (error) console.error('Error loading positions:', error); else setPositions(data || []);
-      })(),
-      (async () => {
-        const { data, error } = await supabase.from('recruiters').select('*').order('name');
-        if (error) console.error('Error loading recruiters:', error); else setRecruiters(data || []);
       })(),
       (async () => {
         const { data, error } = await supabase.from('pipeline').select('candidate_id');
@@ -392,6 +415,41 @@ function TalentPool() {
       setActiveQuickFilter('addedThisWeek');
     }
   }, [clearAllFilters, activeQuickFilter]);
+
+  const handlePasteFromClipboard = async (fieldName) => {
+    try {
+      const text = await navigator.clipboard.readText();
+
+      if (fieldName === 'skills') {
+        // This field expects an array.
+        // Split the pasted text by commas, newlines, or bullets.
+        const newTags = text
+          .split(/[,\n•\-*]/) // Split by common delimiters
+          .map(tag => tag.trim())
+          .filter(tag => tag); // Remove empty strings
+
+        // Update the state, merging with any existing tags
+        setCandidateFormData(prevData => {
+          // Ensure prevData.skills is always an array
+          const existingTags = Array.isArray(prevData.skills) ? prevData.skills : [];
+          // Filter out duplicates
+          const uniqueNewTags = newTags.filter(tag => !existingTags.includes(tag));
+          return {
+            ...prevData,
+            skills: [...existingTags, ...uniqueNewTags]
+          };
+        });
+
+      } else {
+        // This is for all other fields (name, email, notes, etc.)
+        // They expect a string.
+        setCandidateFormData(prevData => ({ ...prevData, [fieldName]: text }));
+      }
+    } catch (err) {
+      console.error('Failed to read clipboard contents: ', err);
+    }
+  };
+
 
   async function handleFileUpload(e) {
     const file = e.target.files[0];
@@ -651,11 +709,67 @@ function TalentPool() {
       <div className="form-panel">
         <h2>{editingCandidate ? `Edit: ${editingCandidate.name}` : 'Add Candidate'}</h2>
         <form onSubmit={handleManualSubmit}>
-          <div className="form-row"><div className="form-group"><label>Full Name *</label><input type="text" required value={candidateFormData.name} onChange={(e) => setCandidateFormData({...candidateFormData, name: e.target.value})} /></div><div className="form-group"><label>Email</label><input type="email" value={candidateFormData.email} onChange={(e) => setCandidateFormData({...candidateFormData, email: e.target.value})} /></div></div>
-          <div className="form-row"><div className="form-group"><label>Phone</label><input type="tel" value={candidateFormData.phone} onChange={(e) => setCandidateFormData({...candidateFormData, phone: e.target.value})} /></div><div className="form-group"><label>Location</label><input type="text" value={candidateFormData.location} onChange={(e) => setCandidateFormData({...candidateFormData, location: e.target.value})} /></div></div>
-          <div className="form-group"><label>LinkedIn URL</label><input type="text" value={candidateFormData.linkedin_url} onChange={(e) => setCandidateFormData({...candidateFormData, linkedin_url: e.target.value})} /></div>
-          <div className="form-group"><label>Skills</label><TagInput tags={candidateFormData.skills} setTags={(skills) => setCandidateFormData({...candidateFormData, skills})} /></div>
-          <div className="form-group"><label>Notes / Summary</label><textarea rows="4" value={candidateFormData.notes} onChange={(e) => setCandidateFormData({...candidateFormData, notes: e.target.value})} /></div>
+          <div className="form-row"><div className="form-group">
+  <label>Full Name *</label>
+  <div className="input-with-button">
+    <input type="text" required value={candidateFormData.name} onChange={(e) => setCandidateFormData({...candidateFormData, name: e.target.value})} />
+    <button type="button" className="btn-paste" onClick={() => handlePasteFromClipboard('name')} title="Paste from Clipboard">
+      <Clipboard size={16} />
+    </button>
+  </div>
+</div><div className="form-group">
+  <label>Email</label>
+  <div className="input-with-button">
+    <input type="email" value={candidateFormData.email} onChange={(e) => setCandidateFormData({...candidateFormData, email: e.target.value})} />
+    <button type="button" className="btn-paste" onClick={() => handlePasteFromClipboard('email')} title="Paste from Clipboard">
+      <Clipboard size={16} />
+    </button>
+  </div>
+</div></div>
+          <div className="form-row"><div className="form-group">
+  <label>Phone</label>
+  <div className="input-with-button">
+    <input type="tel" value={candidateFormData.phone} onChange={(e) => setCandidateFormData({...candidateFormData, phone: e.target.value})} />
+    <button type="button" className="btn-paste" onClick={() => handlePasteFromClipboard('phone')} title="Paste from Clipboard">
+      <Clipboard size={16} />
+    </button>
+  </div>
+</div><div className="form-group">
+  <label>Location</label>
+  <div className="input-with-button">
+    <input type="text" value={candidateFormData.location} onChange={(e) => setCandidateFormData({...candidateFormData, location: e.target.value})} />
+    <button type="button" className="btn-paste" onClick={() => handlePasteFromClipboard('location')} title="Paste from Clipboard">
+      <Clipboard size={16} />
+    </button>
+  </div>
+</div></div>
+          <div className="form-group">
+  <label>LinkedIn URL</label>
+  <div className="input-with-button">
+    <input type="text" value={candidateFormData.linkedin_url} onChange={(e) => setCandidateFormData({...candidateFormData, linkedin_url: e.target.value})} />
+    <button type="button" className="btn-paste" onClick={() => handlePasteFromClipboard('linkedin_url')} title="Paste from Clipboard">
+      <Clipboard size={16} />
+    </button>
+  </div>
+</div>
+          <div className="form-group form-group-with-button">
+  <label>
+    Skills
+    <button type="button" className="btn-paste-label" onClick={() => handlePasteFromClipboard('skills')} title="Paste raw text into Skills box">
+      <Clipboard size={14} /> Paste
+    </button>
+  </label>
+  <TagInput tags={candidateFormData.skills} setTags={(skills) => setCandidateFormData({...candidateFormData, skills})} />
+</div>
+          <div className="form-group form-group-with-button">
+  <label>
+    Notes / Summary
+    <button type="button" className="btn-paste-label" onClick={() => handlePasteFromClipboard('notes')} title="Paste from Clipboard">
+      <Clipboard size={14} /> Paste
+    </button>
+  </label>
+  <textarea rows="4" value={candidateFormData.notes} onChange={(e) => setCandidateFormData({...candidateFormData, notes: e.target.value})} />
+</div>
           <div className="form-group file-upload-section">
             <label>Document Upload</label>
             <div className="document-type-selector">
