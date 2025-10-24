@@ -732,102 +732,106 @@ function RecruiterOutreach() {
   };
 
   // ===================================
-  // DUPLICATE CHECK FUNCTION
+  // DUPLICATE CHECK FUNCTION - THREE SCENARIO LOGIC
   // ===================================
+  // SCENARIO 1: Hard Block - Actively Owned (in pipeline or active outreach)
+  // SCENARIO 2: Allow & Re-engage - In Talent Pool but Available
+  // SCENARIO 3: New Candidate - Not found anywhere
 
   const checkForDuplicates = async (urls) => {
     try {
-      // Normalize all URLs for comparison
-      const normalizedUrls = urls.map(url => normalizeLinkedInURL(url)).filter(url => url);
+      const duplicatesFound = [];
+      const allowedUrls = [];
 
-      if (normalizedUrls.length === 0) {
-        return [];
-      }
+      for (const url of urls) {
+        const normalizedUrl = normalizeLinkedInURL(url);
 
-      // Query all three data sources in parallel
-      const [outreachResults, candidatesResults, pipelineResults] = await Promise.all([
-        // 1. Check recruiter_outreach table (all recruiters)
-        supabase
-          .from('recruiter_outreach')
-          .select('linkedin_url, candidate_name, recruiter_id, recruiters(name)')
-          .in('linkedin_url', urls), // Supabase will handle normalization on their end
-
-        // 2. Check candidates table (talent pool)
-        supabase
+        // SCENARIO 1a: Hard Block - Check if in Active Pipeline
+        // First, find the candidate by LinkedIn URL (normalize for comparison)
+        const { data: allCandidatesForPipeline } = await supabase
           .from('candidates')
-          .select('linkedin_url, name')
-          .in('linkedin_url', urls),
+          .select('id, name, linkedin_url');
 
-        // 3. Check pipeline table (active tracker)
-        supabase
-          .from('pipeline')
-          .select('candidate_id, position_id, candidates(linkedin_url, name), positions(title)')
-          .eq('status', 'Active')
-      ]);
+        const candidateForPipeline = allCandidatesForPipeline?.find(candidate =>
+          normalizeLinkedInURL(candidate.linkedin_url) === normalizedUrl
+        );
 
-      const duplicates = [];
+        if (candidateForPipeline) {
+          // Now check if this candidate is in active pipeline
+          const { data: pipelineCheck } = await supabase
+            .from('pipeline')
+            .select('id, candidate_id, recruiters(name), positions(title), status')
+            .eq('candidate_id', candidateForPipeline.id)
+            .eq('status', 'Active')
+            .maybeSingle();
 
-      // Process recruiter_outreach duplicates
-      if (outreachResults.data) {
-        outreachResults.data.forEach(record => {
-          const normalizedRecord = normalizeLinkedInURL(record.linkedin_url);
-          if (normalizedUrls.includes(normalizedRecord)) {
-            duplicates.push({
-              url: record.linkedin_url,
-              candidateName: record.candidate_name || 'Unknown',
-              location: `Already in ${record.recruiters?.name || 'another recruiter'}'s outreach`,
-              source: 'outreach'
+          if (pipelineCheck) {
+            duplicatesFound.push({
+              url: url,
+              candidateName: candidateForPipeline.name,
+              location: `Active Pipeline - ${pipelineCheck.positions?.title || 'Unknown Position'}`,
+              owner: pipelineCheck.recruiters?.name || 'Unknown Recruiter'
             });
+            continue;
           }
+        }
+
+        // SCENARIO 1b: Hard Block - Check if in Active Outreach (not gone_cold or declined)
+        const { data: outreachCheck } = await supabase
+          .from('recruiter_outreach')
+          .select('id, candidate_name, recruiters(name), positions(title), activity_status')
+          .eq('linkedin_url', normalizedUrl)
+          .not('activity_status', 'in', '(gone_cold,declined)')
+          .maybeSingle();
+
+        if (outreachCheck) {
+          duplicatesFound.push({
+            url: url,
+            candidateName: outreachCheck.candidate_name,
+            location: `Active Outreach - ${outreachCheck.positions?.title || 'Unknown Position'}`,
+            owner: outreachCheck.recruiters?.name || 'Unknown Recruiter'
+          });
+          continue;
+        }
+
+        // SCENARIO 2: Allow & Re-engage - Check if in Talent Pool
+        // We need to fetch ALL candidates and normalize their URLs for comparison
+        // because the database might store URLs with https:// prefix
+        const { data: allCandidates } = await supabase
+          .from('candidates')
+          .select('id, name, linkedin_url');
+
+        // Find a match by normalizing each candidate's URL
+        const talentPoolMatch = allCandidates?.find(candidate =>
+          normalizeLinkedInURL(candidate.linkedin_url) === normalizedUrl
+        );
+
+        if (talentPoolMatch) {
+          // Found in Talent Pool, not actively owned - ALLOW
+          allowedUrls.push({
+            url: url,
+            candidateId: talentPoolMatch.id,
+            candidateName: talentPoolMatch.name,
+            isReengagement: true
+          });
+          continue;
+        }
+
+        // SCENARIO 3: New Candidate - Not found anywhere
+        allowedUrls.push({
+          url: url,
+          candidateId: null,
+          candidateName: extractNameFromLinkedInURL(url) || 'Unknown Name',
+          isReengagement: false
         });
       }
 
-      // Process candidates (talent pool) duplicates
-      if (candidatesResults.data) {
-        candidatesResults.data.forEach(record => {
-          const normalizedRecord = normalizeLinkedInURL(record.linkedin_url);
-          if (normalizedUrls.includes(normalizedRecord)) {
-            // Check if not already added from outreach
-            const alreadyAdded = duplicates.some(d => normalizeLinkedInURL(d.url) === normalizedRecord);
-            if (!alreadyAdded) {
-              duplicates.push({
-                url: record.linkedin_url,
-                candidateName: record.name || 'Unknown',
-                location: 'Already in Talent Pool',
-                source: 'talent_pool'
-              });
-            }
-          }
-        });
-      }
-
-      // Process pipeline (active tracker) duplicates
-      if (pipelineResults.data) {
-        pipelineResults.data.forEach(record => {
-          if (record.candidates?.linkedin_url) {
-            const normalizedRecord = normalizeLinkedInURL(record.candidates.linkedin_url);
-            if (normalizedUrls.includes(normalizedRecord)) {
-              // Check if not already added
-              const alreadyAdded = duplicates.some(d => normalizeLinkedInURL(d.url) === normalizedRecord);
-              if (!alreadyAdded) {
-                duplicates.push({
-                  url: record.candidates.linkedin_url,
-                  candidateName: record.candidates.name || 'Unknown',
-                  location: `Already in Active Tracker for "${record.positions?.title || 'Unknown Position'}" position`,
-                  source: 'pipeline'
-                });
-              }
-            }
-          }
-        });
-      }
-
-      return duplicates;
+      return { duplicatesFound, allowedUrls };
 
     } catch (error) {
       console.error('Error checking for duplicates:', error);
       alert('Error checking for duplicates. Please try again.');
-      return [];
+      return { duplicatesFound: [], allowedUrls: [] };
     }
   };
 
@@ -872,30 +876,30 @@ function RecruiterOutreach() {
   const confirmBulkUpload = async () => {
     if (!bulkPreview || bulkPreview.length === 0) return;
 
-    // --- ADDED: Duplicate check before upload ---
+    // --- UPDATED: Three-scenario duplicate check ---
     setCheckingDuplicates(true);
 
     try {
       const urlsToCheck = bulkPreview.map(contact => contact.url);
-      const duplicates = await checkForDuplicates(urlsToCheck);
+      const { duplicatesFound, allowedUrls } = await checkForDuplicates(urlsToCheck);
 
       setCheckingDuplicates(false);
 
-      if (duplicates.length > 0) {
+      if (duplicatesFound.length > 0) {
         // Duplicates found - block upload and show modal
-        setDuplicatesFound(duplicates);
+        setDuplicatesFound(duplicatesFound);
         setShowDuplicateModal(true);
         return; // Stop the upload process
       }
 
-      // No duplicates - proceed with upload
+      // No duplicates - proceed with upload of allowed URLs
       setProcessingBulk(true);
 
-      const insertData = bulkPreview.map(contact => ({
+      const insertData = allowedUrls.map(item => ({
         recruiter_id: userProfile.id,
         position_id: selectedBulkPosition,
-        linkedin_url: contact.url,
-        candidate_name: contact.name,
+        linkedin_url: item.url,
+        candidate_name: item.candidateName,
         activity_status: 'outreach_sent',
         rating: 0,
         followup_needed: false,
@@ -910,7 +914,16 @@ function RecruiterOutreach() {
 
       if (error) throw error;
 
-      alert(`✅ Successfully added ${bulkPreview.length} contacts!`);
+      // Show success message with re-engagement count
+      const reengagementCount = allowedUrls.filter(u => u.isReengagement).length;
+      const newCount = allowedUrls.length - reengagementCount;
+
+      let message = `✅ Successfully added ${allowedUrls.length} contact${allowedUrls.length === 1 ? '' : 's'}!`;
+      if (reengagementCount > 0) {
+        message += ` (${reengagementCount} re-engaged from Talent Pool)`;
+      }
+
+      alert(message);
 
       setBulkUploadText('');
       setSelectedBulkPosition('');

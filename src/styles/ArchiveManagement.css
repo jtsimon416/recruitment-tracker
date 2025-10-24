@@ -1,0 +1,338 @@
+/* ===================================
+   ARCHIVE MANAGEMENT & SOURCING HISTORY STYLES
+   Dark Theme with Rose Gold Accents
+   =================================== */
+
+/* ===================================
+   ARCHIVE MANAGEMENT SECTION
+   =================================== */
+
+.archive-management-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.archive-section-title {
+  color: #e8b4b8;
+  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.archive-position-selector {
+  width: 100%;
+  padding: 0.75rem;
+  background: #24283b;
+  border: 1px solid #414868;
+  border-radius: 8px;
+  color: #f0f0f0;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.archive-position-selector:hover {
+  border-color: #e8b4b8;
+}
+
+.archive-position-selector:focus {
+  outline: none;
+  border-color: #e8b4b8;
+  box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
+}
+
+.archive-position-selector option {
+  background: #24283b;
+  color: #f0f0f0;
+  padding: 0.5rem;
+}
+
+.btn-archive-outreach {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #e8b4b8, #f4c2a8);
+  color: #1a1a2e;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-archive-outreach:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(232, 180, 184, 0.3);
+}
+
+.btn-archive-outreach:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-archive-outreach.already-archived {
+  background: #24283b;
+  color: #a0a0c0;
+  border: 1px solid #414868;
+}
+
+/* ===================================
+   SOURCING SMART FILTERS
+   =================================== */
+
+.sourcing-filters-section {
+  background: linear-gradient(135deg, rgba(232, 180, 184, 0.05), rgba(244, 194, 168, 0.05));
+  border: 2px solid #e8b4b8;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.sourcing-filters-title {
+  color: #e8b4b8;
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.filter-group {
+  margin-bottom: 1.5rem;
+}
+
+.filter-group label {
+  display: block;
+  color: #a0a0c0;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.multi-select {
+  width: 100%;
+  padding: 0.75rem;
+  background: #24283b;
+  border: 1px solid #414868;
+  border-radius: 8px;
+  color: #f0f0f0;
+  font-size: 1rem;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.multi-select:focus {
+  outline: none;
+  border-color: #e8b4b8;
+  box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
+}
+
+.multi-select option {
+  background: #24283b;
+  color: #f0f0f0;
+  padding: 0.5rem;
+}
+
+.btn-clear-filters {
+  background: transparent;
+  border: 1px solid #414868;
+  color: #a0a0c0;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-clear-filters:hover {
+  border-color: #e8b4b8;
+  color: #e8b4b8;
+  background: rgba(232, 180, 184, 0.1);
+}
+
+.linkedin-profiles-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(232, 180, 184, 0.05), rgba(244, 194, 168, 0.05));
+  border: 1px solid #414868;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.linkedin-profiles-toggle:hover {
+  border-color: #e8b4b8;
+}
+
+.linkedin-profiles-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #e8b4b8;
+}
+
+.linkedin-profiles-toggle label {
+  color: #f0f0f0;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
+}
+
+/* ===================================
+   SHELL PROFILE STYLES
+   =================================== */
+
+.shell-upgrade-banner {
+  background: linear-gradient(135deg, rgba(232, 180, 184, 0.1), rgba(244, 194, 168, 0.1));
+  border: 2px solid #e8b4b8;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.shell-upgrade-banner p {
+  color: #a0a0c0;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.btn-upgrade-shell {
+  background: linear-gradient(135deg, #e8b4b8, #f4c2a8);
+  color: #1a1a2e;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-upgrade-shell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(232, 180, 184, 0.3);
+}
+
+.shell-profile-badge {
+  background: rgba(232, 180, 184, 0.2);
+  color: #e8b4b8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ===================================
+   CONFIRMATION MODAL
+   =================================== */
+
+.archive-confirmation-modal {
+  background: #24283b;
+  border: 1px solid #414868;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.archive-confirmation-title {
+  color: #e8b4b8;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.archive-confirmation-message {
+  color: #f0f0f0;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.archive-confirmation-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.btn-cancel-archive {
+  background: transparent;
+  border: 1px solid #414868;
+  color: #a0a0c0;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel-archive:hover {
+  border-color: #e8b4b8;
+  color: #e8b4b8;
+}
+
+.btn-confirm-archive {
+  background: linear-gradient(135deg, #e8b4b8, #f4c2a8);
+  color: #1a1a2e;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-confirm-archive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(232, 180, 184, 0.3);
+}
+
+/* ===================================
+   RESPONSIVE DESIGN
+   =================================== */
+
+@media (max-width: 768px) {
+  .archive-management-section,
+  .sourcing-filters-section {
+    padding: 1.5rem;
+  }
+
+  .archive-section-title,
+  .sourcing-filters-title {
+    font-size: 1.1rem;
+  }
+
+  .archive-confirmation-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancel-archive,
+  .btn-confirm-archive {
+    width: 100%;
+  }
+}

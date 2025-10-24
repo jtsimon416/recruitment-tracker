@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useConfirmation } from '../contexts/ConfirmationContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ExternalLink, TrendingUp, Users, ChevronDown, ChevronUp, Download, Filter, X, CheckCircle, AlertCircle, FileText, Star, Phone, Calendar
+  ExternalLink, TrendingUp, Users, ChevronDown, ChevronUp, Download, Filter, X, CheckCircle, AlertCircle, FileText, Star, Phone, Calendar, Archive
 } from 'lucide-react';
 import '../styles/DirectorOutreachDashboard.css';
+import '../styles/ArchiveManagement.css';
 
 // =========================================================================
 // HELPER FUNCTIONS (UPDATED for Rose Gold Theme)
@@ -189,9 +191,22 @@ const OutreachCard = ({ activity, onToggleNotes, isExpanded }) => {
 // MAIN DASHBOARD COMPONENT
 // =========================================================================
 function DirectorOutreachDashboard() {
-  const { recruiters, positions, outreachActivities, fetchAllOutreachActivities, fetchPositions } = useData();
+  const {
+    recruiters,
+    positions,
+    outreachActivities,
+    fetchAllOutreachActivities,
+    fetchPositions,
+    archiveOutreachForPosition
+  } = useData();
+  const { showConfirmation } = useConfirmation();
   const [loading, setLoading] = useState(true);
   const [expandedNotes, setExpandedNotes] = useState({});
+
+  // --- ARCHIVE MANAGEMENT STATE ---
+  const [selectedArchivePosition, setSelectedArchivePosition] = useState('');
+  const [archivePreview, setArchivePreview] = useState({ newProfiles: 0, existingProfiles: 0 });
+  const [archiving, setArchiving] = useState(false);
   
   // --- FILTER STATE ---
   const [filterPanelExpanded, setFilterPanelExpanded] = useState(false); 
@@ -267,6 +282,144 @@ function DirectorOutreachDashboard() {
   function toggleStatusFilter(status) { setFilterStatuses(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]); }
   function clearFilters() { setFilterRecruiters([]); setFilterPositions([]); setFilterStatuses([]); setDateFilter('week'); setCustomDateStart(''); setCustomDateEnd(''); }
 
+  // -------------------------------------------------------------------
+  // ARCHIVE MANAGEMENT FUNCTIONS
+  // -------------------------------------------------------------------
+
+  // Get closed positions for archive dropdown
+  const closedPositions = useMemo(() => {
+    return positions.filter(p => p.status === 'Closed').sort((a, b) => {
+      const dateA = new Date(a.date_closed || 0);
+      const dateB = new Date(b.date_closed || 0);
+      return dateB - dateA; // Most recently closed first
+    });
+  }, [positions]);
+
+  // Handle archive position selection and preview
+  const handleArchivePositionChange = async (positionId) => {
+    console.log('🔍 Archive Preview: Selected position ID:', positionId);
+    setSelectedArchivePosition(positionId);
+
+    if (!positionId) {
+      setArchivePreview({ newProfiles: 0, existingProfiles: 0 });
+      return;
+    }
+
+    // Get outreach records for this position
+    const outreachForPosition = outreachActivities.filter(a => a.position_id === positionId);
+    console.log('📋 Outreach records for this position:', outreachForPosition.length);
+    console.log('📋 Sample records:', outreachForPosition.slice(0, 3));
+
+    // Check how many are new vs existing in candidates table
+    let newCount = 0;
+    let existingCount = 0;
+
+    // Import supabase to check candidates
+    const { supabase } = await import('../services/supabaseClient');
+
+    // Fetch all candidates once for comparison
+    const { data: allCandidates, error: candidatesError } = await supabase
+      .from('candidates')
+      .select('id, linkedin_url');
+
+    if (candidatesError) {
+      console.error('❌ Error fetching candidates:', candidatesError);
+      return;
+    }
+
+    console.log('👥 Total candidates in database:', allCandidates?.length || 0);
+
+    // Normalize function (same as in RecruiterOutreach.js)
+    const normalizeLinkedInURL = (url) => {
+      if (!url) return null;
+      let normalized = url.toLowerCase().trim();
+      normalized = normalized.replace(/^https?:\/\//, '');
+      normalized = normalized.replace(/^www\./, '');
+      normalized = normalized.replace(/\/$/, '');
+      normalized = normalized.split('?')[0].split('#')[0];
+      return normalized;
+    };
+
+    // Create a Set of normalized candidate URLs for fast lookup
+    const candidateUrlSet = new Set(
+      allCandidates?.map(c => normalizeLinkedInURL(c.linkedin_url)).filter(Boolean) || []
+    );
+
+    console.log('🔗 Normalized candidate URLs in database:', candidateUrlSet.size);
+
+    for (const record of outreachForPosition) {
+      if (!record.linkedin_url) {
+        console.log('⚠️ Skipping record without LinkedIn URL:', record);
+        continue;
+      }
+
+      const normalizedUrl = normalizeLinkedInURL(record.linkedin_url);
+      const exists = candidateUrlSet.has(normalizedUrl);
+
+      if (exists) {
+        existingCount++;
+        console.log('✅ Already exists:', record.candidate_name, '-', normalizedUrl);
+      } else {
+        newCount++;
+        console.log('🆕 New profile:', record.candidate_name, '-', normalizedUrl);
+      }
+    }
+
+    console.log('📊 Final counts - New:', newCount, 'Existing:', existingCount);
+    setArchivePreview({ newProfiles: newCount, existingProfiles: existingCount });
+  };
+
+  // Handle archive button click
+  const handleArchiveClick = async () => {
+    if (!selectedArchivePosition || archivePreview.newProfiles === 0) return;
+
+    const selectedPosition = closedPositions.find(p => p.id === selectedArchivePosition);
+    const positionTitle = selectedPosition ? `${selectedPosition.title} @ ${selectedPosition.clients?.company_name || 'Unknown Client'}` : 'this position';
+
+    // Show confirmation modal
+    showConfirmation({
+      type: 'info',
+      title: 'Archive Outreach to Talent Pool?',
+      message: `This will create ${archivePreview.newProfiles} new shell profiles in the Talent Pool. ${archivePreview.existingProfiles} candidates are already in the system and will be skipped.`,
+      contextInfo: positionTitle,
+      confirmText: 'Archive Now',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        setArchiving(true);
+        try {
+          const result = await archiveOutreachForPosition(selectedArchivePosition);
+
+          if (result.success) {
+            showConfirmation({
+              type: 'success',
+              title: 'Success!',
+              message: `Archived ${result.newProfilesCreated} candidates to Talent Pool! ${result.existingProfilesSkipped} were already in the system.`,
+            });
+
+            // Reset state
+            setSelectedArchivePosition('');
+            setArchivePreview({ newProfiles: 0, existingProfiles: 0 });
+          } else {
+            showConfirmation({
+              type: 'error',
+              title: 'Archive Failed',
+              message: result.error || 'An error occurred while archiving.',
+            });
+          }
+        } catch (error) {
+          console.error('Archive error:', error);
+          showConfirmation({
+            type: 'error',
+            title: 'Archive Failed',
+            message: 'An unexpected error occurred. Please try again.',
+          });
+        } finally {
+          setArchiving(false);
+        }
+      }
+    });
+  };
+
   // Data for filter dropdowns (keep unchanged)
   const recruiterItems = useMemo(() => 
     recruiterFilterList.map(r => ({ id: r.id, name: r.name })),
@@ -294,7 +447,55 @@ function DirectorOutreachDashboard() {
   return (
     <div className="page-container director-outreach-container">
       <div className="page-header"> <h1>Team Outreach Dashboard</h1> <p className="subtitle">Real-time visibility into recruiter LinkedIn activity</p> </div>
-      
+
+      {/* =================================== */}
+      {/* === ARCHIVE MANAGEMENT SECTION === */}
+      {/* =================================== */}
+      <div className="archive-management-section">
+        <h2 className="archive-section-title">
+          <Archive size={20} />
+          Archive Outreach to Talent Pool
+        </h2>
+        <p style={{ color: '#a0a0c0', marginBottom: '1rem' }}>
+          Select a closed position to archive its outreach history as searchable profiles in the Talent Pool.
+        </p>
+        <select
+          className="archive-position-selector"
+          value={selectedArchivePosition}
+          onChange={(e) => handleArchivePositionChange(e.target.value)}
+          disabled={archiving}
+        >
+          <option value="">Select Closed Position...</option>
+          {closedPositions.map(position => {
+            const closedDate = position.date_closed
+              ? new Date(position.date_closed).toLocaleDateString()
+              : '(Date Not Recorded)';
+            const companyName = position.clients?.company_name || 'Unknown Client';
+            return (
+              <option key={position.id} value={position.id}>
+                {position.title} @ {companyName} - Closed {closedDate}
+              </option>
+            );
+          })}
+        </select>
+        <button
+          className={`btn-archive-outreach ${archivePreview.newProfiles === 0 && selectedArchivePosition ? 'already-archived' : ''}`}
+          onClick={handleArchiveClick}
+          disabled={!selectedArchivePosition || archivePreview.newProfiles === 0 || archiving}
+        >
+          <Archive size={16} />
+          {archiving ? (
+            'Archiving...'
+          ) : archivePreview.newProfiles === 0 && selectedArchivePosition ? (
+            'Already Archived (0 new profiles)'
+          ) : selectedArchivePosition ? (
+            `Archive Outreach (${archivePreview.newProfiles} new, ${archivePreview.existingProfiles} existing)`
+          ) : (
+            'Archive Outreach'
+          )}
+        </button>
+      </div>
+
       {/* =================================== */}
       {/* === ADVANCED FILTER PANEL ==== */}
       {/* =================================== */}

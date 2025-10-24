@@ -4,7 +4,8 @@
       "Bash(npm install:*)",
       "Bash(npm start)",
       "Bash(npm run build)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm run db:migrate:*)"
     ],
     "deny": [],
     "ask": []

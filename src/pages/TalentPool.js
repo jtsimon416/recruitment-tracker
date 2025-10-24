@@ -4,8 +4,10 @@ import * as mammoth from 'mammoth';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Pen, Trash, ChevronDown, ChevronUp, X, Filter, Clipboard } from 'lucide-react';
 import { useConfirmation } from '../contexts/ConfirmationContext';
+import { useData } from '../contexts/DataContext';
 import WordDocViewerModal from '../components/Worddocviewermodal';
 import '../styles/TalentPool.css';
+import '../styles/ArchiveManagement.css';
 
 const TagInput = ({ tags, setTags }) => {
   const [inputValue, setInputValue] = useState('');
@@ -201,6 +203,7 @@ function TalentPool() {
   const location = useLocation();
   const navigate = useNavigate();
   const { showConfirmation } = useConfirmation();
+  const { fetchAllOutreachRecords } = useData();
   const [candidates, setCandidates] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showPipelineModal, setShowPipelineModal] = useState(false);
@@ -212,10 +215,10 @@ function TalentPool() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [wordDocHtml, setWordDocHtml] = useState('');
-  
+
   // *** THIS IS THE FIX: Changed from 'true' to 'false' ***
   const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
-  
+
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState('');
   const [dateRangeStart, setDateRangeStart] = useState('');
@@ -228,9 +231,18 @@ function TalentPool() {
   const [pipelineCandidateIds, setPipelineCandidateIds] = useState([]);
   const [skillSearchTerm, setSkillSearchTerm] = useState('');
   const [debouncedSkillSearchTerm, setDebouncedSkillSearchTerm] = useState('');
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const candidatesPerPage = 10;
+
+  // --- NEW: SOURCING HISTORY FILTERS ---
+  const [showLinkedInProfilesOnly, setShowLinkedInProfilesOnly] = useState(false);
+  const [outreachRecords, setOutreachRecords] = useState([]);
+  const [recruiters, setRecruiters] = useState([]);
+  const [selectedSourcingPositions, setSelectedSourcingPositions] = useState([]);
+  const [selectedSourcingStatuses, setSelectedSourcingStatuses] = useState([]);
+  const [selectedSourcingRatings, setSelectedSourcingRatings] = useState([]);
+  const [selectedSourcingRecruiters, setSelectedSourcingRecruiters] = useState([]);
   
   const [editingCandidate, setEditingCandidate] = useState(null);
   const [candidateFormData, setCandidateFormData] = useState({
@@ -340,9 +352,19 @@ function TalentPool() {
       (async () => {
         const { data, error } = await supabase.from('pipeline').select('candidate_id');
         if (error) console.error('Error loading pipeline candidates:', error); else setPipelineCandidateIds(data?.map(p => p.candidate_id) || []);
+      })(),
+      // NEW: Load outreach records for Smart Filters
+      (async () => {
+        const records = await fetchAllOutreachRecords();
+        setOutreachRecords(records);
+      })(),
+      // NEW: Load recruiters for Smart Filters
+      (async () => {
+        const { data, error } = await supabase.from('recruiters').select('*').order('name');
+        if (error) console.error('Error loading recruiters:', error); else setRecruiters(data || []);
       })()
     ]);
-  }, [loadCandidates]);
+  }, [loadCandidates, fetchAllOutreachRecords]);
 
   useEffect(() => {
     loadData();
@@ -354,6 +376,54 @@ function TalentPool() {
 
   const filteredCandidates = useMemo(() => {
     return candidates.filter(c => {
+      // STEP 1: LinkedIn Profiles Only Filter
+      if (showLinkedInProfilesOnly) {
+        const isSourced = c.profile_type === 'shell' ||
+          outreachRecords.some(o => o.linkedin_url?.toLowerCase() === c.linkedin_url?.toLowerCase());
+        if (!isSourced) return false;
+      }
+
+      // STEP 2: Sourcing Smart Filters (only apply if LinkedIn Profiles Only is ON)
+      if (showLinkedInProfilesOnly) {
+        // Get all outreach records for this candidate
+        const candidateOutreach = outreachRecords.filter(
+          o => o.linkedin_url?.toLowerCase() === c.linkedin_url?.toLowerCase()
+        );
+
+        // Filter by Position
+        if (selectedSourcingPositions.length > 0) {
+          const matchesPosition = candidateOutreach.some(
+            o => selectedSourcingPositions.includes(o.position_id)
+          );
+          if (!matchesPosition) return false;
+        }
+
+        // Filter by Status
+        if (selectedSourcingStatuses.length > 0) {
+          const matchesStatus = candidateOutreach.some(
+            o => selectedSourcingStatuses.includes(o.activity_status)
+          );
+          if (!matchesStatus) return false;
+        }
+
+        // Filter by Rating
+        if (selectedSourcingRatings.length > 0) {
+          const matchesRating = candidateOutreach.some(
+            o => selectedSourcingRatings.includes(o.rating)
+          );
+          if (!matchesRating) return false;
+        }
+
+        // Filter by Recruiter
+        if (selectedSourcingRecruiters.length > 0) {
+          const matchesRecruiter = candidateOutreach.some(
+            o => selectedSourcingRecruiters.includes(o.recruiter_id)
+          );
+          if (!matchesRecruiter) return false;
+        }
+      }
+
+      // STEP 3: Standard Filters (always apply)
       if (debouncedSearchTerm) {
         const search = debouncedSearchTerm.toLowerCase();
         if (!(c.name?.toLowerCase().includes(search) || c.email?.toLowerCase().includes(search) || c.phone?.toLowerCase().includes(search) || c.notes?.toLowerCase().includes(search))) return false;
@@ -374,7 +444,12 @@ function TalentPool() {
       if (inPipelineFilter && !pipelineCandidateIds.includes(c.id)) return false;
       return true;
     });
-  }, [candidates, debouncedSearchTerm, selectedSkills, selectedLocation, dateRangeStart, dateRangeEnd, hasResumeFilter, hasLinkedInProfileFilter, inPipelineFilter, pipelineCandidateIds]);
+  }, [
+    candidates, debouncedSearchTerm, selectedSkills, selectedLocation, dateRangeStart, dateRangeEnd,
+    hasResumeFilter, hasLinkedInProfileFilter, inPipelineFilter, pipelineCandidateIds,
+    showLinkedInProfilesOnly, outreachRecords, selectedSourcingPositions, selectedSourcingStatuses,
+    selectedSourcingRatings, selectedSourcingRecruiters
+  ]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -399,6 +474,12 @@ function TalentPool() {
     setHasLinkedInProfileFilter(false);
     setInPipelineFilter(false);
     setActiveQuickFilter('');
+    // Clear sourcing filters
+    setShowLinkedInProfilesOnly(false);
+    setSelectedSourcingPositions([]);
+    setSelectedSourcingStatuses([]);
+    setSelectedSourcingRatings([]);
+    setSelectedSourcingRecruiters([]);
   }, []);
 
   const handleQuickFilter = useCallback((filterType) => {
@@ -480,11 +561,19 @@ function TalentPool() {
     };
 
     if (editingCandidate) {
+      // If upgrading from shell to full, change profile_type
+      if (editingCandidate.profile_type === 'shell') {
+        dataToSave.profile_type = 'full';
+      }
+
       const { error } = await supabase.from('candidates').update(dataToSave).eq('id', editingCandidate.id);
       if (error) {
         showConfirmation({ type: 'error', title: 'Error', message: `Update failed: ${error.message}` });
       } else {
-        showConfirmation({ type: 'success', title: 'Success!', message: 'Candidate updated.' });
+        const upgradeMessage = editingCandidate.profile_type === 'shell'
+          ? 'Profile upgraded to full candidate!'
+          : 'Candidate updated.';
+        showConfirmation({ type: 'success', title: 'Success!', message: upgradeMessage });
         resetForm();
         await loadCandidates();
       }
@@ -556,6 +645,25 @@ function TalentPool() {
       linkedin_url: candidate.linkedin_url || '',
       skills: candidate.skills ? candidate.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
       notes: candidate.notes || '',
+      resume_url: candidate.resume_url || '',
+      document_type: candidate.document_type || 'Resume',
+      created_by_recruiter: candidate.created_by_recruiter || ''
+    });
+    setShowForm(true);
+  }
+
+  // NEW: Handle shell profile upgrade
+  function handleUpgradeShell(candidate) {
+    setEditingCandidate(candidate);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCandidateFormData({
+      name: candidate.name || '',
+      email: candidate.email || '',
+      phone: candidate.phone || '',
+      location: candidate.location || '',
+      linkedin_url: candidate.linkedin_url || '',
+      skills: candidate.skills ? candidate.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+      notes: `Upgraded from LinkedIn profile. Original sourcing history available.`,
       resume_url: candidate.resume_url || '',
       document_type: candidate.document_type || 'Resume',
       created_by_recruiter: candidate.created_by_recruiter || ''
@@ -817,12 +925,120 @@ function TalentPool() {
         clearAllFilters={clearAllFilters}
         activeFilterCount={activeFilterCount}
       />
+
+      {/* NEW: LinkedIn Profiles Only Toggle */}
+      <div className="linkedin-profiles-toggle" onClick={() => setShowLinkedInProfilesOnly(!showLinkedInProfilesOnly)}>
+        <input
+          type="checkbox"
+          checked={showLinkedInProfilesOnly}
+          onChange={(e) => setShowLinkedInProfilesOnly(e.target.checked)}
+          onClick={(e) => e.stopPropagation()}
+        />
+        <label onClick={(e) => e.stopPropagation()}>📋 Show LinkedIn Profiles Only</label>
+      </div>
+
+      {/* NEW: Sourcing Smart Filters (only visible when toggle is ON) */}
+      {showLinkedInProfilesOnly && (
+        <div className="sourcing-filters-section">
+          <h3 className="sourcing-filters-title">🔍 Sourcing Smart Filters</h3>
+
+          <div className="filter-group">
+            <label>Sourced For Position:</label>
+            <select
+              multiple
+              className="multi-select"
+              value={selectedSourcingPositions}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                setSelectedSourcingPositions(selected);
+              }}
+            >
+              {positions.map(pos => (
+                <option key={pos.id} value={pos.id}>{pos.title}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Last Outreach Status:</label>
+            <select
+              multiple
+              className="multi-select"
+              value={selectedSourcingStatuses}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                setSelectedSourcingStatuses(selected);
+              }}
+            >
+              <option value="outreach_sent">Outreach Sent</option>
+              <option value="reply_received">Reply Received</option>
+              <option value="accepted">Accepted</option>
+              <option value="call_scheduled">Call Scheduled</option>
+              <option value="declined">Declined</option>
+              <option value="ready_for_submission">Ready for Submission</option>
+              <option value="gone_cold">Gone Cold</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Star Rating:</label>
+            <select
+              multiple
+              className="multi-select"
+              value={selectedSourcingRatings.map(r => String(r))}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions).map(o => parseInt(o.value));
+                setSelectedSourcingRatings(selected);
+              }}
+            >
+              <option value="5">5★</option>
+              <option value="4">4★</option>
+              <option value="3">3★</option>
+              <option value="2">2★</option>
+              <option value="1">1★</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Sourced By Recruiter:</label>
+            <select
+              multiple
+              className="multi-select"
+              value={selectedSourcingRecruiters}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                setSelectedSourcingRecruiters(selected);
+              }}
+            >
+              {recruiters.map(rec => (
+                <option key={rec.id} value={rec.id}>{rec.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            className="btn-clear-filters"
+            onClick={() => {
+              setSelectedSourcingPositions([]);
+              setSelectedSourcingStatuses([]);
+              setSelectedSourcingRatings([]);
+              setSelectedSourcingRecruiters([]);
+            }}
+          >
+            Clear Sourcing Filters
+          </button>
+        </div>
+      )}
+
       <div className="candidates-list">
         <div className="candidates-header"><div>Name & LinkedIn</div><div>Skills</div><div>Added By</div><div>Document</div><div>Actions</div></div>
         {currentCandidates.map(candidate => (
           <React.Fragment key={candidate.id}>
             <div className="candidate-row" onClick={() => setExpandedRow(expandedRow === candidate.id ? null : candidate.id)}>
               <div className="candidate-name-cell">
+                {candidate.profile_type === 'shell' && (
+                  <span className="shell-profile-badge">📋 LinkedIn Profile</span>
+                )}
                 <div className="candidate-name">{candidate.name}</div>
                 {candidate.linkedin_url && <a href={candidate.linkedin_url} target="_blank" rel="noopener noreferrer" className="candidate-linkedin" onClick={(e) => e.stopPropagation()}>LinkedIn</a>}
               </div>
@@ -836,7 +1052,22 @@ function TalentPool() {
                 <button className="btn-delete" onClick={(e) => { e.stopPropagation(); handleDelete(candidate.id); }}>Delete</button>
               </div>
             </div>
-            {expandedRow === candidate.id && <div className="expanded-details"><p><strong>Email:</strong> {candidate.email || 'N/A'}</p><p><strong>Phone:</strong> {candidate.phone || 'N/A'}</p><p><strong>Location:</strong> {candidate.location || 'N/A'}</p><p><strong>Notes:</strong> {candidate.notes || 'N/A'}</p></div>}
+            {expandedRow === candidate.id && (
+              <div className="expanded-details">
+                {candidate.profile_type === 'shell' && (
+                  <div className="shell-upgrade-banner">
+                    <p>📋 This is a LinkedIn profile from past outreach. Add full details to create a complete candidate profile.</p>
+                    <button className="btn-upgrade-shell" onClick={() => handleUpgradeShell(candidate)}>
+                      ➕ Add Full Profile
+                    </button>
+                  </div>
+                )}
+                <p><strong>Email:</strong> {candidate.email || 'N/A'}</p>
+                <p><strong>Phone:</strong> {candidate.phone || 'N/A'}</p>
+                <p><strong>Location:</strong> {candidate.location || 'N/A'}</p>
+                <p><strong>Notes:</strong> {candidate.notes || 'N/A'}</p>
+              </div>
+            )}
           </React.Fragment>
         ))}
       </div>

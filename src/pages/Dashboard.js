@@ -775,7 +775,8 @@ function Dashboard() {
         INTERVIEW_STALL: 8,         // > 7 days
         HOLD_REVIEW_OVERDUE: 4,     // > 3 days
         GENERAL_STALE: 7,
-        NEW_ROLE_NO_ACTIVITY: 2,
+        // *** THIS IS THE FIX: Changed from THRESHOLDS.NEW_ROLE_NO_ACTIVITY to NEW_ROLE_NO_ACTIVITY_MS ***
+        NEW_ROLE_NO_ACTIVITY_MS: daysToMs(2), // 48 hours in MS
         LOW_REPLY_RATE: 20,         // New aggressive rate
         MIN_OUTREACH_FOR_RATE: 5
     };
@@ -833,20 +834,33 @@ function Dashboard() {
     // --- 2. Aggressive GENERAL ROLE HEALTH Checks ---
     
     // Check 2a: New Roles with NO Activity
-    const twoDaysAgo = new Date(now.getTime() - daysToMs(THRESHOLDS.NEW_ROLE_NO_ACTIVITY));
-    (Array.isArray(openPositions) ? openPositions : []).filter(p => p.status === 'Open' && new Date(p.created_at) >= twoDaysAgo)
+    // const twoDaysAgo = new Date(now.getTime() - daysToMs(THRESHOLDS.NEW_ROLE_NO_ACTIVITY)); // OLD
+    
+    (Array.isArray(openPositions) ? openPositions : []).filter(p => p.status === 'Open')
       .forEach(pos => {
-        const hasPipelineCandidates = pipelineMetrics[pos.id] && pipelineMetrics[pos.id].count > 0;
-        const healthStats = roleHealth[pos.id];
+        
+        // *** START: TIMESTAMP FIX ***
+        // Calculate the position's *actual* age
+        const posAgeMs = now.getTime() - new Date(pos.created_at).getTime();
 
-        if (!hasPipelineCandidates && (!healthStats || healthStats.outreach === 0) && !stallAlertsMap[pos.id]) {
-           newAlerts.push({
-            type: 'newRoleOpen',
-            message: `${pos.title} has been open > 48hrs with NO activity.`,
-            suggestion: '💡 Assign a recruiter immediately. Ensure initial outreach has begun.',
-            color: '#F7A9BA' // Critical Red (Dusty Pink)
-          });
-        }
+        // ONLY check if the position is *actually* older than the 48hr threshold
+        // *** THIS IS THE FIX: Comparing posAgeMs against NEW_ROLE_NO_ACTIVITY_MS ***
+        if (posAgeMs >= THRESHOLDS.NEW_ROLE_NO_ACTIVITY_MS) {
+        // *** END: TIMESTAMP FIX ***
+
+            const hasPipelineCandidates = pipelineMetrics[pos.id] && pipelineMetrics[pos.id].count > 0;
+            const healthStats = roleHealth[pos.id];
+
+            if (!hasPipelineCandidates && (!healthStats || healthStats.outreach === 0) && !stallAlertsMap[pos.id]) {
+               newAlerts.push({
+                type: 'newRoleOpen',
+                // The message is now accurate because we only run this check *after* 48hrs
+                message: `${pos.title} has been open > 48hrs with NO activity.`,
+                suggestion: '💡 Assign a recruiter immediately. Ensure initial outreach has begun.',
+                color: '#F7A9BA' // Critical Red (Dusty Pink)
+              });
+            }
+        } // End of the 48hr age check
     });
 
 

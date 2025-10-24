@@ -85,7 +85,7 @@ export function DataProvider({ children }) {
   
   async function loadAllData() {
     setLoading(true);
-    
+
     const [clientsRes, positionsRes, candidatesRes, recruitersRes, pipelineRes, interviewsRes, outreachRes] = await Promise.all([
       supabase.from('clients').select('*').order('company_name'),
       supabase.from('positions').select('*, clients(company_name)').order('created_at', { ascending: false }),
@@ -93,7 +93,7 @@ export function DataProvider({ children }) {
       supabase.from('recruiters').select('*').order('name'),
       supabase.from('pipeline').select('*, candidates(name), recruiters(name), positions(title)'),
       supabase.from('interviews').select('*, candidates(name), positions(title)').order('interview_date', { ascending: true }),
-      supabase.from('recruiter_outreach').select('*, positions(*, clients(*)), recruiters(name)').order('created_at', { ascending: false })
+      supabase.from('recruiter_outreach').select('*, positions(*, clients(*)), recruiters(name)').eq('is_archived', false).order('created_at', { ascending: false })
     ]);
 
     setClients(clientsRes.data || []);
@@ -166,6 +166,7 @@ export function DataProvider({ children }) {
     const { data, error } = await supabase
       .from('recruiter_outreach')
       .select('*, positions(*, clients(*)), recruiters(name)')
+      .eq('is_archived', false)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -182,6 +183,7 @@ export function DataProvider({ children }) {
       .from('recruiter_outreach')
       .select('*, positions(title, clients(company_name))')
       .eq('recruiter_id', recruiterId)
+      .eq('is_archived', false)
       .not('activity_status', 'in', '(cold,gone_cold)')
       .order('created_at', { ascending: false });
 
@@ -236,6 +238,183 @@ export function DataProvider({ children }) {
     else setPositions(data || []);
   }
 
+  // -------------------------------------------------------------------
+  // UTILITY FUNCTIONS FOR SOURCING HISTORY & TALENT POOL INTEGRATION
+  // -------------------------------------------------------------------
+
+  // Normalize LinkedIn URLs for consistent comparison
+  // IMPORTANT: This must match the normalization in RecruiterOutreach.js
+  function normalizeLinkedInUrl(url) {
+    if (!url) return '';
+
+    // Convert to lowercase
+    let normalized = url.toLowerCase().trim();
+
+    // Remove protocol (http://, https://)
+    normalized = normalized.replace(/^https?:\/\//, '');
+
+    // Remove www.
+    normalized = normalized.replace(/^www\./, '');
+
+    // Remove trailing slash
+    normalized = normalized.replace(/\/$/, '');
+
+    // Remove query parameters and fragments
+    normalized = normalized.split('?')[0].split('#')[0];
+
+    return normalized;
+  }
+
+  // Fetch all outreach records (for Smart Filters in Talent Pool)
+  async function fetchAllOutreachRecords() {
+    const { data, error } = await supabase
+      .from('recruiter_outreach')
+      .select('*, positions(title), recruiters(name)');
+
+    if (error) {
+      console.error('Error fetching outreach records:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+
+  // Archive outreach for a closed position (creates shell profiles)
+  async function archiveOutreachForPosition(positionId) {
+    try {
+      console.log(`🗄️ Starting archive process for position: ${positionId}`);
+
+      // 1. Get all outreach for this position
+      const { data: outreachRecords, error: fetchError } = await supabase
+        .from('recruiter_outreach')
+        .select('*')
+        .eq('position_id', positionId);
+
+      if (fetchError) throw fetchError;
+
+      console.log(`📋 Found ${outreachRecords.length} outreach records for this position`);
+
+      // 2. Fetch all existing candidates for comparison
+      const { data: allCandidates, error: candidatesError } = await supabase
+        .from('candidates')
+        .select('id, linkedin_url');
+
+      if (candidatesError) throw candidatesError;
+
+      // 3. Build Set of existing normalized URLs for fast lookup
+      const existingCandidateUrls = new Set(
+        allCandidates?.map(c => normalizeLinkedInUrl(c.linkedin_url)).filter(Boolean) || []
+      );
+
+      console.log(`👥 Found ${existingCandidateUrls.size} existing candidates in database`);
+
+      // 4. Process records
+      const newCandidatesToInsert = [];
+      const recordIdsToUpdate = [];
+      let skippedCount = 0;
+
+      for (const record of outreachRecords) {
+        // Skip "Ready for Submission" records - they should stay active
+        if (record.activity_status === 'ready_for_submission') {
+          console.log(`⏭️ Skipping record ID ${record.id} (Ready for Submission)`);
+          skippedCount++;
+          continue;
+        }
+
+        const normalizedUrl = normalizeLinkedInUrl(record.linkedin_url);
+
+        if (!normalizedUrl) {
+          console.warn(`⚠️ Skipping outreach record ID ${record.id} (Invalid URL)`);
+          skippedCount++;
+          continue;
+        }
+
+        // Track this record for archiving flag
+        recordIdsToUpdate.push(record.id);
+
+        // Check if candidate already exists
+        if (existingCandidateUrls.has(normalizedUrl)) {
+          console.log(`✅ Candidate already exists: ${record.candidate_name}`);
+          skippedCount++;
+        } else {
+          // Add to existing URLs set to prevent duplicates in this batch
+          existingCandidateUrls.add(normalizedUrl);
+
+          // Prepare shell profile for insertion
+          const shellProfile = {
+            name: record.candidate_name || 'Archived Candidate',
+            linkedin_url: record.linkedin_url,
+            phone: record.activity_status === 'call_scheduled' ? record.candidate_phone : null,
+            profile_type: 'shell',
+            created_by_recruiter: 'System Archive',
+            status: 'Archived',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+
+          newCandidatesToInsert.push(shellProfile);
+        }
+      }
+
+      console.log(`📊 Prepared ${newCandidatesToInsert.length} new profiles. Skipped ${skippedCount} (Existing, Invalid URL, or Ready for Submission)`);
+
+      // 5. Insert new candidates if any
+      if (newCandidatesToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('candidates')
+          .insert(newCandidatesToInsert);
+
+        if (insertError) {
+          console.error('❌ Error inserting new shell profiles:', insertError);
+          return {
+            success: false,
+            error: `Failed to insert shell profiles: ${insertError.message}`
+          };
+        }
+        console.log(`✅ Successfully inserted ${newCandidatesToInsert.length} new shell profiles`);
+      } else {
+        console.log('ℹ️ No new candidates to insert');
+      }
+
+      // 6. Flag original outreach records as archived
+      if (recordIdsToUpdate.length > 0) {
+        console.log(`🏷️ Flagging ${recordIdsToUpdate.length} original outreach records as archived...`);
+        const { error: updateError } = await supabase
+          .from('recruiter_outreach')
+          .update({
+            is_archived: true,
+            updated_at: new Date().toISOString()
+          })
+          .in('id', recordIdsToUpdate);
+
+        if (updateError) {
+          console.error('❌ Error flagging original outreach records:', updateError);
+          // Don't fail the whole process, but log it
+        } else {
+          console.log('✅ Successfully flagged original records as archived');
+        }
+      }
+
+      // 7. Refresh data
+      await refreshData();
+
+      console.log(`🎉 Archive complete! Created: ${newCandidatesToInsert.length}, Skipped: ${skippedCount}`);
+
+      return {
+        success: true,
+        newProfilesCreated: newCandidatesToInsert.length,
+        existingProfilesSkipped: skippedCount
+      };
+
+    } catch (error) {
+      console.error('❌ Error archiving outreach:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
   const isDirectorOrManager = userProfile?.role?.toLowerCase().includes('director') || userProfile?.role?.toLowerCase().includes('manager');
 
   const value = {
@@ -261,15 +440,19 @@ export function DataProvider({ children }) {
     loadingSession,
     handleLogout,
     user: session?.user,
-    userProfile, 
+    userProfile,
     isDirectorOrManager,
     createNotification,
     fetchAllOutreachActivities,
     fetchMyOutreachActivities,
-    addOutreachActivity, 
+    addOutreachActivity,
     updateOutreachActivity,
     deleteOutreachActivity,
     fetchPositions,
+    // New functions for sourcing history integration
+    normalizeLinkedInUrl,
+    fetchAllOutreachRecords,
+    archiveOutreachForPosition,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
