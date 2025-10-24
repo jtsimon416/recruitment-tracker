@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useConfirmation } from '../contexts/ConfirmationContext';
 import { supabase } from '../services/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -47,7 +48,8 @@ const RoleInstructionCard = ({
   onPreview,
   // NEW PROPS for collapsible state
   expandedCardId,
-  setExpandedCardId
+  setExpandedCardId,
+  showConfirmation
 }) => {
   const documents = instructions || [];
   // Check if THIS card is the one that should be expanded
@@ -136,9 +138,11 @@ const RoleInstructionCard = ({
                     const file = e.target.files[0];
                     if (file) {
                       if (!isValidFilename(file.name)) {
-                        alert(
-                          "Invalid Filename:\n\nPlease rename the file before uploading.\n\nFilenames can only contain letters (A-Z, a-z), numbers (0-9), spaces, dots (.), hyphens (-), and underscores (_).\n\nRemove any special characters (like $, %, &, (, ), –, etc.)."
-                        );
+                        showConfirmation({
+                          type: 'warning',
+                          title: 'Invalid Filename',
+                          message: 'Please rename the file before uploading.\n\nFilenames can only contain letters (A-Z, a-z), numbers (0-9), spaces, dots (.), hyphens (-), and underscores (_).\n\nRemove any special characters (like $, %, &, (, ), –, etc.).'
+                        });
                         e.target.value = null;
                         return;
                       }
@@ -279,6 +283,7 @@ const RoleInstructionCard = ({
 // ===================================
 function StrategyManager() {
   const { userProfile, isDirectorOrManager } = useData();
+  const { showConfirmation } = useConfirmation();
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('role_instructions');
@@ -388,15 +393,23 @@ function StrategyManager() {
   // Check access on component mount
   useEffect(() => {
     if (!isDirectorOrManager) {
-      alert('Access Denied: This page is for managers only.');
+      showConfirmation({
+        type: 'error',
+        title: 'Access Denied',
+        message: 'This page is for managers only.'
+      });
       window.location.href = '/';
     }
-  }, [isDirectorOrManager]);
+  }, [isDirectorOrManager, showConfirmation]);
 
 
   const uploadRoleInstructions = async (positionId, file, notes) => {
     if (!userProfile) {
-      alert('Error: User profile not found.');
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: 'User profile not found.'
+      });
       return;
     }
     
@@ -474,11 +487,19 @@ function StrategyManager() {
           created_at: new Date().toISOString()
         });
 
-      alert('✅ Role instructions uploaded! Recruiters will see it on their active roles.');
+      showConfirmation({
+        type: 'success',
+        title: 'Success!',
+        message: 'Role instructions uploaded! Recruiters will see it on their active roles.'
+      });
       fetchAllPositions();
     } catch (error) {
       console.error('❌ Overall Error uploading role instructions:', error);
-      alert('Upload Failed: ' + error.message);
+      showConfirmation({
+        type: 'error',
+        title: 'Upload Failed',
+        message: `Upload Failed: ${error.message}`
+      });
     } finally {
       setUploadingFile(null);
     }
@@ -490,7 +511,11 @@ function StrategyManager() {
       return;
     }
     if (!userProfile) {
-      alert('Error: User profile not found.');
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: 'User profile not found.'
+      });
       return;
     }
 
@@ -547,13 +572,21 @@ function StrategyManager() {
         
         if (storageError) {
           console.warn(`Storage file deletion failed (path: ${filePath}), but DB record was removed: ${storageError.message}`);
-          alert(`Document record removed, but there was an issue deleting the file from storage. Path: ${filePath}. Error: ${storageError.message}`);
+          showConfirmation({
+            type: 'warning',
+            title: 'Partial Success',
+            message: `Document record removed, but there was an issue deleting the file from storage. Path: ${filePath}. Error: ${storageError.message}`
+          });
         } else {
            console.log(`✅ Storage file deleted: ${filePath}`);
         }
       } else {
         console.warn(`Could not parse file path from URL for deletion: ${docData.file_url}`);
-         alert(`Document record removed, but could not determine the file path to delete from storage. URL: ${docData.file_url}`);
+        showConfirmation({
+          type: 'warning',
+          title: 'Partial Success',
+          message: `Document record removed, but could not determine the file path to delete from storage. URL: ${docData.file_url}`
+        });
       }
 
       // 4. Create audit log
@@ -570,12 +603,20 @@ function StrategyManager() {
 
       console.log('✅ Role instructions document removed from database.');
       if (!filePath || (filePath && !supabase.storage.from('role-instructions').remove([filePath]).error) ) {
-         alert('Role instructions removed successfully.');
+        showConfirmation({
+          type: 'success',
+          title: 'Success!',
+          message: 'Role instructions removed successfully.'
+        });
       }
       fetchAllPositions();
     } catch (error) {
       console.error('❌ Overall Error removing role instructions:', error);
-      alert('Error: ' + error.message);
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: `Error: ${error.message}`
+      });
     }
   };
 
@@ -711,6 +752,7 @@ function StrategyManager() {
                     onPreview={handlePreviewDocument}
                     expandedCardId={expandedCardId}
                     setExpandedCardId={setExpandedCardId}
+                    showConfirmation={showConfirmation}
                 />
             ))
           )}

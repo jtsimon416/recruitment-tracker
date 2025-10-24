@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useConfirmation } from '../contexts/ConfirmationContext';
 import { supabase } from '../services/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion'; // Keep AnimatePresence
 import { useNavigate } from 'react-router-dom';
@@ -556,7 +557,7 @@ const MyCallsDashboard = ({ outreachActivities }) => {
 // ===================================
 // COMPONENT: Quick Rating Modal
 // ===================================
-const QuickRatingScreen = ({ contacts, onComplete }) => {
+const QuickRatingScreen = ({ contacts, onComplete, showConfirmation }) => {
   const [ratings, setRatings] = useState({});
   const [processing, setProcessing] = useState(false);
 
@@ -574,10 +575,18 @@ const QuickRatingScreen = ({ contacts, onComplete }) => {
           .eq('id', contactId);
       }
 
-      alert('✅ Ratings saved!');
+      showConfirmation({
+        type: 'success',
+        title: 'Success!',
+        message: 'Ratings saved!'
+      });
       onComplete();
     } catch (error) {
-      alert('Error saving ratings: ' + error.message);
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: `Error saving ratings: ${error.message}`
+      });
     } finally {
       setProcessing(false);
     }
@@ -640,8 +649,8 @@ const QuickRatingScreen = ({ contacts, onComplete }) => {
 // ===================================
 function RecruiterOutreach() {
   const navigate = useNavigate();
-  // showConfirmation is needed for the new functions
-  const { userProfile, fetchMyOutreachActivities, addOutreachActivity, updateOutreachActivity, deleteOutreachActivity, positions, fetchPositions, showConfirmation } = useData();
+  const { showConfirmation } = useConfirmation();
+  const { userProfile, fetchMyOutreachActivities, addOutreachActivity, updateOutreachActivity, deleteOutreachActivity, positions, fetchPositions } = useData();
 
   // --- ADDED: Reusable list of stages for dropdowns ---
   const outreachStages = [
@@ -830,7 +839,11 @@ function RecruiterOutreach() {
 
     } catch (error) {
       console.error('Error checking for duplicates:', error);
-      alert('Error checking for duplicates. Please try again.');
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: 'Error checking for duplicates. Please try again.'
+      });
       return { duplicatesFound: [], allowedUrls: [] };
     }
   };
@@ -841,12 +854,20 @@ function RecruiterOutreach() {
 
   const processBulkURLs = () => {
     if (!bulkUploadText.trim()) {
-      alert('Please paste some LinkedIn URLs');
+      showConfirmation({
+        type: 'warning',
+        title: 'Missing Input',
+        message: 'Please paste some LinkedIn URLs'
+      });
       return;
     }
 
     if (!selectedBulkPosition) {
-      alert('Please select a position');
+      showConfirmation({
+        type: 'warning',
+        title: 'Missing Selection',
+        message: 'Please select a position'
+      });
       return;
     }
 
@@ -856,7 +877,11 @@ function RecruiterOutreach() {
       .filter(url => url && url.includes('linkedin.com'));
 
     if (urls.length === 0) {
-      alert('No valid LinkedIn URLs found');
+      showConfirmation({
+        type: 'warning',
+        title: 'No URLs Found',
+        message: 'No valid LinkedIn URLs found'
+      });
       return;
     }
 
@@ -918,12 +943,16 @@ function RecruiterOutreach() {
       const reengagementCount = allowedUrls.filter(u => u.isReengagement).length;
       const newCount = allowedUrls.length - reengagementCount;
 
-      let message = `✅ Successfully added ${allowedUrls.length} contact${allowedUrls.length === 1 ? '' : 's'}!`;
+      let message = `Successfully added ${allowedUrls.length} contact${allowedUrls.length === 1 ? '' : 's'}!`;
       if (reengagementCount > 0) {
         message += ` (${reengagementCount} re-engaged from Talent Pool)`;
       }
 
-      alert(message);
+      showConfirmation({
+        type: 'success',
+        title: 'Success!',
+        message: message
+      });
 
       setBulkUploadText('');
       setSelectedBulkPosition('');
@@ -939,7 +968,11 @@ function RecruiterOutreach() {
 
     } catch (error) {
       console.error('Error bulk uploading:', error);
-      alert('Error adding contacts: ' + error.message);
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: `Error adding contacts: ${error.message}`
+      });
       setCheckingDuplicates(false);
     } finally {
       setProcessingBulk(false);
@@ -1160,7 +1193,11 @@ function RecruiterOutreach() {
     if (success) {
       await loadData();
     } else {
-      alert('Error deleting activity');
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: 'Error deleting activity'
+      });
     }
   };
 
@@ -1198,7 +1235,11 @@ function RecruiterOutreach() {
       setEditingActivity(null);
       await loadData();
     } else {
-      alert('Error updating activity');
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: 'Error updating activity'
+      });
     }
   };
 
@@ -1229,13 +1270,21 @@ function RecruiterOutreach() {
             handleEdit({...activityToEdit, ...updates}); // Pass updated activity to modal
         } catch (error) {
              console.error("Error pre-updating status:", error);
-             alert("Could not update status before opening modal. Please try again.");
+             showConfirmation({
+               type: 'error',
+               title: 'Error',
+               message: 'Could not update status before opening modal. Please try again.'
+             });
         }
         // ------------------------------------------------------------------
 
       } else {
         console.error("Could not find activity to edit:", activityId);
-        alert("Error finding candidate details to open the modal.");
+        showConfirmation({
+          type: 'error',
+          title: 'Error',
+          message: 'Error finding candidate details to open the modal.'
+        });
       }
       setQuickEditingStageId(null); // Close the dropdown regardless
       return; // Stop execution here for call_scheduled
@@ -1263,7 +1312,11 @@ function RecruiterOutreach() {
       // Refresh the data in the table
       await loadData();
     } else {
-      alert('Error updating status');
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: 'Error updating status'
+      });
       // Close dropdown even on error
       setQuickEditingStageId(null);
     }
@@ -1954,6 +2007,7 @@ function RecruiterOutreach() {
         <QuickRatingScreen
           contacts={newlyAddedContacts}
           onComplete={handleQuickRatingComplete}
+          showConfirmation={showConfirmation}
         />
       )}
 

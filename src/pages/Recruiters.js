@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../services/supabaseClient';
+import { useConfirmation } from '../contexts/ConfirmationContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, User, Phone } from 'lucide-react';
 import '../styles/Recruiters.css';
 
 function Recruiters() {
+  const { showConfirmation } = useConfirmation();
   const [recruiters, setRecruiters] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingRecruiter, setEditingRecruiter] = useState(null);
@@ -58,10 +60,18 @@ function Recruiters() {
       : await supabase.from('recruiters').insert([formData]);
 
     if (error) {
-      alert(`Error: ${error.message}`);
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: `Error: ${error.message}`
+      });
     } else {
       successMessage = editingRecruiter ? 'Recruiter updated successfully!' : 'Recruiter added successfully!';
-      alert(successMessage);
+      showConfirmation({
+        type: 'success',
+        title: 'Success!',
+        message: successMessage
+      });
       resetForm();
       await fetchRecruiters();
     }
@@ -73,9 +83,17 @@ function Recruiters() {
     setLoading(true);
     const { error } = await supabase.from('recruiters').delete().eq('id', id);
     if (error) {
-      alert(`Error deleting recruiter: ${error.message}`);
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: `Error deleting recruiter: ${error.message}`
+      });
     } else {
-      alert('Recruiter deleted successfully!');
+      showConfirmation({
+        type: 'success',
+        title: 'Success!',
+        message: 'Recruiter deleted successfully!'
+      });
       await fetchRecruiters();
     }
     setLoading(false);

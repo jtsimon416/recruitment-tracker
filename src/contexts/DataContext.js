@@ -179,15 +179,18 @@ export function DataProvider({ children }) {
 
   async function fetchMyOutreachActivities(recruiterId) {
     if (!recruiterId) return null;
+    console.log(`Fetching Recruiter outreach for ${recruiterId} (Not Archived)...`);
     const { data, error } = await supabase
       .from('recruiter_outreach')
       .select('*, positions(title, clients(company_name))')
       .eq('recruiter_id', recruiterId)
       .eq('is_archived', false)
-      .not('activity_status', 'in', '(cold,gone_cold)')
       .order('created_at', { ascending: false });
 
-    if (!error) return data;
+    if (!error) {
+      console.log(`Successfully fetched ${data?.length || 0} outreach records (including Gone Cold)`);
+      return data;
+    }
     console.error('Error fetching my outreach activities:', error);
     return null;
   }

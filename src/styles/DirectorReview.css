@@ -320,10 +320,18 @@
   color: white;
 }
 
-/* Warning (Yellow/Orange) */
+/* Warning (Yellow/Orange) - Hold Button */
 .btn-warning {
-  background: linear-gradient(135deg, var(--accent-orange), #f39c12);
+  background: linear-gradient(135deg, #F4C2A8, #f39c12);
   color: var(--main-bg);
+  border: 2px solid #f39c12;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(244, 194, 168, 0.4);
+}
+.btn-warning:hover {
+  background: linear-gradient(135deg, #f39c12, #F4C2A8);
+  box-shadow: 0 6px 16px rgba(244, 194, 168, 0.6);
+  transform: translateY(-2px);
 }
 
 

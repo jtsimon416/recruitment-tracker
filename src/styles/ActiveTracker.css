@@ -55,10 +55,10 @@ body {
 
 .position-filter {
   padding: 8px 12px;
-  background: var(--card-bg);
+  background: #414868; /* Explicit input background */
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  color: var(--text-primary);
+  color: #c0caf5; /* Explicit text color */
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
@@ -69,6 +69,13 @@ body {
   outline: none;
   border-color: var(--accent-cyan);
   box-shadow: 0 0 0 3px rgba(125, 207, 255, 0.1);
+}
+
+/* Ensure dropdown options are styled properly */
+.position-filter option {
+  background: #24283b; /* Darker background for options */
+  color: #c0caf5; /* Explicit text color for options */
+  padding: 8px;
 }
 
 .view-toggle {
@@ -216,10 +223,10 @@ body {
 .stage-select,
 .status-select {
   padding: 8px 12px;
-  background: var(--secondary-bg);
+  background: #414868; /* Explicit input background */
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  color: var(--text-primary);
+  color: #c0caf5; /* Explicit text color */
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
@@ -231,6 +238,14 @@ body {
   outline: none;
   border-color: var(--accent-blue);
   box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.1);
+}
+
+/* Ensure dropdown options are styled properly */
+.stage-select option,
+.status-select option {
+  background: #24283b; /* Darker background for options */
+  color: #c0caf5; /* Explicit text color for options */
+  padding: 8px;
 }
 
 .actions-cell {

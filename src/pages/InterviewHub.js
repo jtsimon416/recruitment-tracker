@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
+import { useConfirmation } from '../contexts/ConfirmationContext';
 import '../styles/InterviewHub.css';
 
 function InterviewHub() {
+  // Confirmation Modal
+  const { showConfirmation } = useConfirmation();
+
   // Core Data
   const [interviews, setInterviews] = useState([]);
   const [positions, setPositions] = useState([]);
@@ -95,13 +99,21 @@ function InterviewHub() {
       const { error } = await supabase.from('interviews').insert([{ ...scheduleFormData }]);
       if (error) throw error;
 
-      alert('Interview scheduled successfully!');
+      showConfirmation({
+        type: 'success',
+        title: 'Success!',
+        message: 'Interview scheduled successfully!'
+      });
       resetScheduleForm();
       closeModal(); // Close modal if scheduling was a follow-up
       fetchData();
     } catch (error) {
       console.error('Error scheduling interview:', error);
-      alert('Error scheduling interview. Please try again.');
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: 'Error scheduling interview. Please try again.'
+      });
     }
   };
 
@@ -124,7 +136,11 @@ function InterviewHub() {
         .eq('position_id', interview.position_id);
       
       if (pipelineError || !pipelineEntries || pipelineEntries.length === 0) {
-        alert('Feedback saved! (Candidate not found in active pipeline for this role).');
+        showConfirmation({
+          type: 'info',
+          title: 'Feedback Saved',
+          message: 'Feedback saved! (Candidate not found in active pipeline for this role).'
+        });
         closeModal();
         fetchData();
         return;
@@ -159,24 +175,40 @@ function InterviewHub() {
       } else if (decision === 'hold') {
         const { error } = await supabase.from('pipeline').update({ status: 'Hold' }).eq('id', pipelineEntry.id);
         if (error) throw error;
-        alert('Feedback saved and candidate is now On Hold.');
+        showConfirmation({
+          type: 'success',
+          title: 'Success!',
+          message: 'Feedback saved and candidate is now On Hold.'
+        });
         closeModal();
         fetchData();
       } else if (decision === 'reject') {
         const { error } = await supabase.from('pipeline').update({ status: 'Reject' }).eq('id', pipelineEntry.id);
         if (error) throw error;
-        alert('Feedback saved and candidate has been rejected.');
+        showConfirmation({
+          type: 'success',
+          title: 'Success!',
+          message: 'Feedback saved and candidate has been rejected.'
+        });
         closeModal();
         fetchData();
       } else { // 'save'
-        alert('Feedback saved!');
+        showConfirmation({
+          type: 'success',
+          title: 'Success!',
+          message: 'Feedback saved!'
+        });
         closeModal();
         fetchData();
       }
 
     } catch (error) {
       console.error('Error processing decision:', error);
-      alert('An error occurred. Please try again.');
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: 'An error occurred. Please try again.'
+      });
     }
   };
   
@@ -190,7 +222,11 @@ function InterviewHub() {
 
     if (!candidateId || !positionId) {
       console.error("Error: Missing candidateId or positionId for history modal.");
-      alert("Unable to load interview history. Missing candidate or position information.");
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: 'Unable to load interview history. Missing candidate or position information.'
+      });
       return;
     }
 
@@ -205,7 +241,11 @@ function InterviewHub() {
 
     if (error) {
       console.error('Error fetching history:', error);
-      alert("Error loading interview history: " + error.message);
+      showConfirmation({
+        type: 'error',
+        title: 'Error',
+        message: `Error loading interview history: ${error.message}`
+      });
     } else {
       console.log(`Successfully fetched ${data?.length || 0} interview records`);
       setInterviewHistory(data || []);
