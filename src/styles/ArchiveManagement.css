@@ -111,6 +111,66 @@
   font-weight: 600;
 }
 
+/* New: Flexbox container for sourcing filters */
+.sourcing-filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(65, 72, 104, 0.3);
+  border-radius: 6px;
+  border: 1px solid #565f89;
+}
+
+/* New: Individual filter item wrapper */
+.sourcing-filter-item {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.sourcing-filter-item label {
+  font-size: 0.75rem;
+  color: #a0a0c0;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.sourcing-filter-item select {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  background-color: #414868;
+  color: #c0caf5;
+  border: 1px solid #565f89;
+  border-radius: 4px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23a0a0c0' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1em;
+  cursor: pointer;
+  font-size: 0.9rem;
+  min-height: 44px;
+  transition: all 0.2s;
+}
+
+.sourcing-filter-item select:focus {
+  outline: none;
+  border-color: #e8b4b8;
+  box-shadow: 0 0 0 2px rgba(232, 180, 184, 0.3);
+}
+
+.sourcing-filter-item select option {
+  background: #24283b;
+  color: #f0f0f0;
+  padding: 0.5rem;
+}
+
+/* Legacy support for old .filter-group class (if still used elsewhere) */
 .filter-group {
   margin-bottom: 1.5rem;
 }

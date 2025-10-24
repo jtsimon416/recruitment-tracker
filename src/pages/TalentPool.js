@@ -375,55 +375,9 @@ function TalentPool() {
   const filteredSkills = useMemo(() => debouncedSkillSearchTerm ? uniqueSkills.filter(skill => skill.toLowerCase().includes(debouncedSkillSearchTerm.toLowerCase())) : uniqueSkills, [uniqueSkills, debouncedSkillSearchTerm]);
 
   const filteredCandidates = useMemo(() => {
-    return candidates.filter(c => {
-      // STEP 1: LinkedIn Profiles Only Filter
-      if (showLinkedInProfilesOnly) {
-        const isSourced = c.profile_type === 'shell' ||
-          outreachRecords.some(o => o.linkedin_url?.toLowerCase() === c.linkedin_url?.toLowerCase());
-        if (!isSourced) return false;
-      }
-
-      // STEP 2: Sourcing Smart Filters (only apply if LinkedIn Profiles Only is ON)
-      if (showLinkedInProfilesOnly) {
-        // Get all outreach records for this candidate
-        const candidateOutreach = outreachRecords.filter(
-          o => o.linkedin_url?.toLowerCase() === c.linkedin_url?.toLowerCase()
-        );
-
-        // Filter by Position
-        if (selectedSourcingPositions.length > 0) {
-          const matchesPosition = candidateOutreach.some(
-            o => selectedSourcingPositions.includes(o.position_id)
-          );
-          if (!matchesPosition) return false;
-        }
-
-        // Filter by Status
-        if (selectedSourcingStatuses.length > 0) {
-          const matchesStatus = candidateOutreach.some(
-            o => selectedSourcingStatuses.includes(o.activity_status)
-          );
-          if (!matchesStatus) return false;
-        }
-
-        // Filter by Rating
-        if (selectedSourcingRatings.length > 0) {
-          const matchesRating = candidateOutreach.some(
-            o => selectedSourcingRatings.includes(o.rating)
-          );
-          if (!matchesRating) return false;
-        }
-
-        // Filter by Recruiter
-        if (selectedSourcingRecruiters.length > 0) {
-          const matchesRecruiter = candidateOutreach.some(
-            o => selectedSourcingRecruiters.includes(o.recruiter_id)
-          );
-          if (!matchesRecruiter) return false;
-        }
-      }
-
-      // STEP 3: Standard Filters (always apply)
+    // STEP 1: Apply main filters first (Status, Location, Skills, etc.)
+    let filtered = candidates.filter(c => {
+      // Standard Filters (always apply)
       if (debouncedSearchTerm) {
         const search = debouncedSearchTerm.toLowerCase();
         if (!(c.name?.toLowerCase().includes(search) || c.email?.toLowerCase().includes(search) || c.phone?.toLowerCase().includes(search) || c.notes?.toLowerCase().includes(search))) return false;
@@ -444,6 +398,94 @@ function TalentPool() {
       if (inPipelineFilter && !pipelineCandidateIds.includes(c.id)) return false;
       return true;
     });
+
+    // STEP 2: Apply LinkedIn Profiles Only filter + Cumulative Sourcing Smart Filters
+    if (showLinkedInProfilesOnly && outreachRecords) {
+      // Build candidate ID to outreach map for efficient lookups
+      const candidateIdToOutreachMap = {};
+      outreachRecords.forEach(outreach => {
+        // Find candidate by matching linkedin_url
+        const matchingCandidate = filtered.find(
+          c => c.linkedin_url?.toLowerCase() === outreach.linkedin_url?.toLowerCase()
+        );
+        if (matchingCandidate) {
+          if (!candidateIdToOutreachMap[matchingCandidate.id]) {
+            candidateIdToOutreachMap[matchingCandidate.id] = [];
+          }
+          candidateIdToOutreachMap[matchingCandidate.id].push(outreach);
+        }
+      });
+
+      // First: Filter to only show LinkedIn profiles (shell or sourced)
+      filtered = filtered.filter(c => {
+        const isSourced = c.profile_type === 'shell' || candidateIdToOutreachMap[c.id];
+        return isSourced;
+      });
+
+      // Then: Apply cumulative sourcing smart filters
+      // Filter by Position (if active)
+      if (selectedSourcingPositions.length > 0) {
+        const matchingCandidateIds = new Set();
+        filtered.forEach(c => {
+          const candidateOutreach = candidateIdToOutreachMap[c.id] || [];
+          const matchesPosition = candidateOutreach.some(
+            o => selectedSourcingPositions.includes(o.position_id)
+          );
+          if (matchesPosition) {
+            matchingCandidateIds.add(c.id);
+          }
+        });
+        filtered = filtered.filter(c => matchingCandidateIds.has(c.id));
+      }
+
+      // Filter by Last Outreach Status (if active, cumulative on filtered list)
+      if (selectedSourcingStatuses.length > 0) {
+        const matchingCandidateIds = new Set();
+        filtered.forEach(c => {
+          const candidateOutreach = candidateIdToOutreachMap[c.id] || [];
+          if (candidateOutreach.length > 0) {
+            // Sort by created_at descending to find the latest outreach
+            const latestOutreach = [...candidateOutreach].sort(
+              (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            )[0];
+            if (latestOutreach && selectedSourcingStatuses.includes(latestOutreach.activity_status)) {
+              matchingCandidateIds.add(c.id);
+            }
+          }
+        });
+        filtered = filtered.filter(c => matchingCandidateIds.has(c.id));
+      }
+
+      // Filter by Star Rating (if active, cumulative on filtered list)
+      if (selectedSourcingRatings.length > 0) {
+        const matchingCandidateIds = new Set();
+        filtered.forEach(c => {
+          const candidateOutreach = candidateIdToOutreachMap[c.id] || [];
+          const meetsRating = candidateOutreach.some(o => selectedSourcingRatings.includes(o.rating));
+          if (meetsRating) {
+            matchingCandidateIds.add(c.id);
+          }
+        });
+        filtered = filtered.filter(c => matchingCandidateIds.has(c.id));
+      }
+
+      // Filter by Sourced By Recruiter (if active, cumulative on filtered list)
+      if (selectedSourcingRecruiters.length > 0) {
+        const matchingCandidateIds = new Set();
+        filtered.forEach(c => {
+          const candidateOutreach = candidateIdToOutreachMap[c.id] || [];
+          const matchesRecruiter = candidateOutreach.some(
+            o => selectedSourcingRecruiters.includes(o.recruiter_id)
+          );
+          if (matchesRecruiter) {
+            matchingCandidateIds.add(c.id);
+          }
+        });
+        filtered = filtered.filter(c => matchingCandidateIds.has(c.id));
+      }
+    }
+
+    return filtered;
   }, [
     candidates, debouncedSearchTerm, selectedSkills, selectedLocation, dateRangeStart, dateRangeEnd,
     hasResumeFilter, hasLinkedInProfileFilter, inPipelineFilter, pipelineCandidateIds,
@@ -942,78 +984,76 @@ function TalentPool() {
         <div className="sourcing-filters-section">
           <h3 className="sourcing-filters-title">🔍 Sourcing Smart Filters</h3>
 
-          <div className="filter-group">
-            <label>Sourced For Position:</label>
-            <select
-              multiple
-              className="multi-select"
-              value={selectedSourcingPositions}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-                setSelectedSourcingPositions(selected);
-              }}
-            >
-              {positions.map(pos => (
-                <option key={pos.id} value={pos.id}>{pos.title}</option>
-              ))}
-            </select>
-          </div>
+          <div className="sourcing-filters-container">
+            <div className="sourcing-filter-item">
+              <label>Sourced For Position</label>
+              <select
+                multiple
+                value={selectedSourcingPositions}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                  setSelectedSourcingPositions(selected);
+                }}
+              >
+                {positions.map(pos => (
+                  <option key={pos.id} value={pos.id}>{pos.title}</option>
+                ))}
+              </select>
+            </div>
 
-          <div className="filter-group">
-            <label>Last Outreach Status:</label>
-            <select
-              multiple
-              className="multi-select"
-              value={selectedSourcingStatuses}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-                setSelectedSourcingStatuses(selected);
-              }}
-            >
-              <option value="outreach_sent">Outreach Sent</option>
-              <option value="reply_received">Reply Received</option>
-              <option value="accepted">Accepted</option>
-              <option value="call_scheduled">Call Scheduled</option>
-              <option value="declined">Declined</option>
-              <option value="ready_for_submission">Ready for Submission</option>
-              <option value="gone_cold">Gone Cold</option>
-            </select>
-          </div>
+            <div className="sourcing-filter-item">
+              <label>Last Outreach Status</label>
+              <select
+                multiple
+                value={selectedSourcingStatuses}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                  setSelectedSourcingStatuses(selected);
+                }}
+              >
+                <option value="outreach_sent">Outreach Sent</option>
+                <option value="reply_received">Reply Received</option>
+                <option value="accepted">Accepted</option>
+                <option value="call_scheduled">Call Scheduled</option>
+                <option value="declined">Declined</option>
+                <option value="ready_for_submission">Ready for Submission</option>
+                <option value="gone_cold">Gone Cold</option>
+              </select>
+            </div>
 
-          <div className="filter-group">
-            <label>Star Rating:</label>
-            <select
-              multiple
-              className="multi-select"
-              value={selectedSourcingRatings.map(r => String(r))}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions).map(o => parseInt(o.value));
-                setSelectedSourcingRatings(selected);
-              }}
-            >
-              <option value="5">5★</option>
-              <option value="4">4★</option>
-              <option value="3">3★</option>
-              <option value="2">2★</option>
-              <option value="1">1★</option>
-            </select>
-          </div>
+            <div className="sourcing-filter-item">
+              <label>Star Rating</label>
+              <select
+                multiple
+                value={selectedSourcingRatings.map(r => String(r))}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.selectedOptions).map(o => parseInt(o.value));
+                  setSelectedSourcingRatings(selected);
+                }}
+              >
+                <option value="5">5★</option>
+                <option value="4">4★</option>
+                <option value="3">3★</option>
+                <option value="2">2★</option>
+                <option value="1">1★</option>
+              </select>
+            </div>
 
-          <div className="filter-group">
-            <label>Sourced By Recruiter:</label>
-            <select
-              multiple
-              className="multi-select"
-              value={selectedSourcingRecruiters}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-                setSelectedSourcingRecruiters(selected);
-              }}
-            >
-              {recruiters.map(rec => (
-                <option key={rec.id} value={rec.id}>{rec.name}</option>
-              ))}
-            </select>
+            <div className="sourcing-filter-item">
+              <label>Sourced By Recruiter</label>
+              <select
+                multiple
+                value={selectedSourcingRecruiters}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                  setSelectedSourcingRecruiters(selected);
+                }}
+              >
+                {recruiters.map(rec => (
+                  <option key={rec.id} value={rec.id}>{rec.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <button

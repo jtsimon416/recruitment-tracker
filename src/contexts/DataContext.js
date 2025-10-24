@@ -348,8 +348,7 @@ export function DataProvider({ children }) {
             profile_type: 'shell',
             created_by_recruiter: 'System Archive',
             status: 'Archived',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            created_at: new Date().toISOString()
           };
 
           newCandidatesToInsert.push(shellProfile);
