@@ -279,6 +279,32 @@ export function DataProvider({ children }) {
     return data || [];
   }
 
+  // Update commission status
+  async function updateCommissionStatus(commissionId, newStatus) {
+    try {
+      console.log(`Updating commission ${commissionId} to ${newStatus}`);
+      const { error } = await supabase
+        .from('commissions')
+        .update({
+          status: newStatus
+          // updated_at is handled automatically by Supabase
+        })
+        .eq('id', commissionId);
+
+      if (error) {
+        console.error('Error updating commission status:', error);
+        return { success: false, error: error.message };
+      }
+
+      console.log(`Successfully updated commission ${commissionId}`);
+      await refreshData();
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating commission status:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Archive outreach for a closed position (creates shell profiles)
   async function archiveOutreachForPosition(positionId) {
     try {
@@ -452,6 +478,8 @@ export function DataProvider({ children }) {
     normalizeLinkedInUrl,
     fetchAllOutreachRecords,
     archiveOutreachForPosition,
+    // Commission management
+    updateCommissionStatus,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

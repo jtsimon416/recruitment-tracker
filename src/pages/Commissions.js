@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useConfirmation } from '../contexts/ConfirmationContext';
+import { useData } from '../contexts/DataContext';
 import '../styles/Commissions.css';
 
 function Commissions() {
   const { showConfirmation } = useConfirmation();
+  const { updateCommissionStatus } = useData();
   const [commissions, setCommissions] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [recruiters, setRecruiters] = useState([]);
@@ -342,6 +344,48 @@ function Commissions() {
             type: 'success',
             title: 'Success!',
             message: 'Commission deleted successfully!',
+            confirmText: 'OK',
+            cancelText: null,
+            onConfirm: () => {}
+          });
+          fetchCommissions();
+        }
+        setLoading(false);
+      }
+    });
+  }
+
+  async function handleMarkAsPaid(id) {
+    const commission = commissions.find(c => c.id === id);
+    const commissionInfo = commission
+      ? `${commission.recruiters?.name || 'Unknown'} - ${commission.positions?.title || 'Unknown Position'} ($${parseFloat(commission.amount || commission.calculated_amount || 0).toFixed(2)})`
+      : 'this commission';
+
+    showConfirmation({
+      type: 'info',
+      title: 'Mark Commission as Paid?',
+      message: 'This will update the commission status to "Paid" and it will appear in the Paid commissions filter.',
+      contextInfo: `Marking as paid: ${commissionInfo}`,
+      confirmText: 'Mark as Paid',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        setLoading(true);
+        const result = await updateCommissionStatus(id, 'Paid');
+
+        if (!result.success) {
+          showConfirmation({
+            type: 'error',
+            title: 'Error',
+            message: `Error updating commission: ${result.error}`,
+            confirmText: 'OK',
+            cancelText: null,
+            onConfirm: () => {}
+          });
+        } else {
+          showConfirmation({
+            type: 'success',
+            title: 'Success!',
+            message: 'Commission marked as paid successfully!',
             confirmText: 'OK',
             cancelText: null,
             onConfirm: () => {}
@@ -734,6 +778,15 @@ function Commissions() {
               </div>
               <div>{commission.placement_date || 'N/A'}</div>
               <div className="commission-actions">
+                {(commission.status === 'Ready to Invoice' || commission.status === 'Pending') && (
+                  <button
+                    className="btn-mark-paid"
+                    onClick={() => handleMarkAsPaid(commission.id)}
+                    title="Mark this commission as paid"
+                  >
+                    ✓ Mark as Paid
+                  </button>
+                )}
                 <button className="btn-delete" onClick={() => handleDelete(commission.id)}>
                   Delete
                 </button>

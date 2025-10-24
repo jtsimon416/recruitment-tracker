@@ -185,18 +185,29 @@ function InterviewHub() {
     setUpdateFormData({ feedback: interview.feedback || '' });
   };
   
-  const openHistoryModal = async (candidate, position) => {
-    setModalState({ mode: 'history', data: { candidate, position } });
+  const openHistoryModal = async (candidateId, positionId, candidateInfo, positionInfo) => {
+    console.log("Opening history for Candidate:", candidateId, "Position:", positionId);
+
+    if (!candidateId || !positionId) {
+      console.error("Error: Missing candidateId or positionId for history modal.");
+      alert("Unable to load interview history. Missing candidate or position information.");
+      return;
+    }
+
+    setModalState({ mode: 'history', data: { candidate: candidateInfo, position: positionInfo } });
+
     const { data, error } = await supabase
       .from('interviews')
       .select('*')
-      .eq('candidate_id', candidate.id)
-      .eq('position_id', position.id)
+      .eq('candidate_id', candidateId)
+      .eq('position_id', positionId)
       .order('interview_date', { ascending: true });
-      
+
     if (error) {
       console.error('Error fetching history:', error);
+      alert("Error loading interview history: " + error.message);
     } else {
+      console.log(`Successfully fetched ${data?.length || 0} interview records`);
       setInterviewHistory(data || []);
     }
   };
@@ -261,32 +272,56 @@ function InterviewHub() {
             <div className="interviews-list">
               {section.list.map(interview => (
                 <div key={interview.id} className={`interview-card ${section.isPast ? 'past' : 'upcoming'}`}>
-                  <div className="interview-header">
-                    <div>
-                      <h3>{interview.candidates?.name || '...'}</h3>
-                      <p className="position-info">{interview.positions?.title || '...'} - {interview.positions?.clients?.company_name || '...'}</p>
-                    </div>
-                    {interview.outcome && (<span className={`outcome-badge ${interview.outcome.toLowerCase()}`}>{interview.outcome}</span>)}
-                    {!interview.outcome && section.isPast && <span className="outcome-badge hold">Pending</span>}
-                  </div>
-                  
-                  <div className="interview-details">
-                    <p><strong>Date:</strong> {new Date(interview.interview_date).toLocaleString()}</p>
-                    <p><strong>Type:</strong> {interview.interview_type || 'N/A'}</p>
-                    {interview.interviewer_name && (<p><strong>Interviewer:</strong> {interview.interviewer_name}</p>)}
+
+                  {/* Column 1: Candidate & Position Info */}
+                  <div className="interview-card-column candidate-info-column">
+                    <div className="candidate-name">{interview.candidates?.name || 'Unknown'}</div>
+                    <div className="position-info">{interview.positions?.title || 'N/A'}</div>
+                    <div className="company-info">{interview.positions?.clients?.company_name || 'N/A'}</div>
                   </div>
 
-                  {section.isPast && interview.feedback && (
-                    <div className="feedback-box">
-                      <strong>Feedback:</strong>
-                      <p>{interview.feedback}</p>
+                  {/* Column 2: Interview Details */}
+                  <div className="interview-card-column interview-details-column">
+                    <div className="interview-detail-item">
+                      <span className="detail-label">Date:</span>
+                      <span className="detail-value">{new Date(interview.interview_date).toLocaleDateString()}</span>
                     </div>
-                  )}
+                    <div className="interview-detail-item">
+                      <span className="detail-label">Time:</span>
+                      <span className="detail-value">{new Date(interview.interview_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div className="interview-detail-item">
+                      <span className="detail-label">Type:</span>
+                      <span className="detail-value">{interview.interview_type || 'N/A'}</span>
+                    </div>
+                  </div>
 
-                  <div className="interview-actions">
+                  {/* Column 3: Status & Feedback */}
+                  <div className="interview-card-column status-feedback-column">
+                    {interview.interviewer_name && (
+                      <div className="interviewer-info">
+                        <span className="detail-label">Interviewer:</span> {interview.interviewer_name}
+                      </div>
+                    )}
+                    {interview.outcome && (
+                      <span className={`outcome-badge ${interview.outcome.toLowerCase()}`}>{interview.outcome}</span>
+                    )}
+                    {!interview.outcome && section.isPast && (
+                      <span className="outcome-badge pending">Pending</span>
+                    )}
+                    {section.isPast && interview.feedback && (
+                      <div className="feedback-preview">
+                        {interview.feedback.substring(0, 60)}...
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Column 4: Actions */}
+                  <div className="interview-card-column actions-column">
                     <button className="btn-update" onClick={() => openUpdateModal(interview)}>Update & Decide</button>
-                    <button className="btn-secondary" onClick={() => openHistoryModal(interview.candidates, interview.positions)}>View History</button>
+                    <button className="btn-secondary" onClick={() => openHistoryModal(interview.candidate_id, interview.position_id, interview.candidates, interview.positions)}>View History</button>
                   </div>
+
                 </div>
               ))}
             </div>

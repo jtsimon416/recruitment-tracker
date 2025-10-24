@@ -112,27 +112,158 @@
   width: 100%;
 }
 
+/* ===================================
+   HORIZONTAL INTERVIEW CARD LAYOUT
+   =================================== */
 .interview-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-polished);
   box-shadow: var(--shadow-polished);
-  padding: 20px;
+  padding: 16px 20px;
   transition: all 0.2s ease;
+  /* NEW: Horizontal flexbox layout */
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
   width: 100%;
   box-sizing: border-box;
+  min-height: 80px; /* Compact height */
 }
 
 .interview-card.feedback-pending {
-  border-left: 4px solid var(--status-red); /* Highlight for pending feedback */
+  border-left: 4px solid var(--status-red);
+}
+
+.interview-card.past {
+  border-left: 4px solid var(--rose-gold-main);
 }
 
 .interview-card:hover {
   box-shadow: var(--shadow-polished-hover);
   border-color: var(--rose-gold-main);
+}
+
+/* Column structure for horizontal layout */
+.interview-card-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Column 1: Candidate & Position Info */
+.candidate-info-column {
+  flex: 0 0 220px;
+  min-width: 220px;
+}
+
+.candidate-name {
+  font-size: 1.05em;
+  font-weight: 600;
+  color: var(--rose-gold-main);
+  margin-bottom: 2px;
+}
+
+.position-info {
+  font-size: 0.9em;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.company-info {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
+
+/* Column 2: Interview Details */
+.interview-details-column {
+  flex: 0 0 200px;
+  min-width: 200px;
+}
+
+.interview-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85em;
+}
+
+.detail-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 50px;
+}
+
+.detail-value {
+  color: var(--text-primary);
+}
+
+/* Column 3: Status & Feedback */
+.status-feedback-column {
+  flex: 1 1 auto;
+  min-width: 180px;
+  gap: 6px;
+}
+
+.interviewer-info {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
+
+.interviewer-info .detail-label {
+  font-weight: 500;
+  min-width: auto;
+}
+
+.outcome-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.outcome-badge.pending {
+  background-color: var(--status-yellow);
+  color: var(--primary-bg);
+}
+
+.outcome-badge.advance,
+.outcome-badge.positive {
+  background-color: var(--status-green);
+  color: var(--primary-bg);
+}
+
+.outcome-badge.reject,
+.outcome-badge.negative {
+  background-color: var(--status-red);
+  color: var(--text-primary);
+}
+
+.outcome-badge.hold {
+  background-color: var(--secondary-bg);
+  color: var(--status-yellow);
+  border: 1px solid var(--status-yellow);
+}
+
+.feedback-preview {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+/* Column 4: Actions */
+.actions-column {
+  flex: 0 0 auto;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .card-header {
@@ -208,6 +339,41 @@
   margin: 0;
 }
 
+/* Horizontal card action buttons - compact styling */
+.actions-column .btn-update,
+.actions-column .btn-secondary {
+    padding: 6px 12px;
+    font-size: 0.85em;
+    border-radius: var(--border-radius-polished);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.actions-column .btn-update {
+    background: var(--rose-gold-gradient);
+    color: var(--primary-bg);
+    border: none;
+}
+
+.actions-column .btn-update:hover {
+    background: var(--rose-gold-gradient-hover);
+    box-shadow: 0 2px 8px rgba(235, 188, 186, 0.4);
+}
+
+.actions-column .btn-secondary {
+    background: var(--secondary-bg);
+    color: var(--rose-gold-main);
+    border: 1px solid var(--rose-gold-main);
+}
+
+.actions-column .btn-secondary:hover {
+    background: var(--rose-gold-main);
+    color: var(--primary-bg);
+}
+
+/* Legacy styles for modals/other contexts */
 .interview-actions {
   display: flex;
   gap: 10px;
@@ -216,10 +382,9 @@
   border-top: 1px solid var(--border-color);
 }
 
-/* Update & View History Buttons (FIXED: The white-looking buttons) */
 .interview-actions .btn-update {
     background: var(--rose-gold-gradient);
-    color: var(--primary-bg); /* Dark text */
+    color: var(--primary-bg);
     border: none;
     border-radius: var(--border-radius-polished);
     padding: 8px 15px;
@@ -230,7 +395,7 @@
 
 .interview-actions .btn-secondary {
     background: var(--secondary-bg);
-    color: var(--rose-gold-main); /* Rose Gold text on dark background */
+    color: var(--rose-gold-main);
     border: 1px solid var(--rose-gold-main);
     border-radius: var(--border-radius-polished);
     padding: 8px 15px;
@@ -460,4 +625,82 @@
 .rbc-time-gutter,
 .rbc-allday-cell {
   background: var(--secondary-bg);
+}
+
+/* ===================================
+   RESPONSIVE DESIGN FOR INTERVIEW CARDS
+   =================================== */
+@media (max-width: 1200px) {
+  .interview-card {
+    gap: 15px;
+  }
+
+  .candidate-info-column {
+    flex: 0 0 180px;
+    min-width: 180px;
+  }
+
+  .interview-details-column {
+    flex: 0 0 160px;
+    min-width: 160px;
+  }
+
+  .status-feedback-column {
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 992px) {
+  .interview-card {
+    flex-wrap: wrap;
+    padding: 14px 16px;
+  }
+
+  .candidate-info-column {
+    flex: 1 1 100%;
+    min-width: 100%;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+
+  .interview-details-column,
+  .status-feedback-column {
+    flex: 1 1 45%;
+    min-width: 200px;
+  }
+
+  .actions-column {
+    flex: 1 1 100%;
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+  }
+}
+
+@media (max-width: 768px) {
+  .interview-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .candidate-info-column,
+  .interview-details-column,
+  .status-feedback-column,
+  .actions-column {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+
+  .actions-column {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .actions-column .btn-update,
+  .actions-column .btn-secondary {
+    width: 100%;
+  }
 }
