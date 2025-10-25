@@ -216,6 +216,7 @@ function DirectorOutreachDashboard() {
   const [dateFilter, setDateFilter] = useState('week');
   const [customDateStart, setCustomDateStart] = useState('');
   const [customDateEnd, setCustomDateEnd] = useState('');
+  const [activeTab, setActiveTab] = useState('feed'); // 'feed' will be the default
   
   // --- PAGINATION STATE ---
   const [currentPage, setCurrentPage] = useState(1);
@@ -447,179 +448,200 @@ function DirectorOutreachDashboard() {
   return (
     <div className="page-container director-outreach-container">
       <div className="page-header"> <h1>Team Outreach Dashboard</h1> <p className="subtitle">Real-time visibility into recruiter LinkedIn activity</p> </div>
-
-      {/* =================================== */}
-      {/* === ARCHIVE MANAGEMENT SECTION === */}
-      {/* =================================== */}
-      <div className="archive-management-section">
-        <h2 className="archive-section-title">
-          <Archive size={20} />
-          Archive Outreach to Talent Pool
-        </h2>
-        <p style={{ color: '#a0a0c0', marginBottom: '1rem' }}>
-          Select a closed position to archive its outreach history as searchable profiles in the Talent Pool.
-        </p>
-        <select
-          className="archive-position-selector"
-          value={selectedArchivePosition}
-          onChange={(e) => handleArchivePositionChange(e.target.value)}
-          disabled={archiving}
-        >
-          <option value="">Select Closed Position...</option>
-          {closedPositions.map(position => {
-            const closedDate = position.date_closed
-              ? new Date(position.date_closed).toLocaleDateString()
-              : '(Date Not Recorded)';
-            const companyName = position.clients?.company_name || 'Unknown Client';
-            return (
-              <option key={position.id} value={position.id}>
-                {position.title} @ {companyName} - Closed {closedDate}
-              </option>
-            );
-          })}
-        </select>
+      <div className="strategy-tabs">
         <button
-          className={`btn-archive-outreach ${archivePreview.newProfiles === 0 && selectedArchivePosition ? 'already-archived' : ''}`}
-          onClick={handleArchiveClick}
-          disabled={!selectedArchivePosition || archivePreview.newProfiles === 0 || archiving}
+          className={activeTab === 'feed' ? 'active' : ''}
+          onClick={() => setActiveTab('feed')}
         >
-          <Archive size={16} />
-          {archiving ? (
-            'Archiving...'
-          ) : archivePreview.newProfiles === 0 && selectedArchivePosition ? (
-            'Already Archived (0 new profiles)'
-          ) : selectedArchivePosition ? (
-            `Archive Outreach (${archivePreview.newProfiles} new, ${archivePreview.existingProfiles} existing)`
-          ) : (
-            'Archive Outreach'
-          )}
+          Live Feed
+        </button>
+        <button
+          className={activeTab === 'archive' ? 'active' : ''}
+          onClick={() => setActiveTab('archive')}
+        >
+          Archive Management
         </button>
       </div>
 
-      {/* =================================== */}
-      {/* === ADVANCED FILTER PANEL ==== */}
-      {/* =================================== */}
-      <div className="advanced-filter-panel">
-        <div className="filter-panel-header" onClick={() => setFilterPanelExpanded(!filterPanelExpanded)}>
-          <div className="filter-header-left">
-            <Filter size={20} />
-            <h3>Filters</h3>
-            {activeFilterCount > 0 && <span className="filter-count-badge">{activeFilterCount}</span>}
+      {activeTab === 'feed' && (
+        <div className="tab-content">
+          <div className="director-feed-section">
+            {/* =================================== */}
+            {/* === ADVANCED FILTER PANEL ==== */}
+            {/* =================================== */}
+            <div className="advanced-filter-panel">
+              <div className="filter-panel-header" onClick={() => setFilterPanelExpanded(!filterPanelExpanded)}>
+                <div className="filter-header-left">
+                  <Filter size={20} />
+                  <h3>Filters</h3>
+                  {activeFilterCount > 0 && <span className="filter-count-badge">{activeFilterCount}</span>}
+                </div>
+                <div className="filter-header-right">
+                  {activeFilterCount > 0 && (
+                    <button className="btn-clear-filters" onClick={(e) => { e.stopPropagation(); clearFilters(); }}>
+                      Clear All
+                    </button>
+                  )}
+                  <button className="btn-toggle-panel">
+                    {filterPanelExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  </button>
+                </div>
+              </div>
+              
+              <AnimatePresence>
+                {filterPanelExpanded && (
+                  <motion.div
+                    className="filter-panel-content"
+                    initial={{ height: 0, opacity: 0, padding: '0 24px' }}
+                    animate={{ height: 'auto', opacity: 1, padding: '24px 24px' }}
+                    exit={{ height: 0, opacity: 0, padding: '0 24px' }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  >
+                    <div className="filter-row">
+                      <FilterSelection
+                        label="Recruiters"
+                        items={recruiterItems}
+                        selectedItems={filterRecruiters}
+                        onToggle={toggleRecruiterFilter}
+                      />
+                      <FilterSelection
+                        label="Positions"
+                        items={positionItems}
+                        selectedItems={filterPositions}
+                        onToggle={togglePositionFilter}
+                      />
+                    </div>
+                    <div className="filter-row">
+                      <FilterSelection
+                        label="Status"
+                        items={statusItems}
+                        selectedItems={filterStatuses}
+                        onToggle={toggleStatusFilter}
+                      />
+                      <div className="filter-section">
+                        <label className="filter-section-label">Date Range</label>
+                        <div className="date-range-inputs">
+                          <select className="filter-select" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="custom">Custom Range</option>
+                          </select>
+                          {dateFilter === 'custom' && (
+                            <>
+                              <input type="date" className="filter-date-input" value={customDateStart} onChange={(e) => setCustomDateStart(e.target.value)} />
+                              <span className="date-separator">to</span>
+                              <input type="date" className="filter-date-input" value={customDateEnd} onChange={(e) => setCustomDateEnd(e.target.value)} />
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            {/* =================================== */}
+            {/* === END OF FILTER PANEL ========= */}
+            {/* =================================== */}
+
+            
+            <div className="activity-feed-section">
+              <div className="section-header"> 
+                  <h2>Live Activity Feed</h2> 
+                  <span className="activity-count">
+                      {totalItems} total activities 
+                      {totalItems > itemsPerPage && ` (Page ${currentPage} of ${totalPages})`}
+                  </span> 
+              </div>
+              <div className="activity-cards-container"> 
+                {loading ? (
+                  <div className="empty-state"><p>Loading activities...</p></div>
+                ) : (
+                  paginatedActivities.length === 0 ? ( <div className="empty-state"> <p>No activities found matching filters.</p> </div> ) : ( paginatedActivities.map(activity => ( <OutreachCard key={activity.id} activity={activity} onToggleNotes={toggleNotes} isExpanded={expandedNotes[activity.id]} /> )) )
+                )}
+              </div>
+
+              {/* =================================== */}
+              {/* === PAGINATION CONTROLS ==== */}
+              {/* =================================== */}
+              {totalPages > 1 && (
+                  <div className="pagination-controls-bar">
+                      <button
+                          className="btn-page"
+                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                          disabled={currentPage === 1}
+                      >
+                          ◀ Previous
+                      </button>
+                      <span className="pagination-info">
+                          Page {currentPage} of {totalPages}
+                      </span>
+                      <button
+                          className="btn-page"
+                          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                          disabled={currentPage === totalPages}
+                      >
+                          Next ▶
+                      </button>
+                  </div>
+              )}
+              {/* =================================== */}
+              {/* === END: PAGINATION CONTROLS ==== */}
+              {/* =================================== */}
+            </div>
           </div>
-          <div className="filter-header-right">
-            {activeFilterCount > 0 && (
-              <button className="btn-clear-filters" onClick={(e) => { e.stopPropagation(); clearFilters(); }}>
-                Clear All
-              </button>
-            )}
-            <button className="btn-toggle-panel">
-              {filterPanelExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </div>
+      )}
+
+      {activeTab === 'archive' && (
+        <div className="tab-content">
+          <div className="archive-management-section">
+            <h2 className="archive-section-title">
+              <Archive size={20} />
+              Archive Outreach to Talent Pool
+            </h2>
+            <p style={{ color: '#a0a0c0', marginBottom: '1rem' }}>
+              Select a closed position to archive its outreach history as searchable profiles in the Talent Pool.
+            </p>
+            <select
+              className="archive-position-selector"
+              value={selectedArchivePosition}
+              onChange={(e) => handleArchivePositionChange(e.target.value)}
+              disabled={archiving}
+            >
+              <option value="">Select Closed Position...</option>
+              {closedPositions.map(position => {
+                const closedDate = position.date_closed
+                  ? new Date(position.date_closed).toLocaleDateString()
+                  : '(Date Not Recorded)';
+                const companyName = position.clients?.company_name || 'Unknown Client';
+                return (
+                  <option key={position.id} value={position.id}>
+                    {position.title} @ {companyName} - Closed {closedDate}
+                  </option>
+                );
+              })}
+            </select>
+            <button
+              className={`btn-archive-outreach ${archivePreview.newProfiles === 0 && selectedArchivePosition ? 'already-archived' : ''}`}
+              onClick={handleArchiveClick}
+              disabled={!selectedArchivePosition || archivePreview.newProfiles === 0 || archiving}
+            >
+              <Archive size={16} />
+              {archiving ? (
+                'Archiving...'
+              ) : archivePreview.newProfiles === 0 && selectedArchivePosition ? (
+                'Already Archived (0 new profiles)'
+              ) : selectedArchivePosition ? (
+                `Archive Outreach (${archivePreview.newProfiles} new, ${archivePreview.existingProfiles} existing)`
+              ) : (
+                'Archive Outreach'
+              )}
             </button>
           </div>
         </div>
-        
-        <AnimatePresence>
-          {filterPanelExpanded && (
-            <motion.div
-              className="filter-panel-content"
-              initial={{ height: 0, opacity: 0, padding: '0 24px' }}
-              animate={{ height: 'auto', opacity: 1, padding: '24px 24px' }}
-              exit={{ height: 0, opacity: 0, padding: '0 24px' }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-            >
-              <div className="filter-row">
-                <FilterSelection
-                  label="Recruiters"
-                  items={recruiterItems}
-                  selectedItems={filterRecruiters}
-                  onToggle={toggleRecruiterFilter}
-                />
-                <FilterSelection
-                  label="Positions"
-                  items={positionItems}
-                  selectedItems={filterPositions}
-                  onToggle={togglePositionFilter}
-                />
-              </div>
-              <div className="filter-row">
-                <FilterSelection
-                  label="Status"
-                  items={statusItems}
-                  selectedItems={filterStatuses}
-                  onToggle={toggleStatusFilter}
-                />
-                <div className="filter-section">
-                  <label className="filter-section-label">Date Range</label>
-                  <div className="date-range-inputs">
-                    <select className="filter-select" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-                      <option value="today">Today</option>
-                      <option value="week">This Week</option>
-                      <option value="month">This Month</option>
-                      <option value="custom">Custom Range</option>
-                    </select>
-                    {dateFilter === 'custom' && (
-                      <>
-                        <input type="date" className="filter-date-input" value={customDateStart} onChange={(e) => setCustomDateStart(e.target.value)} />
-                        <span className="date-separator">to</span>
-                        <input type="date" className="filter-date-input" value={customDateEnd} onChange={(e) => setCustomDateEnd(e.target.value)} />
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      {/* =================================== */}
-      {/* === END OF FILTER PANEL ========= */}
-      {/* =================================== */}
-
-      
-      <div className="activity-feed-section">
-        <div className="section-header"> 
-            <h2>Live Activity Feed</h2> 
-            <span className="activity-count">
-                {totalItems} total activities 
-                {totalItems > itemsPerPage && ` (Page ${currentPage} of ${totalPages})`}
-            </span> 
-        </div>
-        <div className="activity-cards-container"> 
-          {loading ? (
-             <div className="empty-state"><p>Loading activities...</p></div>
-          ) : (
-            paginatedActivities.length === 0 ? ( <div className="empty-state"> <p>No activities found matching filters.</p> </div> ) : ( paginatedActivities.map(activity => ( <OutreachCard key={activity.id} activity={activity} onToggleNotes={toggleNotes} isExpanded={expandedNotes[activity.id]} /> )) )
-          )}
-        </div>
-
-        {/* =================================== */}
-        {/* === PAGINATION CONTROLS ==== */}
-        {/* =================================== */}
-        {totalPages > 1 && (
-            <div className="pagination-controls-bar">
-                <button
-                    className="btn-page"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                >
-                    ◀ Previous
-                </button>
-                <span className="pagination-info">
-                    Page {currentPage} of {totalPages}
-                </span>
-                <button
-                    className="btn-page"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                >
-                    Next ▶
-                </button>
-            </div>
-        )}
-        {/* =================================== */}
-        {/* === END: PAGINATION CONTROLS ==== */}
-        {/* =================================== */}
-      </div>
+      )}
     </div>
   );
 }

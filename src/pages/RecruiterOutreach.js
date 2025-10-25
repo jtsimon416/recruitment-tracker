@@ -1407,9 +1407,8 @@ function RecruiterOutreach() {
   return (
     <div className="recruiter-outreach-page">
       {/* Page Header */}
-      <div className="outreach-page-header">
-        <h1>MY LINKEDIN OUTREACH</h1>
-        <p className="outreach-page-subtitle">Track and manage your LinkedIn recruitment activities</p>
+      <div className="page-header">
+        <h1>My Outreach</h1>
       </div>
 
       <div className="strategy-tabs">
