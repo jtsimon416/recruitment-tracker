@@ -1934,6 +1934,53 @@
   }
 }
 
+/* --- Tab Content Styling --- */
+.tab-content {
+  padding-top: 20px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Strategy Manager Tabs --- */
+.strategy-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border-color);
+  margin-bottom: 20px;
+}
+
+.strategy-tabs button {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  border-bottom: 4px solid transparent;
+  transition: all 0.2s ease-in-out;
+  margin-bottom: -2px; /* Aligns border with parent's border */
+}
+
+.strategy-tabs button:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.strategy-tabs button.active {
+  color: var(--rose-gold);
+  border-bottom: 4px solid var(--rose-gold);
+}
+
 
 /* =================================== */
 /* DARK THEME FOR REACT-DATEPICKER (More Specific) */

@@ -66,12 +66,25 @@ const InfoSidebar = ({ candidate, onClose }) => {
 
 function ActiveTracker() {
   const { showConfirmation } = useConfirmation();
-  const { newCommentCandidateIds, clearCommentNotifications, user, createNotification, recruiters } = useData();
+  const { 
+    pipeline, 
+    setPipeline,
+    positions, 
+    recruiters, 
+    loading, 
+    refreshData,
+    newCommentCandidateIds, 
+    clearCommentNotifications, 
+    user, 
+    createNotification 
+  } = useData();
   const location = useLocation();
   
+  const openPositions = useMemo(() => {
+    return positions.filter(pos => pos.status === 'Open');
+  }, [positions]);
+  
   const navigate = useNavigate();
-  const [pipeline, setPipeline] = useState([]);
-  const [positions, setPositions] = useState([]);
   const [view, setView] = useState('list');
   const [expandedCard, setExpandedCard] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
@@ -80,7 +93,6 @@ function ActiveTracker() {
   const [commentData, setCommentData] = useState({ comment_text: '' });
   const [editingComment, setEditingComment] = useState(null);
   const [editingText, setEditingText] = useState('');
-  const [loading, setLoading] = useState(true);
   
   const [showInfoSidebar, setShowInfoSidebar] = useState(false);
   const [sidebarCandidate, setSidebarCandidate] = useState(null);
@@ -104,14 +116,6 @@ function ActiveTracker() {
 
   const stages = ['Screening', 'Submit to Client', 'Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired'];
   const statuses = ['Active', 'Hold', 'Reject'];
-
-  useEffect(() => {
-    const loadData = async () => {
-      await Promise.all([fetchPipeline(), fetchPositions()]); 
-      setLoading(false);
-    };
-    loadData();
-  }, []);
   
   useEffect(() => {
     if (location.state?.candidateId && location.state?.positionId) {
@@ -161,39 +165,6 @@ function ActiveTracker() {
     }
   }, [pendingMove, user, pipeline, DIRECTOR_EMAIL]);
   
-  async function fetchPipeline() {
-    const { data, error } = await supabase
-      .from('pipeline')
-      .select(`
-        *,
-        candidates (*),
-        positions (*),
-        recruiters (*)
-      `)
-      .neq('stage', 'Archived')
-      .not('positions', 'is', null);
-
-    if (error) {
-      console.error('Error fetching pipeline:', error);
-    } else {
-      setPipeline(data || []);
-    }
-  }
-  
-  async function fetchPositions() {
-    const { data, error } = await supabase
-      .from('positions')
-      .select('*')
-      .eq('status', 'Open')
-      .order('title');
-    
-    if (error) {
-      console.error('Error fetching positions:', error);
-    } else {
-      setPositions(data || []);
-    }
-  }
-  
   async function updateCandidateStage(id, newStage) {
     const { error } = await supabase
       .from('pipeline')
@@ -212,7 +183,7 @@ function ActiveTracker() {
       });
       return false;
     } else {
-      await fetchPipeline();
+      await refreshData();
       return true;
     }
   }
@@ -234,7 +205,7 @@ function ActiveTracker() {
         onConfirm: () => {}
       });
     } else {
-      await fetchPipeline();
+      await refreshData();
     }
   }
   
@@ -255,7 +226,7 @@ function ActiveTracker() {
         onConfirm: () => {}
       });
     } else {
-      await fetchPipeline();
+      await refreshData();
       setConfirmDeleteId(null);
     }
   }
@@ -765,8 +736,7 @@ function ActiveTracker() {
       <div className="page-header">
         <h1>Active Tracker</h1>
         <div className="header-controls">
-          <select className="position-filter" value={selectedStage} onChange={(e) => setSelectedStage(e.target.value)}><option value="all">All Stages</option>{stages.map(stage => <option key={stage} value={stage}>{stage}</option>)}</select>
-          <select className="position-filter" value={selectedPosition} onChange={(e) => setSelectedPosition(e.target.value)}><option value="all">All Positions</option>{positions.map(pos => <option key={pos.id} value={pos.id}>{pos.title}</option>)}</select>
+          <select className="position-filter" value={selectedStage} onChange={(e) => setSelectedStage(e.target.value)}><option value="all">All Stages</option>{stages.map(stage => <option key={stage} value={stage}>{stage}</option>)}</select>          <select className="position-filter" value={selectedPosition} onChange={(e) => setSelectedPosition(e.target.value)}><option value="all">All Positions</option>{openPositions.map(pos => <option key={pos.id} value={pos.id}>{pos.title}</option>)}</select>
           <select className="position-filter" value={selectedRecruiter} onChange={(e) => setSelectedRecruiter(e.target.value)}><option value="all">All Recruiters</option>{recruiters.map(rec => <option key={rec.id} value={rec.id}>{rec.name}</option>)}</select>
           <select className="position-filter" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}><option value="all">All Statuses</option>{statuses.map(status => <option key={status} value={status}>{status}</option>)}</select>
           <div className="view-toggle"><button className={`toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>List</button><button className={`toggle-btn ${view === 'pipeline' ? 'active' : ''}`} onClick={() => setView('pipeline')}>Pipeline</button></div>

@@ -91,7 +91,7 @@ export function DataProvider({ children }) {
       supabase.from('positions').select('*, clients(company_name)').order('created_at', { ascending: false }),
       supabase.from('candidates').select('*').order('name'),
       supabase.from('recruiters').select('*').order('name'),
-      supabase.from('pipeline').select('*, candidates(name), recruiters(name), positions(title)'),
+      supabase.from('pipeline').select('*, candidates (*), positions (*), recruiters (*)'),
       supabase.from('interviews').select('*, candidates(name), positions(title)').order('interview_date', { ascending: true }),
       supabase.from('recruiter_outreach').select('*, positions(*, clients(*)), recruiters(name)').eq('is_archived', false).order('created_at', { ascending: false })
     ]);

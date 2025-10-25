@@ -722,6 +722,7 @@ function RecruiterOutreach() {
   const [duplicatesFound, setDuplicatesFound] = useState([]);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   // ----------------------------------------------------
+  const [activeTab, setActiveTab] = useState('roles'); // 'roles' will be the default tab
 
   // Load Data
   useEffect(() => {
@@ -1407,14 +1408,30 @@ function RecruiterOutreach() {
     <div className="recruiter-outreach-page">
       {/* Page Header */}
       <div className="outreach-page-header">
-        <h1>📊 MY LINKEDIN OUTREACH</h1>
+        <h1>MY LINKEDIN OUTREACH</h1>
         <p className="outreach-page-subtitle">Track and manage your LinkedIn recruitment activities</p>
       </div>
 
-      {/* MY ACTIVE ROLES Section */}
-      <MyActiveRoles userProfile={userProfile} />
+      <div className="strategy-tabs">
+        <button
+          className={activeTab === 'roles' ? 'active' : ''}
+          onClick={() => setActiveTab('roles')}
+        >
+          Active Roles & Calls
+        </button>
+        <button
+          className={activeTab === 'sourcing' ? 'active' : ''}
+          onClick={() => setActiveTab('sourcing')}
+        >
+          Sourcing & Outreach
+        </button>
+      </div>
 
-      {/* --- ADDED: Gone Cold Notification Banner --- */}
+      {activeTab === 'roles' && (
+        <div className="tab-content">
+          {/* MY ACTIVE ROLES Section */}
+          <MyActiveRoles userProfile={userProfile} />
+          {/* --- ADDED: Gone Cold Notification Banner --- */}
       {showGoneColdBanner && goingColdOutreach.length > 0 && (
         <div className="gone-cold-notification-banner">
           <div className="banner-content">
@@ -1443,11 +1460,16 @@ function RecruiterOutreach() {
       )}
       {/* -------------------------------------------- */}
 
-      {/* Calls Dashboard */}
-      <MyCallsDashboard outreachActivities={outreachActivities} />
+          {/* Calls Dashboard */}
+          <MyCallsDashboard outreachActivities={outreachActivities} />
+        </div>
+      )}
 
-      {/* Bulk Upload Card */}
-      <div className="bulk-upload-card">
+      {activeTab === 'sourcing' && (
+        <div className="tab-content">
+          <div className="outreach-table-section">
+            {/* Bulk Upload Card */}
+            <div className="bulk-upload-card">
         <h3><Upload size={20} /> BULK UPLOAD OUTREACH</h3>
 
         {!bulkPreview ? (
@@ -1517,9 +1539,8 @@ function RecruiterOutreach() {
           </div>
         )}
       </div>
-
-      {/* Filters Card */}
-      <div className="filters-card">
+            {/* Filters Card */}
+            <div className="filters-card">
         <h3><Filter size={20} /> FILTERS & SEARCH</h3>
 
         <div className="filters-grid">
@@ -1614,9 +1635,8 @@ function RecruiterOutreach() {
           </button>
         </div>
       </div>
-
-      {/* Table */}
-      <div className="outreach-table-container">
+            {/* Table */}
+            <div className="outreach-table-container">
         <div className="outreach-table-header">
           <h3>📋 MY OUTREACH ACTIVITY</h3>
           <span className="outreach-table-count">({sortedOutreach.length} contacts)</span>
@@ -1885,6 +1905,9 @@ function RecruiterOutreach() {
           </>
         )}
       </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {editingActivity && (
