@@ -1,18 +1,46 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
+import { useConfirmation } from '../contexts/ConfirmationContext';
 import { FaFileAlt, FaUserTie, FaExclamationCircle, FaLightbulb } from 'react-icons/fa';
 // Import new themed icons
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Check, X, Archive, Send, MessageSquare, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { Eye, Check, X, Archive, Send, MessageSquare, ExternalLink, ChevronDown, ChevronUp, Edit, Trash2 } from 'lucide-react';
 import '../styles/DirectorReview.css';
 
 // Modal component for comments
-const CommentsModal = ({ pipelineEntry, comments, handleCommentChange, handleFinalDecision, onClose }) => {
+const CommentsModal = ({ 
+    pipelineEntry, 
+    comments, 
+    handleCommentChange, 
+    handleFinalDecision, 
+    onClose, 
+    userProfile,
+    editingComment,
+    setEditingComment,
+    editingText,
+    setEditingText,
+    handleUpdateComment,
+    handleDeleteComment,
+    fetchCandidatesForReview
+}) => {
+    const { showConfirmation } = useConfirmation();
+
+    const handleEditClick = (comment) => {
+        setEditingComment(comment);
+        setEditingText(comment.comment_text);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingComment(null);
+        setEditingText('');
+    };
+
     return (
         <div className="modal-overlay">
             <motion.div 
               className="modal-content"
+              style={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
@@ -23,31 +51,61 @@ const CommentsModal = ({ pipelineEntry, comments, handleCommentChange, handleFin
                 </div>
                 
                 <div className="modal-body">
-                  <div className="modal-comments-history">
-                      {pipelineEntry.comments && pipelineEntry.comments.length > 0 ? (
-                          pipelineEntry.comments.map(comment => (
-                              <div key={comment.id} className="comment">
-                                  <p><strong>{comment.author_name}:</strong> {comment.comment_text}</p>
-                                  <small>{new Date(comment.created_at).toLocaleString()}</small>
-                              </div>
-                          ))
-                      ) : <p className="no-comments-message">No comment history for this candidate.</p>}
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="decision-comments">Your Decision & Comment</label>
-                    <textarea
-                        id="decision-comments"
-                        value={comments[pipelineEntry.id] || ''}
-                        onChange={e => handleCommentChange(pipelineEntry.id, e.target.value)}
-                        placeholder="Provide your feedback here... (Required for Hold/Reject)"
-                        rows="5"
-                        className="form-textarea"
-                    />
-                  </div>
+                    <div className="modal-comments-history">
+                        {pipelineEntry.comments && pipelineEntry.comments.length > 0 ? (
+                            pipelineEntry.comments.map(comment => (
+                                <div key={comment.id} className="comment">
+                                    {editingComment?.id === comment.id ? (
+                                        <form onSubmit={(e) => { e.preventDefault(); handleUpdateComment(); }} className="edit-comment-form">
+                                            <textarea
+                                                value={editingText}
+                                                onChange={(e) => setEditingText(e.target.value)}
+                                                required
+                                                rows="3"
+                                            />
+                                            <div className="edit-comment-actions">
+                                                <button type="submit" className="btn btn-primary">Update</button>
+                                                <button type="button" className="btn btn-secondary" onClick={handleCancelEdit}>Cancel</button>
+                                            </div>
+                                        </form>
+                                    ) : (
+                                        <>
+                                            <div className="comment-header">
+                                                <p className="comment-author"><strong>{comment.author_name}:</strong></p>
+                                                <small className="comment-date">{new Date(comment.created_at).toLocaleString()}</small>
+                                            </div>
+                                            <p className="comment-text-body">{comment.comment_text}</p>
+                                            {userProfile?.id === comment.user_id && (
+                                                <div className="comment-actions">
+                                                    <button onClick={() => handleEditClick(comment)} className="btn-icon" title="Edit Comment">
+                                                        <Edit size={14} />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteComment(comment.id)} className="btn-icon" title="Delete Comment">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            ))
+                        ) : <p className="no-comments-message">No comment history for this candidate.</p>}
+                    </div>
+                    
+                    <div className="form-group">
+                        <label htmlFor="decision-comments">Your Decision & Comment</label>
+                        <textarea
+                            id="decision-comments"
+                            value={comments[pipelineEntry.id] || ''}
+                            onChange={e => handleCommentChange(pipelineEntry.id, e.target.value)}
+                            placeholder="Provide your feedback here... (Required for Hold/Reject)"
+                            rows="5"
+                            className="form-textarea"
+                        />
+                    </div>
                 </div>
 
-                <div className="modal-footer">
+                <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
                     {/* Using new, standard button classes */}
                     <button onClick={() => handleFinalDecision(pipelineEntry, 'Hold', comments[pipelineEntry.id] || '')} className="btn btn-warning">
                       <Archive size={16} /> Hold & Notify
@@ -116,6 +174,11 @@ function DirectorReview() {
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
     const [showCommentsModal, setShowCommentsModal] = useState(false);
+    const { showConfirmation } = useConfirmation();
+
+    // State for comment editing
+    const [editingComment, setEditingComment] = useState(null);
+    const [editingText, setEditingText] = useState('');
     const [selectedCandidateForComments, setSelectedCandidateForComments] = useState(null);
 
     const fetchCandidatesForReview = useCallback(async () => {
@@ -145,6 +208,46 @@ function DirectorReview() {
     
     const handleCommentChange = (id, text) => setComments(prev => ({ ...prev, [id]: text }));
     const displayAlert = (message) => { setAlertMessage(message); setShowAlert(true); setTimeout(() => setShowAlert(false), 3000); };
+
+    const handleUpdateComment = async () => {
+        if (!editingComment || !editingText.trim()) return;
+        const { error } = await supabase
+            .from('comments')
+            .update({ comment_text: editingText })
+            .eq('id', editingComment.id);
+
+        if (error) {
+            displayAlert(`Error updating comment: ${error.message}`);
+        } else {
+            setEditingComment(null);
+            setEditingText('');
+            fetchCandidatesForReview(); // Refresh all data to show update
+            displayAlert('Comment updated.');
+        }
+    };
+
+    const handleDeleteComment = (commentId) => {
+        showConfirmation({
+            type: 'delete',
+            title: 'Delete Comment?',
+            message: 'Are you sure you want to permanently delete this comment?',
+            onConfirm: async () => {
+                const { error } = await supabase
+                    .from('comments')
+                    .delete()
+                    .eq('id', commentId);
+
+                if (error) {
+                    displayAlert(`Error deleting comment: ${error.message}`);
+                } else {
+                    fetchCandidatesForReview(); // Refresh all data
+                    displayAlert('Comment deleted.');
+                }
+            }
+        });
+    };
+
+
     
     const handleFinalDecision = async (pipelineEntry, action, comment) => {
         console.log(`--- DR DEBUG START: user exists=${!!user}, user profile role=${userProfile?.role}, action=${action}`);
@@ -300,6 +403,13 @@ function DirectorReview() {
                     comments={comments}
                     handleCommentChange={handleCommentChange}
                     handleFinalDecision={handleFinalDecision}
+                    userProfile={userProfile}
+                    editingComment={editingComment}
+                    setEditingComment={setEditingComment}
+                    editingText={editingText}
+                    setEditingText={setEditingText}
+                    handleUpdateComment={handleUpdateComment}
+                    handleDeleteComment={handleDeleteComment}
                     onClose={closeCommentsModal}
                 />
             )}

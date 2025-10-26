@@ -314,26 +314,35 @@
   border-color: var(--text-secondary);
 }
 
-/* Danger (Red) */
-.btn-danger {
-  background: linear-gradient(135deg, var(--accent-red), #e74c3c);
+/* Reject - Change to a dark charcoal/maroon */
+.modal-footer .btn-danger {
+  background-color: #4a4a4a; /* Dark Charcoal Gray */
   color: white;
+  border: 1px solid #555;
+}
+.modal-footer .btn-danger:hover {
+  background-color: #633030; /* Slightly lighter maroon on hover */
 }
 
-/* Warning (Yellow/Orange) - Hold Button */
-.btn-warning {
-  background: linear-gradient(135deg, #F4C2A8, #f39c12);
-  color: var(--main-bg);
-  border: 2px solid #f39c12;
+/* Hold - Change to a dark bronze/graphite */
+.modal-footer .btn-warning {
+  background-color: #6B4F3F; /* Dark Bronze */
+  color: white;
+  border: none; /* Remove the orange border */
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(244, 194, 168, 0.4);
+  border: 1px solid #7a5c4a;
 }
-.btn-warning:hover {
-  background: linear-gradient(135deg, #f39c12, #F4C2A8);
-  box-shadow: 0 6px 16px rgba(244, 194, 168, 0.6);
-  transform: translateY(-2px);
+.modal-footer .btn-warning:hover {
+  background-color: #85634e; /* Slightly lighter bronze on hover */
 }
 
+/* Ensure other buttons in the modal footer also have high specificity if needed */
+/* Submit Button - Rose Gold */
+.modal-footer .btn-primary {
+  background: var(--rose-gold);
+  color: var(--main-bg);
+  border: none;
+}
 
 /* ===================================
    Modal Styles (Themed)
@@ -363,23 +372,27 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); 
   overflow: hidden;
   max-height: 90vh;
+  /* --- FIX: Use Flexbox for single scroll area --- */
   display: flex;
   flex-direction: column;
 }
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center; /* Center the h2 */
   padding: 1.5rem 2rem;
   border-bottom: 1px solid var(--border-color);
   background: var(--secondary-bg);
+  position: relative; /* For absolute positioning of close button */
 }
-
 .modal-header h2 {
   color: var(--rose-gold);
   margin: 0;
   font-size: 1.5rem;
+  padding: 1rem 0;
+  /* No flex-grow needed, centering is handled by parent */
+  text-align: center; /* Ensure text is centered if it wraps */
 }
 
 .modal-close-btn {
@@ -391,6 +404,10 @@
   border-radius: 50%;
   transition: all 0.2s;
   display: flex;
+  position: absolute; /* Position relative to header */
+  right: 1.5rem;
+  top: 50%; /* Center vertically */
+  transform: translateY(-50%); /* Precise vertical centering */
 }
 .modal-close-btn:hover {
   background-color: var(--hover-bg);
@@ -399,28 +416,91 @@
 
 .modal-body {
   padding: 2rem;
+  flex: 1;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: var(--main-bg); /* Ensure body has a background */
+  overflow-x: hidden;
+}
+
+/* For Chrome, Safari, and Edge */
+.modal-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: var(--secondary-bg); /* Dark track background */
+  border-radius: 5px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background-color: var(--rose-gold); /* Rose gold handle */
+  border-radius: 5px;
+  border: 2px solid var(--secondary-bg); /* Padding around thumb */
 }
 
 .modal-comments-history { 
-  max-height: 250px; 
-  overflow-y: auto; 
+  /* REMOVED: overflow-y: auto; */
   border: 1px solid var(--border-color); 
   border-radius: 8px; 
   padding: 1rem; 
   background-color: var(--main-bg); 
-  margin-bottom: 1.5rem; 
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
+/* --- NEW: Styling for individual comments --- */
 .comment { 
   background-color: var(--secondary-bg); 
-  margin-bottom: 0.75rem; 
   padding: 1rem; 
   border-radius: 6px;
   border-left: 3px solid var(--rose-gold);
+  position: relative;
 }
-.comment p { margin: 0 0 0.5rem 0; color: var(--text-primary); }
-.comment small { color: var(--text-muted); }
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.comment-author { margin: 0; color: var(--text-primary); }
+.comment-date { color: var(--text-muted); font-size: 0.8rem; }
+.comment-text-body { margin: 0; color: var(--text-secondary); line-height: 1.5; }
+
+.comment-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.comment:hover .comment-actions {
+  opacity: 1;
+}
+.btn-icon {
+  background: var(--hover-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.btn-icon:hover {
+  color: var(--rose-gold);
+  border-color: var(--rose-gold);
+}
+.edit-comment-form { display: flex; flex-direction: column; gap: 0.5rem; }
+.edit-comment-form textarea { width: 100%; background: var(--main-bg); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; }
+.edit-comment-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
 
 .no-comments-message { color: var(--text-muted); text-align: center; padding: 1rem; }
 
@@ -450,8 +530,8 @@
   flex-wrap: wrap; 
   gap: 0.75rem; 
   justify-content: flex-end;
-  padding: 1.5rem 2rem;
   background-color: var(--secondary-bg);
+  padding: 1.5rem 2rem;
   border-top: 1px solid var(--border-color);
 }
 
