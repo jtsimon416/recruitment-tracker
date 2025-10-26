@@ -203,7 +203,7 @@ function TalentPool() {
   const location = useLocation();
   const navigate = useNavigate();
   const { showConfirmation } = useConfirmation();
-  const { fetchAllOutreachRecords } = useData();
+  const { fetchAllOutreachRecords, refreshData } = useData();
   const [candidates, setCandidates] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showPipelineModal, setShowPipelineModal] = useState(false);
@@ -767,7 +767,7 @@ function TalentPool() {
     } else {
       showConfirmation({ type: 'success', title: 'Success!', message: 'Added to pipeline.' });
       closePipelineModal();
-      await loadData();
+      await refreshData();
     }
   };
 

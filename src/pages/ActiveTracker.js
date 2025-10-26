@@ -108,7 +108,6 @@ function ActiveTracker() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedStage, setSelectedStage] = useState('all'); 
   const [sortConfig, setSortConfig] = useState({ key: 'candidates.name', direction: 'ascending' });
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null); 
 
   const [pendingMove, setPendingMove] = useState(null);
 
@@ -227,7 +226,6 @@ function ActiveTracker() {
       });
     } else {
       await refreshData();
-      setConfirmDeleteId(null);
     }
   }
   
@@ -311,12 +309,18 @@ function ActiveTracker() {
       },
     });
   };
-  const handleRemove = (id) => {
-    if (confirmDeleteId === id) {
-      removeCandidateFromPipeline(id);
-    } else {
-      setConfirmDeleteId(id);
-    }
+  const handleRemove = (id, candidateName, positionTitle) => {
+    showConfirmation({
+      type: 'delete',
+      title: 'Remove Candidate?',
+      message: `Are you sure you want to remove ${candidateName || 'this candidate'} from the "${positionTitle || 'this position'}"?`,
+      contextInfo: 'This will move the candidate to the "Archived" stage.',
+      confirmText: 'Yes, Remove',
+      cancelText: 'Cancel',
+      onConfirm: () => {
+        removeCandidateFromPipeline(id);
+      }
+    });
   };
   
   const handleOpenInfoSidebar = (candidate) => {
@@ -489,7 +493,7 @@ function ActiveTracker() {
   }
   
   const filteredAndSortedPipeline = useMemo(() => {
-    let filtered = pipeline;
+    let filtered = pipeline.filter(item => item.positions?.status === 'Open' && item.stage !== 'Archived');
     
     if (selectedPosition !== 'all') {
       filtered = filtered.filter(item => item.position_id === selectedPosition);
@@ -615,8 +619,14 @@ function ActiveTracker() {
                           >
                             Schedule Interview
                           </button>
-                         <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={(e) => { e.stopPropagation(); handleRemove(item.id); }}>
-                            {confirmDeleteId === item.id ? 'Confirm Delete' : 'Remove'} 
+                         <button 
+                            className="btn-remove" 
+                            onClick={(e) => { 
+                                e.stopPropagation(); 
+                                handleRemove(item.id, item.candidates?.name, item.positions?.title); 
+                            }}
+                         >
+                            Remove
                          </button>
                       </div>
                     </div>
@@ -708,8 +718,13 @@ function ActiveTracker() {
                                     >
                                       Schedule Interview
                                     </button>
-                                    <button className={`btn-remove ${confirmDeleteId === item.id ? 'confirm-delete' : ''}`} onClick={() => handleRemove(item.id)}>
-                                       {confirmDeleteId === item.id ? 'Confirm Delete' : 'Remove'}
+                                    <button 
+                                        className="btn-remove" 
+                                        onClick={() => {
+                                            handleRemove(item.id, item.candidates?.name, item.positions?.title);
+                                        }}
+                                    >
+                                       Remove
                                     </button>
                                   </div>
                                 </div>
