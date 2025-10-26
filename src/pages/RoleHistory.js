@@ -29,7 +29,7 @@ function RoleHistory() {
       (positions || []).map(async (position) => {
         const { data: pipelineData } = await supabase
           .from('pipeline')
-          .select('*, candidates(name), recruiters(name)')
+          .select('*, candidates(name), recruiters(name), highest_stage_reached')
           .eq('position_id', position.id);
 
         const totalCandidates = pipelineData?.length || 0;
@@ -69,51 +69,39 @@ function RoleHistory() {
           const stats = recruiterBreakdown[entry.recruiter_id];
           stats.totalCandidates++;
           stats.candidates.push({ name: entry.candidates?.name || 'Unknown', stage: entry.stage });
+          // --- START NEW LOGIC ---
+          // Read from the new highest_stage_reached column.
           
-          const stageMap = { 'Interview 1': 1, 'Interview 2': 2, 'Interview 3': 3, 'Offer': 3, 'Hired': 3 };
-          const highestStageValue = stageMap[stats.highestStage] || 0;
-          const currentStageValue = stageMap[entry.stage] || 0;
-
-          if (currentStageValue > highestStageValue) {
-            stats.highestStage = entry.stage;
+          if (entry.highest_stage_reached === 'Interview 1') {
+              stats.interview1Count++;
+          } else if (entry.highest_stage_reached === 'Interview 2') {
+              stats.interview2Count++;
+          } else if (['Interview 3', 'Offer', 'Hired'].includes(entry.highest_stage_reached)) {
+              // Group 'Interview 3', 'Offer', and 'Hired' together
+              stats.interview3Count++;
           }
-
-          // Aggregate interview counts
-          if (['Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired'].includes(entry.stage)) {
-            stats.interview1Count++;
-          }
-          if (['Interview 2', 'Interview 3', 'Offer', 'Hired'].includes(entry.stage)) {
-            stats.interview2Count++;
-          }
-          if (['Interview 3', 'Offer', 'Hired'].includes(entry.stage)) {
-            stats.interview3Count++;
-          }
+          // --- END NEW LOGIC ---
         });
 
         // Assign commission percentages to other recruiters if a hire was made
         if (hiredCandidate) {
           for (const recruiterId in recruiterBreakdown) {
+            // --- START REPLACEMENT ---
             if (recruiterId !== hiringRecruiterId) {
-              const stats = recruiterBreakdown[recruiterId];
-              switch (stats.highestStage) {
-                case 'Interview 1':
-                  stats.commission = 1;
-                  stats.commissionReason = 'Candidate reached Interview 1';
-                  break;
-                case 'Interview 2':
-                  stats.commission = 2;
-                  stats.commissionReason = 'Candidate reached Interview 2';
-                  break;
-                case 'Interview 3':
-                case 'Offer':
-                case 'Hired': // This case handles if another candidate was also hired, but the logic takes the highest stage.
-                  stats.commission = 3;
-                  stats.commissionReason = 'Candidate reached Interview 3+';
-                  break;
-                default:
-                  break;
+                const stats = recruiterBreakdown[recruiterId];
+            
+                // Base commission on the new, accurate discrete counts
+                if (stats.interview3Count > 0) {
+                    stats.commission = 3;
+                    stats.commissionReason = 'Candidate reached Interview 3+';
+                } else if (stats.interview2Count > 0) {
+                    stats.commission = 2;
+                    stats.commissionReason = 'Candidate reached Interview 2';
+                } else if (stats.interview1Count > 0) {
+                    stats.commission = 1;
+                    stats.commissionReason = 'Candidate reached Interview 1';
+                }
               }
-            }
           }
         }
         
@@ -237,11 +225,11 @@ function RoleHistory() {
                         <span className="stat-value-small">{data.totalCandidates}</span>
                       </div>
                       <div className="stat-item-small">
-                        <span className="stat-label-small">Interview 1+</span>
+                        <span className="stat-label-small">Interview 1</span>
                         <span className="stat-value-small">{data.interview1Count}</span>
                       </div>
                       <div className="stat-item-small">
-                        <span className="stat-label-small">Interview 2+</span>
+                        <span className="stat-label-small">Interview 2</span>
                         <span className="stat-value-small">{data.interview2Count}</span>
                       </div>
                       <div className="stat-item-small">

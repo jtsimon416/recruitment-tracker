@@ -114,6 +114,15 @@ function ActiveTracker() {
   const DIRECTOR_EMAIL = 'brian.griffiths@brydongama.com';
 
   const stages = ['Screening', 'Submit to Client', 'Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired'];
+  const stageOrder = {
+    'Screening': 1,
+    'Submit to Client': 2,
+    'Interview 1': 3,
+    'Interview 2': 4,
+    'Interview 3': 5,
+    'Offer': 6,
+    'Hired': 7
+  };
   const statuses = ['Active', 'Hold', 'Reject'];
   
   useEffect(() => {
@@ -149,7 +158,7 @@ function ActiveTracker() {
       } else {
         // RECRUITER MOVED CANDIDATE - NO NOTIFICATION!
         const updateAndHandle = async () => {
-          const success = await updateCandidateStage(pipelineId, newStage);
+          const success = await updateCandidateStage(pipelineId, newStage, pipelineItem.highest_stage_reached);
           if (!success) {
             // Revert the change if it failed
             setPipeline(prevPipeline =>
@@ -164,12 +173,28 @@ function ActiveTracker() {
     }
   }, [pendingMove, user, pipeline, DIRECTOR_EMAIL]);
   
-  async function updateCandidateStage(id, newStage) {
+  // THIS IS THE NEW, SAFER LOGIC
+  async function updateCandidateStage(id, newStage, currentHighestStage) {
+    const dataToUpdate = {
+      stage: newStage
+    };
+  
+    const newStageValue = stageOrder[newStage] || 0;
+  
+    // RULE 1: If the new stage is an "advancement" stage (like 'I1', 'I2', 'I3')...
+    if (newStageValue > 0) {
+      // We ALWAYS update highest_stage_reached.
+      // This fixes the "fat-finger" error by allowing corrections (e.g., I3 -> I2).
+      dataToUpdate.highest_stage_reached = newStage;
+    }
+    // RULE 2: If the new stage is 'Reject', 'Hold', etc. (newStageValue is 0)...
+    // We do NOT update highest_stage_reached. It is "frozen" at its last known value,
+    // which perfectly preserves the stage for the commission report.
+  
     const { error } = await supabase
       .from('pipeline')
-      .update({ stage: newStage })
+      .update(dataToUpdate)
       .eq('id', id);
-
     if (error) {
       console.error('Error updating stage:', error);
       showConfirmation({
@@ -232,18 +257,21 @@ function ActiveTracker() {
   const handleStageChange = (pipelineId, newStage) => {
     const pipelineItem = pipeline.find(p => p.id === pipelineId);
     if (!pipelineItem) return;
-    
+  
     const oldStage = pipelineItem.stage;
+    const currentHighestStage = pipelineItem.highest_stage_reached; // Get the current highest stage
+  
     setPipeline(prevPipeline =>
       prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: newStage } : p))
     );
-    
-    setPendingMove({ pipelineId, newStage, oldStage, pipelineItem });
+  
+    // Pass the current highest stage into the pending move
+    setPendingMove({ pipelineId, newStage, oldStage, pipelineItem, currentHighestStage });
   };
 
   const confirmStageChange = async () => {
-    const { pipelineId, newStage, oldStage, candidateName, recruiterName, recruiterEmail, positionTitle } = notificationModal.data;
-    const success = await updateCandidateStage(pipelineId, newStage);
+    const { pipelineId, newStage, oldStage, candidateName, recruiterName, recruiterEmail, positionTitle, currentHighestStage } = notificationModal.data;
+    const success = await updateCandidateStage(pipelineId, newStage, currentHighestStage);
     if (success) {
       await createNotification({
         type: 'stage_change_director',
