@@ -3,8 +3,10 @@ import { useData } from '../contexts/DataContext';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ExternalLink, TrendingUp, Users, ChevronDown, ChevronUp, Download, Filter, X, CheckCircle, AlertCircle, FileText, Star, Phone, Calendar, Archive
+  ExternalLink, TrendingUp, Users, ChevronDown, ChevronUp, Download, Filter, X, CheckCircle, AlertCircle, FileText, Star, Phone, Calendar, Archive, List, BarChartHorizontal
 } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import AnimatedCounter from '../components/AnimatedCounter';
 import '../styles/DirectorOutreachDashboard.css';
 import '../styles/ArchiveManagement.css';
 
@@ -217,6 +219,7 @@ function DirectorOutreachDashboard() {
   const [customDateStart, setCustomDateStart] = useState('');
   const [customDateEnd, setCustomDateEnd] = useState('');
   const [activeTab, setActiveTab] = useState('feed'); // 'feed' will be the default
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'stats'
   
   // --- PAGINATION STATE ---
   const [currentPage, setCurrentPage] = useState(1);
@@ -434,6 +437,122 @@ function DirectorOutreachDashboard() {
     outreachStages.map(s => ({ id: s, name: getStatusLabel(s) })),
   [outreachStages]);
 
+  // =========================================================================
+  // STATS VIEW CALCULATIONS
+  // =========================================================================
+
+  // Helper: Get Monday of current week
+  const getMondayOfWeek = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+  };
+
+  // Helper: Get week range
+  const getWeekRange = (weekOffset = 0) => {
+    const now = new Date();
+    const monday = getMondayOfWeek(now);
+    monday.setDate(monday.getDate() + (weekOffset * 7));
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    return { start: monday, end: sunday };
+  };
+
+  // Filter out directors and managers for stats
+  const nonManagerOutreach = useMemo(() => {
+    const managerIds = recruiters
+      .filter(r => {
+        const role = r.role?.toLowerCase() || '';
+        return role === 'director' || role.includes('manager');
+      })
+      .map(r => r.id);
+    return outreachActivities.filter(a => !managerIds.includes(a.recruiter_id));
+  }, [outreachActivities, recruiters]);
+
+  // KPI 1: Total Outreach This Week
+  const totalOutreachThisWeek = useMemo(() => {
+    const { start, end } = getWeekRange(0);
+    return nonManagerOutreach.filter(a => {
+      const date = new Date(a.created_at);
+      return date >= start && date <= end;
+    }).length;
+  }, [nonManagerOutreach]);
+
+  // KPI 2: Team Reply Rate This Week
+  const replyRateThisWeek = useMemo(() => {
+    const { start, end } = getWeekRange(0);
+    const thisWeekOutreach = nonManagerOutreach.filter(a => {
+      const date = new Date(a.created_at);
+      return date >= start && date <= end;
+    });
+    if (thisWeekOutreach.length === 0) return 0;
+    const replied = thisWeekOutreach.filter(a => a.activity_status !== 'outreach_sent').length;
+    return ((replied / thisWeekOutreach.length) * 100);
+  }, [nonManagerOutreach]);
+
+  // KPI 3: Positive Replies This Week
+  const positiveRepliesThisWeek = useMemo(() => {
+    const { start, end } = getWeekRange(0);
+    return nonManagerOutreach.filter(a => {
+      const date = new Date(a.created_at);
+      return date >= start && date <= end && (a.activity_status === 'accepted' || a.activity_status === 'call_scheduled');
+    }).length;
+  }, [nonManagerOutreach]);
+
+  // KPI 4: Declines This Week
+  const declinesThisWeek = useMemo(() => {
+    const { start, end } = getWeekRange(0);
+    return nonManagerOutreach.filter(a => {
+      const date = new Date(a.created_at);
+      return date >= start && date <= end && a.activity_status === 'declined';
+    }).length;
+  }, [nonManagerOutreach]);
+
+  // Chart 1: Weekly Outreach Trend (Last 4 weeks)
+  const weeklyTrendData = useMemo(() => {
+    const weeks = [];
+    for (let i = 3; i >= 0; i--) {
+      const { start, end } = getWeekRange(-i);
+      const count = nonManagerOutreach.filter(a => {
+        const date = new Date(a.created_at);
+        return date >= start && date <= end;
+      }).length;
+
+      const weekLabel = i === 0 ? 'This Week' : `${i} Week${i > 1 ? 's' : ''} Ago`;
+      weeks.push({ week: weekLabel, outreach: count });
+    }
+    return weeks;
+  }, [nonManagerOutreach]);
+
+  // Chart 2: Recruiter Reply Rate Comparison (Current Week)
+  const recruiterReplyRates = useMemo(() => {
+    const { start, end } = getWeekRange(0);
+    const rates = [];
+
+    recruiterFilterList.forEach(recruiter => {
+      const recruiterOutreach = nonManagerOutreach.filter(a => {
+        const date = new Date(a.created_at);
+        return a.recruiter_id === recruiter.id && date >= start && date <= end;
+      });
+
+      if (recruiterOutreach.length === 0) return;
+
+      const replied = recruiterOutreach.filter(a => a.activity_status !== 'outreach_sent').length;
+      const replyRate = ((replied / recruiterOutreach.length) * 100);
+
+      rates.push({
+        name: recruiter.name,
+        replyRate: parseFloat(replyRate.toFixed(1)),
+        total: recruiterOutreach.length
+      });
+    });
+
+    return rates.sort((a, b) => b.replyRate - a.replyRate);
+  }, [nonManagerOutreach, recruiterFilterList]);
+
   // Calculate active filter count (keep unchanged)
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -465,7 +584,33 @@ function DirectorOutreachDashboard() {
 
       {activeTab === 'feed' && (
         <div className="tab-content">
-          <div className="director-feed-section">
+          <div className="view-mode-tabs">
+            <button
+              className={viewMode === 'list' ? 'view-tab active' : 'view-tab'}
+              onClick={() => setViewMode('list')}
+            >
+              <List size={18} />
+              List View
+            </button>
+            <button
+              className={viewMode === 'stats' ? 'view-tab active' : 'view-tab'}
+              onClick={() => setViewMode('stats')}
+            >
+              <BarChartHorizontal size={18} />
+              Stats View
+            </button>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {viewMode === 'list' && (
+              <motion.div
+                key="list-view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="director-feed-section">
             {/* =================================== */}
             {/* === ADVANCED FILTER PANEL ==== */}
             {/* =================================== */}
@@ -591,6 +736,161 @@ function DirectorOutreachDashboard() {
               {/* =================================== */}
             </div>
           </div>
+              </motion.div>
+            )}
+
+            {viewMode === 'stats' && (
+              <motion.div
+                key="stats-view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="stats-view-container"
+              >
+                <div className="kpi-cards-section">
+                  <motion.div
+                    className="kpi-card"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <div className="kpi-icon" style={{ backgroundColor: '#B8D4D0' }}>
+                      <TrendingUp size={24} />
+                    </div>
+                    <div className="kpi-content">
+                      <div className="kpi-label">Total Outreach This Week</div>
+                      <div className="kpi-value">
+                        <AnimatedCounter value={totalOutreachThisWeek} />
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    className="kpi-card"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <div className="kpi-icon" style={{ backgroundColor: '#9ECE6A' }}>
+                      <CheckCircle size={24} />
+                    </div>
+                    <div className="kpi-content">
+                      <div className="kpi-label">Team Reply Rate This Week</div>
+                      <div className="kpi-value">
+                        <AnimatedCounter value={replyRateThisWeek} suffix="%" />
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    className="kpi-card"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <div className="kpi-icon" style={{ backgroundColor: '#C5B9D6' }}>
+                      <Star size={24} />
+                    </div>
+                    <div className="kpi-content">
+                      <div className="kpi-label">Positive Replies This Week</div>
+                      <div className="kpi-value">
+                        <AnimatedCounter value={positiveRepliesThisWeek} />
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    className="kpi-card"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <div className="kpi-icon" style={{ backgroundColor: '#F7A9BA' }}>
+                      <AlertCircle size={24} />
+                    </div>
+                    <div className="kpi-content">
+                      <div className="kpi-label">Declines This Week</div>
+                      <div className="kpi-value">
+                        <AnimatedCounter value={declinesThisWeek} />
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+
+                <div className="charts-section">
+                  <motion.div
+                    className="chart-card"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <h3 className="chart-title">Weekly Outreach Trend</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={weeklyTrendData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2a2a40" />
+                        <XAxis dataKey="week" stroke="#a0a0c0" />
+                        <YAxis stroke="#a0a0c0" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1a1a2e',
+                            border: '1px solid #2a2a40',
+                            borderRadius: '8px',
+                            color: '#e0e0f0'
+                          }}
+                        />
+                        <Legend />
+                        <Line
+                          type="monotone"
+                          dataKey="outreach"
+                          stroke="#E8B4B8"
+                          strokeWidth={3}
+                          dot={{ fill: '#E8B4B8', r: 5 }}
+                          activeDot={{ r: 7 }}
+                          name="Total Outreach"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </motion.div>
+
+                  <motion.div
+                    className="chart-card"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <h3 className="chart-title">Recruiter Reply Rate Comparison</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={recruiterReplyRates} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2a2a40" />
+                        <XAxis type="number" stroke="#a0a0c0" />
+                        <YAxis dataKey="name" type="category" stroke="#a0a0c0" width={120} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1a1a2e',
+                            border: '1px solid #2a2a40',
+                            borderRadius: '8px',
+                            color: '#e0e0f0'
+                          }}
+                          formatter={(value, name, props) => [
+                            `${value}% (${props.payload.total} outreach)`,
+                            'Reply Rate'
+                          ]}
+                        />
+                        <Legend />
+                        <Bar
+                          dataKey="replyRate"
+                          fill="#B8D4D0"
+                          name="Reply Rate (%)"
+                          radius={[0, 8, 8, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
