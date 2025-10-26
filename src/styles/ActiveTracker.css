@@ -55,10 +55,10 @@ body {
 
 .position-filter {
   padding: 8px 12px;
-  background: #414868; /* Explicit input background */
+  background: var(--secondary-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  color: #c0caf5; /* Explicit text color */
+  color: var(--text-primary);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
@@ -67,14 +67,14 @@ body {
 
 .position-filter:focus {
   outline: none;
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(125, 207, 255, 0.1);
+  border-color: var(--rose-gold-main);
+  box-shadow: 0 0 0 3px rgba(235, 188, 186, 0.2);
 }
 
 /* Ensure dropdown options are styled properly */
 .position-filter option {
-  background: #24283b; /* Darker background for options */
-  color: #c0caf5; /* Explicit text color for options */
+  background: var(--primary-bg);
+  color: var(--text-primary);
   padding: 8px;
 }
 
@@ -104,7 +104,7 @@ body {
 }
 
 .toggle-btn.active {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  background: var(--rose-gold-gradient);
   color: white;
   box-shadow: 0 2px 8px rgba(122, 162, 247, 0.3);
 }
@@ -126,7 +126,7 @@ body {
 
 .position-section-title {
   background: var(--secondary-bg);
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   padding: 20px;
   margin: 0;
   font-size: 20px;
@@ -161,7 +161,7 @@ body {
 }
 
 .pipeline-header > div:hover {
-  color: var(--accent-cyan);
+  color: var(--rose-gold-shine);
 }
 
 .pipeline-row {
@@ -192,19 +192,19 @@ body {
 }
 
 .candidate-name-cell strong {
-  color: var(--accent-cyan);
+  color: var(--text-primary);
   font-size: 15px;
 }
 
 .icon-view-details {
-  color: var(--accent-purple);
+  color: var(--status-purple);
   cursor: pointer;
   transition: color 0.2s;
   flex-shrink: 0;
 }
 
 .icon-view-details:hover {
-  color: var(--accent-pink);
+  color: var(--status-red);
 }
 
 .icon-view-resume {
@@ -217,16 +217,16 @@ body {
 }
 
 .icon-view-resume:hover {
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
 }
 
 .stage-select,
 .status-select {
   padding: 8px 12px;
-  background: #414868; /* Explicit input background */
+  background: var(--secondary-bg);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  color: #c0caf5; /* Explicit text color */
+  color: var(--text-primary);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
@@ -236,15 +236,15 @@ body {
 .stage-select:focus,
 .status-select:focus {
   outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.1);
+  border-color: var(--rose-gold-main);
+  box-shadow: 0 0 0 3px rgba(235, 188, 186, 0.2);
 }
 
 /* Ensure dropdown options are styled properly */
 .stage-select option,
 .status-select option {
-  background: #24283b; /* Darker background for options */
-  color: #c0caf5; /* Explicit text color for options */
+  background: var(--primary-bg);
+  color: var(--text-primary);
   padding: 8px;
 }
 
@@ -264,7 +264,7 @@ body {
 }
 
 .btn-comments {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  background: linear-gradient(135deg, var(--status-blue), var(--status-purple));
   color: white;
   border: none;
   padding: 8px 12px;
@@ -283,7 +283,7 @@ body {
 }
 
 .btn-remove {
-  background: linear-gradient(135deg, var(--accent-pink), var(--accent-orange));
+  background: linear-gradient(135deg, var(--status-red), var(--status-yellow));
   color: white;
   border: none;
   padding: 8px 12px;
@@ -303,7 +303,7 @@ body {
 }
 
 .btn-remove.confirm-delete {
-  background: var(--accent-pink); 
+  background: var(--status-red); 
   box-shadow: 0 0 0 3px rgba(247, 162, 198, 0.5); 
   animation: pulse 1s infinite alternate;
 }
@@ -314,11 +314,11 @@ body {
   border-bottom: 1px solid var(--border-color);
   color: var(--text-secondary);
   line-height: 1.6;
-  border-left: 3px solid var(--accent-cyan);
+  border-left: 3px solid var(--rose-gold-main);
 }
 
 .pipeline-row-notes strong {
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -356,7 +356,7 @@ body {
 
 .pipeline-column.dragging-over {
   background: var(--hover-bg);
-  border-color: var(--accent-cyan);
+  border-color: var(--rose-gold-main);
 }
 
 .column-header {
@@ -371,7 +371,7 @@ body {
 
 .column-header h3 {
   margin: 0;
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
@@ -379,7 +379,7 @@ body {
 }
 
 .column-count {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  background: linear-gradient(135deg, var(--status-blue), var(--status-purple));
   color: white;
   padding: 4px 10px;
   border-radius: 12px;
@@ -411,7 +411,7 @@ body {
 .pipeline-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border-color: var(--accent-cyan);
+  border-color: var(--rose-gold-main);
 }
 
 .pipeline-card.dragging {
@@ -436,7 +436,7 @@ body {
 .card-name-row h4 {
   margin: 0;
   font-size: 15px;
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   flex: 1;
 }
 
@@ -447,14 +447,14 @@ body {
 }
 
 .icon-view-details-kanban {
-  color: var(--accent-purple);
+  color: var(--status-purple);
   cursor: pointer;
   transition: color 0.2s;
   flex-shrink: 0;
 }
 
 .icon-view-details-kanban:hover {
-  color: var(--accent-pink);
+  color: var(--status-red);
 }
 
 .icon-view-resume-kanban {
@@ -501,25 +501,30 @@ body {
 
 .card-status-select:focus {
   outline: none;
-  border-color: var(--accent-blue);
+  border-color: var(--rose-gold-main);
 }
 
 .card-actions {
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
+.card-actions button {
+  margin-bottom: 5px;
+}
+
 .status-active {
-  border-left: 4px solid var(--accent-green);
+  border-left: 4px solid var(--status-green);
 }
 
 .status-hold {
-  border-left: 4px solid var(--accent-orange);
+  border-left: 4px solid var(--status-yellow);
 }
 
 .status-reject {
-  border-left: 4px solid var(--accent-pink);
+  border-left: 4px solid var(--status-red);
 }
 
 /* ========== EMPTY STATE ========== */
@@ -584,7 +589,7 @@ body {
 
 .modal-content h2 {
   margin: 0 0 20px 0;
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   font-size: 24px;
 }
 
@@ -634,7 +639,7 @@ body {
 }
 
 .comment-form textarea:focus {
-  border-color: var(--accent-purple);
+  border-color: var(--status-purple);
   outline: none;
 }
 
@@ -652,7 +657,7 @@ body {
 
 .comments-list h3 {
   margin: 0 0 20px 0;
-  color: var(--accent-purple);
+  color: var(--status-purple);
   font-size: 18px;
 }
 
@@ -672,7 +677,7 @@ body {
 }
 
 .comment-header strong {
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   font-size: 15px;
   font-weight: 600;
 }
@@ -715,22 +720,22 @@ body {
 }
 
 .btn-edit-comment {
-  background: var(--accent-blue);
+  background: var(--status-blue);
   color: white;
 }
 
 .btn-edit-comment:hover {
-  background: var(--accent-cyan);
+  background: var(--rose-gold-main);
   transform: translateY(-1px);
 }
 
 .btn-delete-comment {
-  background: var(--accent-pink);
+  background: var(--status-red);
   color: white;
 }
 
 .btn-delete-comment:hover {
-  background: var(--accent-orange);
+  background: var(--status-yellow);
   transform: translateY(-1px);
 }
 
@@ -826,7 +831,7 @@ body {
   height: 100%;
   overflow-y: auto;
   animation: slideIn 0.3s forwards;
-  border-left: 3px solid var(--accent-cyan);
+  border-left: 3px solid var(--rose-gold-main);
 }
 
 @keyframes slideIn {
@@ -845,7 +850,7 @@ body {
 
 .sidebar-header-custom h2 {
   margin: 0;
-  color: var(--accent-purple);
+  color: var(--status-purple);
   font-size: 24px;
 }
 
@@ -860,7 +865,7 @@ body {
 }
 
 .btn-close-sidebar:hover {
-  color: var(--accent-pink);
+  color: var(--status-red);
 }
 
 .sidebar-section {
@@ -874,7 +879,7 @@ body {
 }
 
 .sidebar-section h3 {
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   font-size: 16px;
   margin-bottom: 15px;
   text-transform: uppercase;
@@ -902,19 +907,19 @@ body {
 
 .skill-tag-full {
   background: var(--secondary-bg);
-  color: var(--accent-green);
+  color: var(--status-green);
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  border: 1px solid var(--accent-green);
+  border: 1px solid var(--status-green);
 }
 
 .notes-text-large {
   background: var(--secondary-bg);
   padding: 15px;
   border-radius: 8px;
-  border-left: 4px solid var(--accent-purple);
+  border-left: 4px solid var(--status-purple);
   white-space: pre-wrap;
   line-height: 1.6;
   color: var(--text-secondary);
@@ -991,7 +996,7 @@ body {
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 15px;
-  border-left: 3px solid var(--accent-cyan);
+  border-left: 3px solid var(--rose-gold-main);
 }
 
 .comment-header {
@@ -1004,7 +1009,7 @@ body {
 }
 
 .comment-header strong {
-  color: var(--accent-cyan);
+  color: var(--rose-gold-main);
   font-size: 15px;
   font-weight: 600;
 }
@@ -1041,22 +1046,22 @@ body {
 }
 
 .btn-edit-comment {
-  background: var(--accent-blue);
+  background: var(--status-blue);
   color: white;
 }
 
 .btn-edit-comment:hover {
-  background: var(--accent-cyan);
+  background: var(--rose-gold-main);
   transform: translateY(-1px);
 }
 
 .btn-delete-comment {
-  background: var(--accent-pink);
+  background: var(--status-red);
   color: white;
 }
 
 .btn-delete-comment:hover {
-  background: var(--accent-orange);
+  background: var(--status-yellow);
   transform: translateY(-1px);
 }
 
@@ -1077,7 +1082,7 @@ body {
 .card-label {
   font-weight: bold;
   font-size: 0.9em;
-  color: #555;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -1108,7 +1113,7 @@ body {
 .card-label {
   font-weight: bold;
   font-size: 0.9em;
-  color: #555;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
