@@ -95,7 +95,8 @@ const getStatusBadge = (status) => {
     'call_scheduled': { label: 'Call Scheduled', emoji: '🔵', class: 'call-scheduled', color: '#7aa2f7' },
     'declined': { label: 'Declined', emoji: '❌', class: 'declined', color: '#f7768e' },
     'ready_for_submission': { label: 'Ready for Submission', emoji: '🚀', class: 'ready-submission', color: '#bb9af7' },
-    'gone_cold': { label: 'Gone Cold', emoji: '❄️', class: 'gone-cold', color: '#64748b' }
+    'gone_cold': { label: 'Gone Cold', emoji: '❄️', class: 'gone-cold', color: '#64748b' },
+    'archived': { label: 'Archived', emoji: '📦', class: 'archived', color: '#a9b1d6' }
   };
 
   return statusMap[status] || statusMap['outreach_sent'];
@@ -1095,13 +1096,13 @@ function RecruiterOutreach() {
 
   // --- ADDED: Identify outreach items going cold (4+ days old with status 'outreach_sent') ---
   const goingColdOutreach = useMemo(() => {
-    const fourDaysAgo = new Date();
-    fourDaysAgo.setDate(fourDaysAgo.getDate() - 4);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     return outreachActivities.filter(activity => {
       if (activity.activity_status !== 'outreach_sent') return false;
       const createdDate = new Date(activity.created_at);
-      return createdDate <= fourDaysAgo;
+      return createdDate <= sevenDaysAgo;
     });
   }, [outreachActivities]);
   // ----------------------------------------------------
@@ -1793,6 +1794,20 @@ function RecruiterOutreach() {
                               <Trash2 size={16} />
                             </button>
                           </div>
+                      {/* --- NEW: Gone Cold Warning & Button --- */}
+                      {goingColdOutreach.some(coldActivity => coldActivity.id === activity.id) &&
+                        activity.activity_status !== 'gone_cold' &&
+                        activity.activity_status !== 'ready_for_submission' && (
+                          <div className="gone-cold-warning-row">
+                            <div className="gone-cold-warning-text">
+                              <AlertCircle size={16} />
+                              <span>Going Cold (7+ days no reply)</span>
+                            </div>
+                            <button className="btn-mark-cold" onClick={() => handleQuickStageChange(activity.id, 'gone_cold')}>
+                              Mark as Gone Cold
+                            </button>
+                          </div>
+                      )}
                         </td>
                       </tr>
                       <tr>
