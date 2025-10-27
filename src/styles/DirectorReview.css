@@ -1,13 +1,35 @@
 /* ===================================
    DIRECTOR REVIEW STYLES
-   (Rose-Gold Theme - FINAL Row Layout Fix)
+   (Rose-Gold Dark Theme - Professional)
    =================================== */
+
+/* CSS Variables for consistency */
+:root {
+  --main-bg: #1a1a2e;
+  --card-bg: #2e2e54;
+  --card-bg-solid: #2e2e54;
+  --secondary-bg: #2a2a4e;
+  --hover-bg: #3a3a6e;
+  --text-primary: #f0f0f0;
+  --text-secondary: #a0a0c0;
+  --text-muted: #7a7a9a;
+  --border-color: #4a4a70;
+  --rose-gold: #ebbcba;
+  --rose-gold-main: #ebbcba;
+  --rose-gold-shine: #f7d4d4;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --accent-red: #f7768e;
+  --accent-orange: #ff9e64;
+  --accent-blue: #7aa2f7;
+  --accent-green: #9ece6a;
+}
 
 .director-review-container {
     padding: 2rem;
-    max-width: 1800px; /* Wider for row layout */
+    max-width: 1800px;
     margin: 0 auto;
     color: var(--text-primary);
+    background: var(--main-bg);
 }
 
 /* Page Header */
@@ -314,231 +336,501 @@
   border-color: var(--text-secondary);
 }
 
-/* Reject - Change to a dark charcoal/maroon */
-.modal-footer .btn-danger {
-  background-color: #4a4a4a; /* Dark Charcoal Gray */
-  color: white;
-  border: 1px solid #555;
-}
-.modal-footer .btn-danger:hover {
-  background-color: #633030; /* Slightly lighter maroon on hover */
-}
+/* ===================================
+   MODAL FOOTER BUTTON STYLES
+   =================================== */
 
-/* Hold - Change to a dark bronze/graphite */
-.modal-footer .btn-warning {
-  background-color: #6B4F3F; /* Dark Bronze */
-  color: white;
-  border: none; /* Remove the orange border */
-  font-weight: 600;
-  border: 1px solid #7a5c4a;
-}
-.modal-footer .btn-warning:hover {
-  background-color: #85634e; /* Slightly lighter bronze on hover */
-}
-
-/* Ensure other buttons in the modal footer also have high specificity if needed */
-/* Submit Button - Rose Gold */
+/* Primary Button - Submit to Client (Rose Gold) */
 .modal-footer .btn-primary {
-  background: var(--rose-gold);
-  color: var(--main-bg);
-  border: none;
+  background: linear-gradient(135deg, var(--rose-gold), var(--rose-gold-shine));
+  color: #1a1a2e;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(235, 188, 186, 0.4);
+}
+
+.modal-footer .btn-primary:hover {
+  background: linear-gradient(135deg, var(--rose-gold-shine), var(--rose-gold));
+  box-shadow: 0 6px 20px rgba(235, 188, 186, 0.6);
+}
+
+/* Danger Button - Reject (Red) */
+.modal-footer .btn-danger {
+  background: linear-gradient(135deg, #4a2c2c, #3a2020);
+  color: #ff9eb3;
+  border: 1px solid #5a3030;
+  box-shadow: 0 4px 12px rgba(247, 118, 142, 0.25);
+}
+
+.modal-footer .btn-danger:hover {
+  background: linear-gradient(135deg, #5a3333, #4a2828);
+  color: #ffb3c6;
+  border-color: #703a3a;
+  box-shadow: 0 6px 16px rgba(247, 118, 142, 0.35);
+}
+
+/* Warning Button - Hold (Bronze/Yellow) */
+.modal-footer .btn-warning {
+  background: linear-gradient(135deg, #4a3f2e, #3a3428);
+  color: #f0c878;
+  border: 1px solid #5a4a3a;
+  box-shadow: 0 4px 12px rgba(224, 175, 104, 0.25);
+}
+
+.modal-footer .btn-warning:hover {
+  background: linear-gradient(135deg, #5a4f3e, #4a4228);
+  color: #ffd88e;
+  border-color: #6a5a4a;
+  box-shadow: 0 6px 16px rgba(224, 175, 104, 0.35);
 }
 
 /* ===================================
-   Modal Styles (Themed)
+   PROFESSIONAL MODAL DESIGN
    =================================== */
-.modal-overlay { 
-  position: fixed; 
-  top: 0; 
-  left: 0; 
-  right: 0; 
-  bottom: 0; 
-  background-color: rgba(0, 0, 0, 0.8); 
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  animation: overlayFadeIn 0.3s ease;
+  padding: 1rem;
 }
 
-.modal-content { 
-  background-color: var(--card-bg); 
-  color: var(--text-primary); 
-  padding: 0;
-  border-radius: 12px; 
-  width: 90%; 
-  max-width: 700px; 
-  border: 1px solid var(--border-color); 
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); 
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(10px);
+  }
+}
+
+.modal-content {
+  background: var(--main-bg);
+  color: var(--text-primary);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 900px;
+  border: 1px solid var(--border-color);
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(235, 188, 186, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   overflow: hidden;
-  max-height: 90vh;
-  /* --- FIX: Use Flexbox for single scroll area --- */
+  max-height: 95vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===================================
+   MODAL HEADER - Clean & Professional
+   =================================== */
 
 .modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: center; /* Center the h2 */
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--secondary-bg);
-  position: relative; /* For absolute positioning of close button */
+  padding: 2rem 2.5rem;
+  background: linear-gradient(180deg, var(--secondary-bg) 0%, var(--main-bg) 100%);
+  border-bottom: 1px solid rgba(235, 188, 186, 0.15);
+  position: relative;
 }
+
 .modal-header h2 {
-  color: var(--rose-gold);
   margin: 0;
   font-size: 1.5rem;
-  padding: 1rem 0;
-  /* No flex-grow needed, centering is handled by parent */
-  text-align: center; /* Ensure text is centered if it wraps */
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.modal-close-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: all 0.2s;
-  display: flex;
-  position: absolute; /* Position relative to header */
-  right: 1.5rem;
-  top: 50%; /* Center vertically */
-  transform: translateY(-50%); /* Precise vertical centering */
+.modal-header h2::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(180deg, var(--rose-gold), var(--rose-gold-shine));
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(235, 188, 186, 0.5);
 }
-.modal-close-btn:hover {
-  background-color: var(--hover-bg);
-  color: var(--rose-gold);
-}
+
+/* ===================================
+   MODAL BODY - Organized Sections
+   =================================== */
 
 .modal-body {
-  padding: 2rem;
+  padding: 0;
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--main-bg);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  background-color: var(--main-bg); /* Ensure body has a background */
-  overflow-x: hidden;
 }
 
-/* For Chrome, Safari, and Edge */
+/* Custom Scrollbar */
 .modal-body::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 .modal-body::-webkit-scrollbar-track {
-  background: var(--secondary-bg); /* Dark track background */
-  border-radius: 5px;
+  background: transparent;
 }
 
 .modal-body::-webkit-scrollbar-thumb {
-  background-color: var(--rose-gold); /* Rose gold handle */
-  border-radius: 5px;
-  border: 2px solid var(--secondary-bg); /* Padding around thumb */
+  background: var(--border-color);
+  border-radius: 4px;
+  transition: background 0.3s ease;
 }
 
-.modal-comments-history { 
-  /* REMOVED: overflow-y: auto; */
-  border: 1px solid var(--border-color); 
-  border-radius: 8px; 
-  padding: 1rem; 
-  background-color: var(--main-bg); 
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--rose-gold);
 }
 
-/* --- NEW: Styling for individual comments --- */
-.comment { 
-  background-color: var(--secondary-bg); 
-  padding: 1rem; 
-  border-radius: 6px;
-  border-left: 3px solid var(--rose-gold);
+/* ===================================
+   COMMENT HISTORY SECTION
+   =================================== */
+
+.modal-comments-history {
+  padding: 2.5rem;
+  background: var(--secondary-bg);
+  border-bottom: 1px solid var(--border-color);
+  max-height: 400px;
+  overflow-y: auto;
+  min-height: 200px;
+}
+
+.modal-comments-history::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-comments-history::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.modal-comments-history::-webkit-scrollbar-thumb:hover {
+  background: var(--rose-gold);
+}
+
+/* Section Title */
+.modal-comments-history::before {
+  content: 'Comment History';
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(235, 188, 186, 0.1);
+}
+
+/* Individual Comment Card */
+.comment {
+  background: var(--card-bg-solid);
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 1rem;
   position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+.comment:last-child {
+  margin-bottom: 0;
+}
+
+.comment:hover {
+  border-color: rgba(235, 188, 186, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
 .comment-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
 }
-.comment-author { margin: 0; color: var(--text-primary); }
-.comment-date { color: var(--text-muted); font-size: 0.8rem; }
-.comment-text-body { margin: 0; color: var(--text-secondary); line-height: 1.5; }
 
+.comment-author {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--rose-gold);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.comment-author::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--rose-gold);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(235, 188, 186, 0.6);
+}
+
+.comment-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.comment-text-body {
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-size: 0.925rem;
+  padding-right: 3rem;
+}
+
+/* Edit/Delete Action Buttons - Always visible with opacity */
 .comment-actions {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 1rem;
+  right: 1rem;
   display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.2s;
+  gap: 0.5rem;
+  opacity: 0.3;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 10;
 }
+
 .comment:hover .comment-actions {
   opacity: 1;
+  transform: translateY(-2px);
 }
+
 .btn-icon {
-  background: var(--hover-bg);
+  background: var(--card-bg-solid);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  flex-shrink: 0;
 }
+
 .btn-icon:hover {
+  background: var(--secondary-bg);
   color: var(--rose-gold);
   border-color: var(--rose-gold);
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(235, 188, 186, 0.4);
 }
-.edit-comment-form { display: flex; flex-direction: column; gap: 0.5rem; }
-.edit-comment-form textarea { width: 100%; background: var(--main-bg); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; }
-.edit-comment-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
 
-.no-comments-message { color: var(--text-muted); text-align: center; padding: 1rem; }
+.btn-icon:active {
+  transform: scale(0.95);
+}
 
-/* Form Styles */
-.form-group { margin-bottom: 1.5rem; }
-.form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; }
-.form-textarea { 
-  width: 100%; 
-  min-height: 120px; 
-  padding: 0.75rem; 
-  border: 1px solid var(--border-color); 
-  border-radius: 8px; 
-  font-size: 1rem; 
-  resize: vertical; 
-  background-color: var(--secondary-bg); 
+/* Edit Comment Form */
+.edit-comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.edit-comment-textarea {
+  width: 100%;
+  background: var(--main-bg);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1rem;
+  font-family: inherit;
+  font-size: 0.925rem;
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+}
+
+.edit-comment-textarea:focus {
+  border-color: var(--rose-gold);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(235, 188, 186, 0.15);
+  background: var(--card-bg-solid);
+}
+
+.edit-comment-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+/* No Comments Message */
+.no-comments-message {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 3rem 2rem;
+  font-style: italic;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* ===================================
+   NEW COMMENT INPUT SECTION
+   =================================== */
+
+.form-group {
+  margin: 0;
+  padding: 2.5rem;
+  background: var(--main-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 0.925rem;
+  resize: vertical;
+  background: var(--card-bg-solid);
   color: var(--text-primary);
   font-family: inherit;
+  transition: all 0.3s ease;
+  line-height: 1.7;
 }
+
 .form-textarea:focus {
   outline: none;
   border-color: var(--rose-gold);
-  box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
+  box-shadow: 0 0 0 4px rgba(235, 188, 186, 0.15);
+  background: var(--secondary-bg);
 }
 
-.modal-footer { 
-  display: flex; 
-  flex-wrap: wrap; 
-  gap: 0.75rem; 
-  justify-content: flex-end;
-  background-color: var(--secondary-bg);
-  padding: 1.5rem 2rem;
+.form-textarea::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* ===================================
+   MODAL FOOTER - Action Buttons
+   =================================== */
+
+.modal-footer {
+  padding: 1.5rem 2.5rem;
+  background: var(--secondary-bg);
   border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
-/* Modal buttons need to be larger than card buttons */
+/* All modal buttons */
 .modal-footer .btn {
-  padding: 0.6rem 1.2rem;
-  font-size: 0.9rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+
+.modal-footer .btn:hover {
+  transform: translateY(-2px);
+}
+
+.modal-footer .btn:active {
+  transform: translateY(0);
+}
+
+/* Action Button Group */
+.modal-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Close Button */
+.btn-close-footer {
+  background: transparent;
+  color: var(--text-muted);
+  border: 2px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.btn-close-footer:hover {
+  background: var(--main-bg);
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+  box-shadow: none;
+}
+
+/* Save Comment Only Button */
+.modal-footer .btn-secondary {
+  background: var(--card-bg-solid);
+  color: var(--text-secondary);
+  border: 2px solid var(--border-color);
+}
+
+.modal-footer .btn-secondary:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* ===================================
@@ -589,23 +881,56 @@
 }
 
 
+/* Modal Responsive Design */
 @media (max-width: 768px) {
     .director-review-container {
         padding: 1rem;
     }
+
+    .modal-overlay {
+        padding: 0.5rem;
+    }
+
     .modal-content {
-        padding: 0;
-        width: 95%;
+        max-width: 100%;
+        border-radius: 16px;
     }
-    .modal-header { padding: 1.25rem 1.5rem; }
-    .modal-body { padding: 1.5rem; }
+
+    .modal-header {
+        padding: 1.5rem;
+    }
+
+    .modal-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .modal-comments-history {
+        padding: 1.5rem;
+        max-height: 300px;
+    }
+
+    .form-group {
+        padding: 1.5rem;
+    }
+
     .modal-footer {
-      padding: 1.25rem 1.5rem;
-      flex-direction: column;
+        padding: 1.25rem 1.5rem;
+        flex-direction: column;
+        gap: 1rem;
     }
-    /* Make modal buttons full-width on mobile */
+
+    .modal-action-group {
+        width: 100%;
+        flex-direction: column;
+    }
+
     .modal-footer .btn {
-      width: 100%;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-close-footer {
+        order: -1;
     }
 }
 
