@@ -5,8 +5,10 @@ import { supabase } from '../services/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText, Trash2, Eye, Calendar, BarChart, Upload, Users, AlertTriangle,
-  ChevronDown, ChevronUp // Import Chevrons for toggle
+  ChevronDown, ChevronUp, TrendingUp, Clock, CheckCircle, User
 } from 'lucide-react';
+import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import AnimatedCounter from '../components/AnimatedCounter';
 import DocumentViewerModal from '../components/DocumentViewerModal';
 import '../styles/Dashboard.css'; // Re-using styles for consistency
 import '../styles/RecruiterOutreach.css'; // Re-using styles for cards
@@ -301,6 +303,12 @@ function StrategyManager() {
   // NEW: State to track the expanded card. Starts collapsed (null).
   const [expandedCardId, setExpandedCardId] = useState(null);
 
+  // Audit Trail state
+  const [allPositionsForAudit, setAllPositionsForAudit] = useState([]);
+  const [selectedAuditPositionId, setSelectedAuditPositionId] = useState(null);
+  const [auditData, setAuditData] = useState({ logs: [], kpis: {}, chartData: [] });
+  const [loadingAuditData, setLoadingAuditData] = useState(false);
+
   // Fetches all recruiters so we can map IDs to names
   const fetchAllRecruiters = useCallback(async () => {
     console.log('🔍 Fetching all recruiters for name mapping...');
@@ -382,8 +390,11 @@ function StrategyManager() {
       return;
     }
     if (activeTab === 'role_instructions') {
-      fetchAllRecruiters(); 
+      fetchAllRecruiters();
       fetchAllPositions();
+    } else if (activeTab === 'audit') {
+      fetchAllRecruiters();
+      fetchAllPositionsForAudit();
     } else {
       setLoading(false);
     }
@@ -629,6 +640,140 @@ function StrategyManager() {
     });
   };
 
+  // ===================================
+  // AUDIT TRAIL FUNCTIONS
+  // ===================================
+
+  const fetchAllPositionsForAudit = useCallback(async () => {
+    console.log('🔍 Fetching all positions for Audit Trail...');
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('positions')
+        .select('*, clients(company_name)')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log('✅ Positions for audit:', data);
+      setAllPositionsForAudit(data || []);
+    } catch (error) {
+      console.error('❌ Error fetching positions for audit:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchAuditTrailData = async (positionId) => {
+    if (!positionId) return;
+
+    setLoadingAuditData(true);
+    console.log('🔍 Fetching audit data for position:', positionId);
+
+    try {
+      const { data: logs, error } = await supabase
+        .from('pipeline_audit_log')
+        .select('*')
+        .eq('position_id', positionId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      console.log('✅ Audit logs fetched:', logs);
+
+      const selectedPosition = allPositionsForAudit.find(p => p.id === positionId);
+
+      const kpis = calculateAuditKPIs(logs, selectedPosition);
+      const chartData = calculateBottleneckData(logs, selectedPosition);
+
+      setAuditData({
+        logs: logs || [],
+        kpis,
+        chartData
+      });
+    } catch (error) {
+      console.error('❌ Error fetching audit trail data:', error);
+      setAuditData({ logs: [], kpis: {}, chartData: [] });
+    } finally {
+      setLoadingAuditData(false);
+    }
+  };
+
+  const calculateAuditKPIs = (logs, position) => {
+    if (!position) return {};
+
+    const now = new Date();
+    const positionCreated = new Date(position.created_at);
+
+    let roleLifespan = 0;
+    if (position.status === 'Closed' && position.date_closed) {
+      const closedDate = new Date(position.date_closed);
+      roleLifespan = Math.floor((closedDate - positionCreated) / (1000 * 60 * 60 * 24));
+    } else {
+      roleLifespan = Math.floor((now - positionCreated) / (1000 * 60 * 60 * 24));
+    }
+
+    const firstInstructionEvent = logs.find(log => log.event_type === 'role_instructions_uploaded');
+    let timeToFirstInstruction = 'N/A';
+    if (firstInstructionEvent) {
+      const instructionDate = new Date(firstInstructionEvent.created_at);
+      const days = Math.floor((instructionDate - positionCreated) / (1000 * 60 * 60 * 24));
+      timeToFirstInstruction = days >= 0 ? `${days} days` : 'N/A';
+    }
+
+    const firstCandidateEvent = logs.find(log => log.event_type === 'candidate_added');
+    let timeToFirstCandidate = 'N/A';
+    if (firstCandidateEvent) {
+      const candidateDate = new Date(firstCandidateEvent.created_at);
+      const days = Math.floor((candidateDate - positionCreated) / (1000 * 60 * 60 * 24));
+      timeToFirstCandidate = days >= 0 ? `${days} days` : 'N/A';
+    }
+
+    return {
+      roleLifespan,
+      timeToFirstInstruction,
+      timeToFirstCandidate,
+      totalEvents: logs.length
+    };
+  };
+
+  const calculateBottleneckData = (logs, position) => {
+    if (!position) return [];
+
+    const positionCreated = new Date(position.created_at);
+    const data = [];
+
+    const firstInstruction = logs.find(log => log.event_type === 'role_instructions_uploaded');
+    if (firstInstruction) {
+      const days = Math.max(0, Math.floor((new Date(firstInstruction.created_at) - positionCreated) / (1000 * 60 * 60 * 24)));
+      data.push({ stage: 'Role Created → First Instruction', days });
+    }
+
+    const firstCandidate = logs.find(log => log.event_type === 'candidate_added');
+    if (firstInstruction && firstCandidate) {
+      const days = Math.max(0, Math.floor((new Date(firstCandidate.created_at) - new Date(firstInstruction.created_at)) / (1000 * 60 * 60 * 24)));
+      data.push({ stage: 'First Instruction → First Candidate', days });
+    }
+
+    const firstInterview = logs.find(log => log.event_type === 'interview_scheduled');
+    if (firstCandidate && firstInterview) {
+      const days = Math.max(0, Math.floor((new Date(firstInterview.created_at) - new Date(firstCandidate.created_at)) / (1000 * 60 * 60 * 24)));
+      data.push({ stage: 'First Candidate → First Interview', days });
+    }
+
+    return data;
+  };
+
+  const handleAuditPositionChange = (positionId) => {
+    setSelectedAuditPositionId(positionId);
+    if (positionId) {
+      fetchAuditTrailData(positionId);
+    } else {
+      setAuditData({ logs: [], kpis: {}, chartData: [] });
+    }
+  };
+
   if (!isDirectorOrManager) {
     return (
         <div className="dashboard-container">
@@ -704,22 +849,19 @@ function StrategyManager() {
         <button
           className={`tab-button ${activeTab === 'audit' ? 'active' : ''}`}
           onClick={() => setActiveTab('audit')}
-           style={{
+          style={{
             padding: '0.75rem 1.5rem',
-            background: 'transparent',
+            background: activeTab === 'audit' ? 'linear-gradient(135deg, var(--rose-gold), #F39C9C)' : 'transparent',
             border: 'none',
-            borderBottom: '3px solid transparent',
-            color: 'var(--text-muted)',
-            cursor: 'not-allowed',
+            borderBottom: activeTab === 'audit' ? '3px solid var(--rose-gold)' : '3px solid transparent',
+            color: activeTab === 'audit' ? 'var(--main-bg)' : 'var(--text-secondary)',
+            cursor: 'pointer',
             fontWeight: 600,
-            transition: 'all 0.3s',
-            opacity: 0.5
+            transition: 'all 0.3s'
           }}
-          disabled
-          title="This feature has been removed."
         >
           <BarChart size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-          Audit Trail (Removed)
+          Audit Trail
         </button>
       </div>
 
@@ -757,6 +899,309 @@ function StrategyManager() {
             ))
           )}
         </div>
+      )}
+
+      {/* Audit Trail Tab */}
+      {activeTab === 'audit' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Position Selector */}
+          <div style={{
+            background: 'var(--card-bg)',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            marginBottom: '2rem',
+            border: '1px solid var(--border-color)'
+          }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.75rem',
+              color: 'var(--rose-gold)',
+              fontWeight: 600,
+              fontSize: '1rem'
+            }}>
+              Select Position to Analyze:
+            </label>
+            <select
+              value={selectedAuditPositionId || ''}
+              onChange={(e) => handleAuditPositionChange(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                background: 'var(--secondary-bg)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                color: 'var(--text-primary)',
+                fontSize: '1rem',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">-- Select a Position --</option>
+              {allPositionsForAudit.map(position => (
+                <option key={position.id} value={position.id}>
+                  {position.title} @ {position.clients?.company_name || 'Unknown'} ({position.status})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Dashboard Content */}
+          {selectedAuditPositionId && (
+            <>
+              {loadingAuditData ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '3rem',
+                  color: 'var(--text-secondary)'
+                }}>
+                  Loading audit data...
+                </div>
+              ) : (
+                <>
+                  {/* KPI Cards */}
+                  <motion.div
+                    className="executive-summary-cards"
+                    style={{ marginBottom: '2rem' }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <div className="executive-card">
+                      <div className="executive-card-icon" style={{ color: '#B8D4D0' }}>
+                        <Calendar size={28} />
+                      </div>
+                      <div className="executive-card-value">
+                        <AnimatedCounter value={auditData.kpis.roleLifespan || 0} />
+                      </div>
+                      <div className="executive-card-label">Days Total Role Lifespan</div>
+                    </div>
+
+                    <div className="executive-card">
+                      <div className="executive-card-icon" style={{ color: '#C5B9D6' }}>
+                        <FileText size={28} />
+                      </div>
+                      <div className="executive-card-value" style={{ fontSize: '1.5rem' }}>
+                        {auditData.kpis.timeToFirstInstruction || 'N/A'}
+                      </div>
+                      <div className="executive-card-label">Time to First Instruction</div>
+                    </div>
+
+                    <div className="executive-card">
+                      <div className="executive-card-icon" style={{ color: '#9ECE6A' }}>
+                        <Users size={28} />
+                      </div>
+                      <div className="executive-card-value" style={{ fontSize: '1.5rem' }}>
+                        {auditData.kpis.timeToFirstCandidate || 'N/A'}
+                      </div>
+                      <div className="executive-card-label">Time to First Candidate</div>
+                    </div>
+
+                    <div className="executive-card">
+                      <div className="executive-card-icon" style={{ color: '#E8B4B8' }}>
+                        <TrendingUp size={28} />
+                      </div>
+                      <div className="executive-card-value">
+                        <AnimatedCounter value={auditData.kpis.totalEvents || 0} />
+                      </div>
+                      <div className="executive-card-label">Total Audit Events</div>
+                    </div>
+                  </motion.div>
+
+                  {/* Bottleneck Analysis Chart */}
+                  {auditData.chartData.length > 0 && (
+                    <motion.div
+                      style={{
+                        background: 'var(--card-bg)',
+                        padding: '1.5rem',
+                        borderRadius: '12px',
+                        marginBottom: '2rem',
+                        border: '1px solid var(--border-color)'
+                      }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <h3 style={{
+                        color: 'var(--rose-gold)',
+                        marginBottom: '1.5rem',
+                        fontSize: '1.25rem',
+                        fontWeight: 600
+                      }}>
+                        Bottleneck Analysis
+                      </h3>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <RechartsBarChart data={auditData.chartData} layout="vertical">
+                          <CartesianGrid strokeDasharray="3 3" stroke="#2a2a40" />
+                          <XAxis type="number" stroke="#a0a0c0" label={{ value: 'Days', position: 'insideBottom', offset: -5 }} />
+                          <YAxis dataKey="stage" type="category" stroke="#a0a0c0" width={200} />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: '#1a1a2e',
+                              border: '1px solid #2a2a40',
+                              borderRadius: '8px',
+                              color: '#e0e0f0'
+                            }}
+                          />
+                          <Legend />
+                          <Bar dataKey="days" fill="#E8B4B8" name="Days" radius={[0, 8, 8, 0]} />
+                        </RechartsBarChart>
+                      </ResponsiveContainer>
+                    </motion.div>
+                  )}
+
+                  {/* Role Lifecycle Timeline */}
+                  <motion.div
+                    style={{
+                      background: 'var(--card-bg)',
+                      padding: '1.5rem',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border-color)'
+                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <h3 style={{
+                      color: 'var(--rose-gold)',
+                      marginBottom: '1.5rem',
+                      fontSize: '1.25rem',
+                      fontWeight: 600
+                    }}>
+                      Role Lifecycle Timeline
+                    </h3>
+
+                    {auditData.logs.length === 0 ? (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '2rem',
+                        color: 'var(--text-secondary)',
+                        fontStyle: 'italic'
+                      }}>
+                        No audit events found for this position.
+                      </div>
+                    ) : (
+                      <div style={{
+                        maxHeight: '500px',
+                        overflowY: 'auto',
+                        paddingRight: '0.5rem'
+                      }}>
+                        {auditData.logs.map((log, index) => {
+                          const performer = recruiters.find(r => r.id === log.performed_by);
+                          const performerName = performer ? performer.name : 'System';
+
+                          let icon = <Clock size={16} />;
+                          let iconColor = '#B8D4D0';
+
+                          if (log.event_type === 'role_instructions_uploaded') {
+                            icon = <FileText size={16} />;
+                            iconColor = '#C5B9D6';
+                          } else if (log.event_type === 'candidate_added') {
+                            icon = <Users size={16} />;
+                            iconColor = '#9ECE6A';
+                          } else if (log.event_type === 'interview_scheduled') {
+                            icon = <Calendar size={16} />;
+                            iconColor = '#E8B4B8';
+                          }
+
+                          return (
+                            <motion.div
+                              key={log.id}
+                              className="timeline-item"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              style={{
+                                display: 'flex',
+                                gap: '1rem',
+                                padding: '1rem',
+                                background: 'var(--secondary-bg)',
+                                borderRadius: '8px',
+                                marginBottom: '0.75rem',
+                                borderLeft: `3px solid ${iconColor}`
+                              }}
+                            >
+                              <div style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                background: iconColor,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'var(--main-bg)',
+                                flexShrink: 0
+                              }}>
+                                {icon}
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{
+                                  fontSize: '0.75rem',
+                                  color: 'var(--text-muted)',
+                                  marginBottom: '0.25rem',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.5px'
+                                }}>
+                                  {formatDateTime(log.created_at)}
+                                </div>
+                                <div style={{
+                                  fontSize: '0.95rem',
+                                  color: 'var(--text-primary)',
+                                  marginBottom: '0.25rem',
+                                  fontWeight: 600
+                                }}>
+                                  {log.event_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                </div>
+                                <div style={{
+                                  fontSize: '0.85rem',
+                                  color: 'var(--text-secondary)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem'
+                                }}>
+                                  <User size={14} />
+                                  <span>By: {performerName}</span>
+                                </div>
+                                {log.notes && (
+                                  <div style={{
+                                    marginTop: '0.5rem',
+                                    paddingTop: '0.5rem',
+                                    borderTop: '1px solid var(--border-color)',
+                                    fontSize: '0.85rem',
+                                    color: 'var(--text-secondary)',
+                                    fontStyle: 'italic'
+                                  }}>
+                                    {log.notes}
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </motion.div>
+                </>
+              )}
+            </>
+          )}
+
+          {!selectedAuditPositionId && !loading && (
+            <div style={{
+              textAlign: 'center',
+              padding: '3rem',
+              color: 'var(--text-secondary)',
+              background: 'var(--card-bg)',
+              borderRadius: '12px',
+              border: '1px dashed var(--border-color)'
+            }}>
+              <BarChart size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+              <p>Select a position above to view its audit trail and performance metrics.</p>
+            </div>
+          )}
+        </motion.div>
       )}
 
       {/* Document Viewer Modal */}
