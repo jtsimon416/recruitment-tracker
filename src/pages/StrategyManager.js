@@ -38,6 +38,11 @@ const isValidFilename = (filename) => {
 };
 
 // ===================================
+// AUDIT TRAIL CONFIG
+// ===================================
+const AUDIT_START_DATE = '2025-10-27T00:00:00.000Z';
+
+// ===================================
 // COMPONENT: Role Instruction Card
 // ===================================
 const RoleInstructionCard = ({
@@ -675,6 +680,7 @@ function StrategyManager() {
       const { data: logs, error } = await supabase
         .from('pipeline_audit_log')
         .select('*')
+        .gte('created_at', AUDIT_START_DATE) // <-- ADD THIS LINE
         .eq('position_id', positionId)
         .order('created_at', { ascending: true });
 
@@ -1051,6 +1057,36 @@ function StrategyManager() {
                       </ResponsiveContainer>
                     </motion.div>
                   )}
+
+                  {/* NEW: Audit Trail Warning Box */}
+                  <motion.div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '1rem',
+                      background: 'rgba(235, 188, 186, 0.1)', // Light rose-gold background
+                      border: '1px solid var(--rose-gold)',
+                      padding: '1rem',
+                      borderRadius: '12px',
+                      marginBottom: '2rem',
+                      color: 'var(--text-secondary)'
+                    }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <AlertTriangle size={24} color="var(--rose-gold)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div>
+                      <h4 style={{ color: 'var(--rose-gold)', margin: 0, padding: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>
+                        Please Note:
+                      </h4>
+                      <p style={{ margin: 0, padding: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>
+                        To provide a clean and relevant history, this audit timeline only displays events logged on or after **October 27, 2025**.
+                        <br />
+                        Older, historical data is hidden to prevent confusion.
+                      </p>
+                    </div>
+                  </motion.div>
 
                   {/* Role Lifecycle Timeline */}
                   <motion.div

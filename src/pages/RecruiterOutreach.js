@@ -709,6 +709,15 @@ function RecruiterOutreach() {
 
   // Edit Modal State
   const [editingActivity, setEditingActivity] = useState(null);
+  
+  // --- ADDED: State for new note in edit modal ---
+  const [newNoteText, setNewNoteText] = useState('');
+  // ----------------------------------------------------
+
+  // --- ADDED: State for inline note editing ---
+  const [editingNoteIndex, setEditingNoteIndex] = useState(null);
+  const [editingNoteText, setEditingNoteText] = useState('');
+  // --------------------------------------------
 
   // --- ADDED: State for quick stage-change dropdown ---
   const [quickEditingStageId, setQuickEditingStageId] = useState(null);
@@ -931,7 +940,8 @@ function RecruiterOutreach() {
         rating: 0,
         followup_needed: false,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        notes: [] // --- MODIFIED: Initialize notes as empty array ---
       }));
 
       const { data, error } = await supabase
@@ -1203,13 +1213,36 @@ function RecruiterOutreach() {
     }
   };
 
+  // --- MODIFIED: To handle new 'notes' array structure & reset inline edit state ---
   const handleEdit = (activity) => {
+    // --- MODIFICATION: Ensure 'notes' is an array ---
+    let notesArray = [];
+    if (Array.isArray(activity.notes)) {
+      notesArray = activity.notes;
+    } else if (typeof activity.notes === 'string' && activity.notes.trim() !== '') {
+      // Handle migration of old string-based notes
+      notesArray = [{
+        speaker: 'recruiter', // Assume old notes were recruiter's
+        message: activity.notes,
+        timestamp: activity.updated_at || activity.created_at
+      }];
+    }
+    // --------------------------------------------------
+
     setEditingActivity({
       ...activity,
       scheduled_call_date: activity.scheduled_call_date || '',
-      candidate_phone: activity.candidate_phone || ''
+      candidate_phone: activity.candidate_phone || '',
+      notes: notesArray // --- MODIFIED: Set as array ---
     });
+    setNewNoteText(''); // Clear new note text when opening modal
+    
+    // --- ADDED: Reset inline edit state ---
+    setEditingNoteIndex(null);
+    setEditingNoteText('');
+    // ----------------------------------------
   };
+  // ----------------------------------------------------
 
   const saveEdit = async () => {
     if (!editingActivity) return;
@@ -1218,7 +1251,7 @@ function RecruiterOutreach() {
       candidate_name: editingActivity.candidate_name,
       activity_status: editingActivity.activity_status,
       rating: editingActivity.rating,
-      notes: editingActivity.notes,
+      notes: editingActivity.notes, // This is now an array
       scheduled_call_date: editingActivity.scheduled_call_date || null,
       candidate_phone: editingActivity.candidate_phone || null,
       updated_at: new Date().toISOString()
@@ -1351,7 +1384,7 @@ function RecruiterOutreach() {
           fromOutreach: {
             name: outreach.candidate_name,
             linkedin_url: outreach.linkedin_url,
-            notes: outreach.notes,
+            notes: outreach.notes, // This will pass the notes array
             position_id: outreach.position_id
           }
         } 
@@ -1875,12 +1908,57 @@ function RecruiterOutreach() {
                                 </div>
                               </div>
 
+                              {/* --- MODIFIED: Conversation Notes Display --- */}
                               <div className="notes-section">
-                                <h4>Notes</h4>
-                                <div className="notes-content">
-                                  {activity.notes || 'No notes added yet'}
+                                <h4>Conversation Log</h4>
+                                <div className="notes-content" style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                                  {(!activity.notes || !Array.isArray(activity.notes) || activity.notes.length === 0) ? (
+                                    <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No notes added yet</p>
+                                  ) : (
+                                    activity.notes.map((note, index) => (
+                                      <div key={index} className="conversation-note-item" style={{ 
+                                        marginBottom: '12px',
+                                        paddingLeft: '10px',
+                                        borderLeft: `3px solid ${note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)'}`
+                                      }}>
+                                        <strong style={{ 
+                                          color: note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)',
+                                          textTransform: 'capitalize'
+                                        }}>
+                                          {note.speaker === 'recruiter' ? 'Me' : note.speaker}:
+                                        </strong>
+                                        <span style={{ 
+                                          display: 'block', 
+                                          fontSize: '0.8rem', 
+                                          color: 'var(--text-secondary)',
+                                          marginBottom: '4px'
+                                        }}>
+                                          {note.timestamp ? new Date(note.timestamp).toLocaleString() : ''}
+                                        </span>
+                                        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{note.message}</p>
+                                      </div>
+                                    ))
+                                  )}
+                                  
+                                  {/* Handle legacy string notes */}
+                                  {typeof activity.notes === 'string' && activity.notes.trim() !== '' && (
+                                    <div className="conversation-note-item" style={{ 
+                                        marginBottom: '12px',
+                                        paddingLeft: '10px',
+                                        borderLeft: `3px solid var(--text-secondary)`
+                                      }}>
+                                        <strong style={{ 
+                                          color: 'var(--text-secondary)',
+                                          textTransform: 'capitalize'
+                                        }}>
+                                          Legacy Note:
+                                        </strong>
+                                        <p style={{ margin: 0, whiteSpace: 'pre-wrap', marginTop: '4px' }}>{activity.notes}</p>
+                                      </div>
+                                  )}
                                 </div>
                               </div>
+                              {/* --- END: Conversation Notes Display --- */}
                             </div>
                           </td>
                         </tr>
@@ -2019,17 +2097,177 @@ function RecruiterOutreach() {
                   </div>
                 </>
               )}
+              
+              {/* --- MODIFIED: Conversation Notes Section with Edit/Delete --- */}
               <div className="form-group">
-                <label>Notes</label>
+                <label>Conversation Log</label>
+                
+                {/* Display existing notes */}
+                <div className="conversation-log-display" style={{ 
+                  maxHeight: '200px', 
+                  overflowY: 'auto', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '4px', 
+                  padding: '10px', 
+                  marginBottom: '10px',
+                  backgroundColor: 'var(--primary-bg)'
+                }}>
+                  {(!editingActivity.notes || editingActivity.notes.length === 0) ? (
+                    <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No notes yet.</p>
+                  ) : (
+                    // --- MODIFIED: Loop to handle inline editing ---
+                    editingActivity.notes.map((note, index) => (
+                      <div key={index} className="conversation-note-item" style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid var(--border-color-light)' }}>
+                        {editingNoteIndex === index ? (
+                          // --- INLINE EDITING VIEW ---
+                          <>
+                            <textarea
+                              className="form-textarea"
+                              rows="3"
+                              value={editingNoteText}
+                              onChange={(e) => setEditingNoteText(e.target.value)}
+                              style={{ marginBottom: '5px' }}
+                            />
+                            <div className="inline-edit-actions" style={{ display: 'flex', gap: '5px' }}>
+                              <button
+                                type="button"
+                                className="btn-primary"
+                                style={{ padding: '2px 6px', fontSize: '0.8rem' }}
+                                onClick={() => {
+                                  const updatedNotes = editingActivity.notes.map((n, i) => 
+                                    i === index ? { ...n, message: editingNoteText } : n
+                                  );
+                                  setEditingActivity(prev => ({ ...prev, notes: updatedNotes }));
+                                  setEditingNoteIndex(null);
+                                  setEditingNoteText('');
+                                }}
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                style={{ padding: '2px 6px', fontSize: '0.8rem' }}
+                                onClick={() => {
+                                  setEditingNoteIndex(null);
+                                  setEditingNoteText('');
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          // --- DEFAULT DISPLAY VIEW ---
+                          <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <strong style={{ 
+                                  color: note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)',
+                                  textTransform: 'capitalize'
+                                }}>
+                                  {note.speaker === 'recruiter' ? 'Me' : note.speaker}:
+                                </strong>
+                                <span style={{ 
+                                  display: 'block', 
+                                  fontSize: '0.8rem', 
+                                  color: 'var(--text-secondary)' 
+                                }}>
+                                  {note.timestamp ? new Date(note.timestamp).toLocaleString() : ''}
+                                </span>
+                              </div>
+                              <div className="note-actions" style={{ display: 'flex', gap: '5px' }}>
+                                <button
+                                  type="button"
+                                  className="btn-action"
+                                  title="Edit note"
+                                  style={{ padding: '2px' }}
+                                  onClick={() => {
+                                    setEditingNoteIndex(index);
+                                    setEditingNoteText(note.message);
+                                    setNewNoteText(''); // Stop adding new note
+                                  }}
+                                >
+                                  <Edit size={14} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-action delete"
+                                  title="Delete note"
+                                  style={{ padding: '2px' }}
+                                  onClick={() => {
+                                    if (window.confirm('Are you sure you want to delete this note?')) {
+                                      const updatedNotes = editingActivity.notes.filter((_, i) => i !== index);
+                                      setEditingActivity(prev => ({ ...prev, notes: updatedNotes }));
+                                    }
+                                  }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                            <p style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>{note.message}</p>
+                          </>
+                        )}
+                      </div>
+                    ))
+                    // --- END: Modified loop ---
+                  )}
+                </div>
+                
+                {/* Add new note (but disable if inline-editing) */}
                 <textarea
                   className="form-textarea"
-                  rows="4"
-                  placeholder="Add notes about this contact..."
-                  value={editingActivity.notes || ''}
-                  // --- THIS IS THE LINE THAT WAS FIXED ---
-                  onChange={(e) => setEditingActivity({ ...editingActivity, notes: e.target.value })}
+                  rows="3"
+                  placeholder={editingNoteIndex !== null ? "Editing an existing note..." : "Type a new note..."}
+                  value={newNoteText}
+                  onChange={(e) => setNewNoteText(e.target.value)}
+                  disabled={editingNoteIndex !== null}
                 />
+                <div className="add-note-actions" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      if (!newNoteText.trim()) return;
+                      const newNote = {
+                        speaker: 'candidate',
+                        message: newNoteText,
+                        timestamp: new Date().toISOString()
+                      };
+                      setEditingActivity(prev => ({
+                        ...prev,
+                        notes: [...(prev.notes || []), newNote]
+                      }));
+                      setNewNoteText('');
+                    }}
+                    disabled={editingNoteIndex !== null}
+                  >
+                    Add Candidate Note
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      if (!newNoteText.trim()) return;
+                      const newNote = {
+                        speaker: 'recruiter',
+                        message: newNoteText,
+                        timestamp: new Date().toISOString()
+                      };
+                      setEditingActivity(prev => ({
+                        ...prev,
+                        notes: [...(prev.notes || []), newNote]
+                      }));
+                      setNewNoteText('');
+                    }}
+                    disabled={editingNoteIndex !== null}
+                  >
+                    Add My Note
+                  </button>
+                </div>
               </div>
+              {/* --- END: Conversation Notes Section --- */}
             </div>
             <div className="modal-footer">
               <button className="btn-secondary" onClick={() => setEditingActivity(null)}>Cancel</button>
