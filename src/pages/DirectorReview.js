@@ -188,6 +188,39 @@ const ReviewHeader = () => {
     );
 };
 
+// --- NEW: Aging Candidate Warning Box Component ---
+const AgingWarningBox = ({ candidates, level }) => {
+    const isRed = level === 'red';
+    const icon = isRed ? '🚨' : '⚠️';
+    const title = isRed
+        ? 'Action Required: Candidates Aging (Over 5 Days)'
+        : 'Action Needed Soon: Candidates Aging (3-5 Days)';
+
+    return (
+        <div className={`aging-warning-box ${level}`}>
+            <div className="banner-content">
+                <div className="banner-icon">{icon}</div>
+                <div className="banner-message">
+                    <strong>{title}</strong>
+                    <span className="banner-names">
+                        {candidates.map((c, index) => (
+                            <span key={c.id}>
+                                {c.candidates.name}
+                                {index < candidates.length - 1 ? ', ' : ''}
+                            </span>
+                        ))}
+                    </span>
+                    <p className="banner-note">
+                        {isRed
+                            ? 'These candidates have been waiting over 5 days. Please review and take action immediately.'
+                            : 'These candidates are approaching the 5-day mark. Consider reviewing them soon.'}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 // --- Main DirectorReview Component ---
 // Holds the state and logic for edit/delete/alerts
@@ -466,6 +499,15 @@ function DirectorReview() {
     const screeningQueue = candidatesForReview.filter(p => p.stage === 'Screening' && p.status !== 'Hold');
     const holdQueue = candidatesForReview.filter(p => p.status === 'Hold');
 
+    // --- NEW: Calculate candidates for aging warnings ---
+    const candidatesWithDays = candidatesForReview.map(p => ({
+        ...p,
+        daysInStage: calculateDaysInStage(p.created_at)
+    }));
+
+    const redWarningCandidates = candidatesWithDays.filter(p => p.daysInStage > 5);
+    const yellowWarningCandidates = candidatesWithDays.filter(p => p.daysInStage > 3 && p.daysInStage <= 5);
+
     // Loading and Error States
     if (loading) return <div className="loading-state">Loading reviews...</div>;
     if (error) return <div className="error-state">Error loading reviews: {error}</div>;
@@ -533,6 +575,14 @@ function DirectorReview() {
             </AnimatePresence>
 
             <div className="page-header"> <h1>Director Review Queue</h1> </div>
+            
+            {/* --- NEW: Conditional Rendering for Aging Warning Boxes --- */}
+            {redWarningCandidates.length > 0 ? (
+                <AgingWarningBox level="red" candidates={redWarningCandidates} />
+            ) : yellowWarningCandidates.length > 0 ? (
+                <AgingWarningBox level="yellow" candidates={yellowWarningCandidates} />
+            ) : null}
+
             <ReviewHeader />
             <div className="review-section"> <h2><Check size={28} /> Screening Queue ({screeningQueue.length})</h2> {renderCandidateList(screeningQueue, "Screening Queue")} </div>
             <div className="review-section"> <h2><Archive size={28} /> Hold Queue ({holdQueue.length})</h2> {renderCandidateList(holdQueue, "Hold Queue")} </div>

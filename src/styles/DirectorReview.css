@@ -139,6 +139,117 @@
 }
 
 /* ===================================
+   AGING WARNING BOX (RecruiterOutreach Style)
+   =================================== */
+
+.aging-warning-box {
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  animation: slideInDown 0.4s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aging-warning-box .banner-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+}
+
+.aging-warning-box .banner-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.aging-warning-box .banner-message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.aging-warning-box .banner-message strong {
+  font-size: 1rem;
+  font-weight: 700;
+  display: block;
+}
+
+.aging-warning-box .banner-names {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.aging-warning-box .banner-note {
+  font-size: 0.875rem;
+  font-style: italic;
+  margin: 0.5rem 0 0 0;
+  opacity: 0.9;
+}
+
+/* Yellow Variant (3-5 Days - Warning) */
+.aging-warning-box.yellow {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(245, 158, 11, 0.1));
+  border: 2px solid rgba(234, 179, 8, 0.5);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
+}
+
+.aging-warning-box.yellow .banner-message strong {
+  color: #eab308;
+}
+
+.aging-warning-box.yellow .banner-names {
+  color: var(--text-primary);
+}
+
+.aging-warning-box.yellow .banner-note {
+  color: var(--text-secondary);
+}
+
+/* Red Variant (5+ Days - Urgent) */
+.aging-warning-box.red {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+  border: 2px solid rgba(239, 68, 68, 0.5);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.aging-warning-box.red .banner-message strong {
+  color: #ef4444;
+}
+
+.aging-warning-box.red .banner-names {
+  color: var(--text-primary);
+}
+
+.aging-warning-box.red .banner-note {
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .aging-warning-box {
+    flex-direction: column;
+  }
+}
+
+/* ===================================
    Review Sections
    =================================== */
 .review-section {
