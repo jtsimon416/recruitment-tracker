@@ -115,7 +115,7 @@ const FilterSelection = ({ label, items, selectedItems, onToggle }) => {
 // =========================================================================
 // OutreachCard Component (Modified Candidate Name/Info structure)
 // =========================================================================
-const OutreachCard = ({ activity, onToggleNotes, isExpanded }) => {
+const OutreachCard = ({ activity, onToggleNotes, isExpanded, userProfile }) => {
     const statusColor = getStatusColor(activity.activity_status);
     const recruiterInitial = activity.recruiters?.name?.charAt(0) || 'R';
     const formattedCallDate = formatCallDate(activity.scheduled_call_date);
@@ -179,9 +179,49 @@ const OutreachCard = ({ activity, onToggleNotes, isExpanded }) => {
             </div>
             <AnimatePresence>
               {isExpanded && activity.notes && (
-                  <motion.div className="expanded-notes-card-footer" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                      <strong>Notes:</strong> {activity.notes}
-                  </motion.div>
+                <motion.div
+                  className="expanded-notes-card-footer"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                >
+                  <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--rose-gold)' }}>Conversation Log:</h4>
+                  {Array.isArray(activity.notes) && activity.notes.length > 0 ? (
+                    activity.notes.map((note, index) => (
+                      <div key={index} style={{
+                        marginBottom: '1rem',
+                        paddingLeft: '10px',
+                        borderLeft: `3px solid ${note.speaker === 'candidate' ? 'var(--accent-blue)' : 'var(--rose-gold)'}`
+                      }}>
+                        <strong style={{
+                          color: note.speaker === 'candidate' ? 'var(--accent-blue)' : 'var(--rose-gold)',
+                          textTransform: 'capitalize'
+                        }}>
+                          {note.speaker === 'recruiter' ? (activity.recruiters?.name || 'Recruiter') : note.speaker}:
+                        </strong>
+                        <span style={{
+                          display: 'block',
+                          fontSize: '0.8rem',
+                          color: 'var(--text-muted)',
+                          marginBottom: '4px'
+                        }}>
+                          {note.timestamp ? new Date(note.timestamp).toLocaleString() : ''}
+                        </span>
+                        <p style={{ margin: 0, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
+                          {note.message}
+                        </p>
+                      </div>
+                    ))
+                  ) : typeof activity.notes === 'string' && activity.notes.trim() !== '' ? (
+                    // Fallback for legacy string-based notes
+                    <p style={{ margin: 0, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
+                      {activity.notes}
+                    </p>
+                  ) : (
+                    // Message for empty or invalid notes
+                    <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No notes available.</p>
+                  )}
+                </motion.div>
               )}
             </AnimatePresence>
         </motion.div>
@@ -194,6 +234,7 @@ const OutreachCard = ({ activity, onToggleNotes, isExpanded }) => {
 // =========================================================================
 function DirectorOutreachDashboard() {
   const {
+    userProfile,
     recruiters,
     positions,
     outreachActivities,
@@ -703,7 +744,7 @@ function DirectorOutreachDashboard() {
                 {loading ? (
                   <div className="empty-state"><p>Loading activities...</p></div>
                 ) : (
-                  paginatedActivities.length === 0 ? ( <div className="empty-state"> <p>No activities found matching filters.</p> </div> ) : ( paginatedActivities.map(activity => ( <OutreachCard key={activity.id} activity={activity} onToggleNotes={toggleNotes} isExpanded={expandedNotes[activity.id]} /> )) )
+                  paginatedActivities.length === 0 ? ( <div className="empty-state"> <p>No activities found matching filters.</p> </div> ) : ( paginatedActivities.map(activity => ( <OutreachCard key={activity.id} activity={activity} onToggleNotes={toggleNotes} isExpanded={expandedNotes[activity.id]} userProfile={userProfile} /> )) )
                 )}
               </div>
 
