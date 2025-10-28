@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from 'https://esm.sh/@google/generative-ai@0.1.0';
 
-// Define the exact, strict output structure for the AI
 export interface ResumeData {
   name: string;
   email: string;
@@ -25,7 +24,6 @@ export interface ResumeData {
   }>;
 }
 
-// JSON Schema for structured output
 const RESUME_SCHEMA = {
   type: "object",
   properties: {
@@ -124,11 +122,6 @@ const RESUME_SCHEMA = {
   required: ["name", "email", "phone", "skills", "education", "experience"]
 };
 
-/**
- * Uses Google Gemini AI to parse raw resume text into a structured JSON object.
- * @param resumeText The raw text extracted from the resume file.
- * @returns A promise resolving to the structured ResumeData object.
- */
 export async function parseResumeWithAI(resumeText: string): Promise<ResumeData> {
   const apiKey = Deno.env.get("GEMINI_API_KEY");
 

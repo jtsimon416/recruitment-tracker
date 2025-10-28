@@ -1,8 +1,8 @@
-﻿export function getCorsHeaders() {
+export function getCorsHeaders() {
     return {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS', // Ensure OPTIONS is allowed here
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
     };
 }
 
