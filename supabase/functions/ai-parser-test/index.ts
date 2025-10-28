@@ -1,18 +1,24 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { getCorsHeaders, handleOptionsRequest } from '../_utils/cors.ts';
-import { parseResumeWithAI } from '../_utils/openaiProcessor.ts';
-import { processPdf } from '../_utils/pdfProcessor.ts';
 
-const corsHeaders = getCorsHeaders();
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight request
-  const optionsResponse = handleOptionsRequest(req);
-  if (optionsResponse) {
-    return optionsResponse;
-  }
-
   try {
+    // Handle CORS preflight request FIRST
+    if (req.method === 'OPTIONS') {
+      return new Response('ok', {
+        headers: corsHeaders,
+        status: 200,
+      });
+    }
+
+    // Dynamic imports to prevent initialization errors from blocking CORS
+    const { parseResumeWithAI } = await import('../_utils/openaiProcessor.ts');
+    const { processPdf } = await import('../_utils/pdfProcessor.ts');
     // Only allow POST requests
     if (req.method !== 'POST') {
       return new Response(

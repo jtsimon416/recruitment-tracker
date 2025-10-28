@@ -1,15 +1,23 @@
-import { WebPDFLoader } from "npm:@langchain/community@0.3.18/document_loaders/web/pdf";
+import * as pdfjsLib from "npm:pdfjs-dist@4.0.269";
 
 export async function processPdf(pdfBuffer: Uint8Array): Promise<string> {
   try {
-    const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
-    const pdfLoader = new WebPDFLoader(pdfBlob);
-    const docs = await pdfLoader.load();
+    const pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise;
+    const textPages: string[] = [];
 
-    const text = docs.map(doc => doc.pageContent).join('\n');
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ');
+      textPages.push(pageText);
+    }
+
+    const text = textPages.join('\n');
     return text.replace(/\s\s+/g, ' ').trim();
   } catch (error) {
     console.error("Error processing PDF:", error);
-    throw new Error("Failed to parse PDF content.");
+    throw new Error(`Failed to parse PDF content: ${error.message}`);
   }
 }
