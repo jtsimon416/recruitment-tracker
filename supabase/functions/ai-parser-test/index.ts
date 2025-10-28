@@ -1,38 +1,68 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { corsHeaders } from "../_utils/cors.ts";
-import { parseResumeWithAI } from "../_utils/openaiProcessor.ts";
+class CommissionCalculator:
+    """
+    Calculates the commission for different types of recruitment placements.
+    """
 
-serve(async (req) => {
-  // Handle CORS pre-flight requests
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+    def calculate_commission(self, placement_type: str, **kwargs) -> float:
+        """
+        Calculates commission based on the placement type and provided details.
 
-  try {
-    // Expect the raw resume text in the request body under the key 'resume_text'
-    const { resume_text } = await req.json();
+        For 'Permanent' placements, kwargs should include:
+        - annual_salary: The annual salary of the placed candidate.
+        - commission_rate: The commission percentage (e.g., 0.20 for 20%).
 
-    if (!resume_text) {
-      return new Response(JSON.stringify({ error: "Missing 'resume_text' in request body." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+        For 'Contract' placements, kwargs should include:
+        - client_rate: The hourly rate billed to the client.
+        - contractor_rate: The hourly rate paid to the contractor.
+        - hours_worked: The total hours worked by the contractor.
 
-    // Call the new AI parsing function
-    const structuredData = await parseResumeWithAI(resume_text);
+        Returns:
+            The calculated commission as a float.
 
-    // Return the structured JSON data for n8n or your front-end to process
-    return new Response(JSON.stringify(structuredData), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+        Raises:
+            ValueError: If the placement type is unknown or missing required arguments.
+        """
+        if placement_type == 'Permanent':
+            try:
+                annual_salary = kwargs['annual_salary']
+                commission_rate = kwargs['commission_rate']
+                commission = annual_salary * commission_rate
+                return commission
+            except KeyError as e:
+                raise ValueError(f"Missing required argument for 'Permanent' placement: {e}")
 
-  } catch (error) {
-    console.error(error);
-    return new Response(JSON.stringify({ error: error.message || "An unknown error occurred during parsing." }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
+        elif placement_type == 'Contract':
+            try:
+                client_rate = kwargs['client_rate']
+                contractor_rate = kwargs['contractor_rate']
+                hours_worked = kwargs['hours_worked']
+                
+                # Corrected commission calculation for Contract placements
+                spread = client_rate - contractor_rate
+                commission = spread * hours_worked
+                return commission
+            except KeyError as e:
+                raise ValueError(f"Missing required argument for 'Contract' placement: {e}")
+
+        else:
+            raise ValueError(f"Unknown placement type: '{placement_type}'")
+
+# Example Usage:
+# calculator = CommissionCalculator()
+
+# # Permanent placement example
+# perm_commission = calculator.calculate_commission(
+#     'Permanent',
+#     annual_salary=100000,
+#     commission_rate=0.20
+# )
+# print(f"Commission for Permanent placement: ${perm_commission:.2f}") # Expected: .00
+
+# # Contract placement example
+# contract_commission = calculator.calculate_commission(
+#     'Contract',
+#     client_rate=100,
+#     contractor_rate=75,
+#     hours_worked=480
+# )
+# print(f"Commission for Contract placement: .2f") # Expected: .00
