@@ -1,68 +1,119 @@
-class CommissionCalculator:
-    """
-    Calculates the commission for different types of recruitment placements.
-    """
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { getCorsHeaders, handleOptionsRequest } from '../_utils/cors.ts';
+import { parseResumeWithAI } from '../_utils/openaiProcessor.ts';
+import { processPdf } from '../_utils/pdfProcessor.ts';
 
-    def calculate_commission(self, placement_type: str, **kwargs) -> float:
-        """
-        Calculates commission based on the placement type and provided details.
+const corsHeaders = getCorsHeaders();
 
-        For 'Permanent' placements, kwargs should include:
-        - annual_salary: The annual salary of the placed candidate.
-        - commission_rate: The commission percentage (e.g., 0.20 for 20%).
+Deno.serve(async (req) => {
+  // Handle CORS preflight request
+  const optionsResponse = handleOptionsRequest(req);
+  if (optionsResponse) {
+    return optionsResponse;
+  }
 
-        For 'Contract' placements, kwargs should include:
-        - client_rate: The hourly rate billed to the client.
-        - contractor_rate: The hourly rate paid to the contractor.
-        - hours_worked: The total hours worked by the contractor.
+  try {
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ error: 'Method not allowed. Use POST.' }),
+        {
+          status: 405,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
-        Returns:
-            The calculated commission as a float.
+    // Parse the request body
+    const { fileUrl } = await req.json();
 
-        Raises:
-            ValueError: If the placement type is unknown or missing required arguments.
-        """
-        if placement_type == 'Permanent':
-            try:
-                annual_salary = kwargs['annual_salary']
-                commission_rate = kwargs['commission_rate']
-                commission = annual_salary * commission_rate
-                return commission
-            except KeyError as e:
-                raise ValueError(f"Missing required argument for 'Permanent' placement: {e}")
+    if (!fileUrl) {
+      return new Response(
+        JSON.stringify({ error: 'Missing fileUrl in request body' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
-        elif placement_type == 'Contract':
-            try:
-                client_rate = kwargs['client_rate']
-                contractor_rate = kwargs['contractor_rate']
-                hours_worked = kwargs['hours_worked']
-                
-                # Corrected commission calculation for Contract placements
-                spread = client_rate - contractor_rate
-                commission = spread * hours_worked
-                return commission
-            except KeyError as e:
-                raise ValueError(f"Missing required argument for 'Contract' placement: {e}")
+    console.log('Processing file:', fileUrl);
 
-        else:
-            raise ValueError(f"Unknown placement type: '{placement_type}'")
+    // Fetch the file from the URL
+    const fileResponse = await fetch(fileUrl);
+    if (!fileResponse.ok) {
+      throw new Error(`Failed to fetch file from URL: ${fileResponse.statusText}`);
+    }
 
-# Example Usage:
-# calculator = CommissionCalculator()
+    const fileBuffer = await fileResponse.arrayBuffer();
+    let resumeText = '';
 
-# # Permanent placement example
-# perm_commission = calculator.calculate_commission(
-#     'Permanent',
-#     annual_salary=100000,
-#     commission_rate=0.20
-# )
-# print(f"Commission for Permanent placement: ${perm_commission:.2f}") # Expected: .00
+    // Extract text based on file type
+    if (fileUrl.toLowerCase().endsWith('.pdf')) {
+      console.log('Extracting text from PDF...');
+      resumeText = await processPdf(new Uint8Array(fileBuffer));
+    } else if (fileUrl.toLowerCase().endsWith('.docx')) {
+      // For DOCX files, we'd need a different processor
+      // For now, return an error
+      return new Response(
+        JSON.stringify({ error: 'DOCX parsing not yet implemented. Please use PDF files.' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    } else {
+      return new Response(
+        JSON.stringify({ error: 'Unsupported file type. Please upload a PDF file.' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
-# # Contract placement example
-# contract_commission = calculator.calculate_commission(
-#     'Contract',
-#     client_rate=100,
-#     contractor_rate=75,
-#     hours_worked=480
-# )
-# print(f"Commission for Contract placement: .2f") # Expected: .00
+    if (!resumeText || resumeText.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Could not extract text from the file' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    console.log('Extracted text length:', resumeText.length);
+    console.log('Calling AI parser...');
+
+    // Parse the resume text with AI
+    const parsedData = await parseResumeWithAI(resumeText);
+
+    console.log('AI parsing successful');
+
+    // Return the parsed data
+    return new Response(
+      JSON.stringify({
+        success: true,
+        parsedData
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+
+  } catch (error) {
+    console.error('Error processing resume:', error);
+
+    return new Response(
+      JSON.stringify({
+        error: error.message || 'Failed to process resume',
+        details: error.toString()
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+});
