@@ -1,23 +1,16 @@
-import * as pdfjsLib from "npm:pdfjs-dist@4.0.269";
+import { extractText } from 'npm:unpdf@0.12.1';
 
 export async function processPdf(pdfBuffer: Uint8Array): Promise<string> {
   try {
-    const pdf = await pdfjsLib.getDocument({ data: pdfBuffer }).promise;
-    const textPages: string[] = [];
+    const { text } = await extractText(pdfBuffer);
 
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      const page = await pdf.getPage(pageNum);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(' ');
-      textPages.push(pageText);
+    if (!text) {
+      throw new Error("Could not extract text from PDF.");
     }
 
-    const text = textPages.join('\n');
     return text.replace(/\s\s+/g, ' ').trim();
   } catch (error) {
-    console.error("Error processing PDF:", error);
+    console.error("Error processing PDF with unpdf:", error);
     throw new Error(`Failed to parse PDF content: ${error.message}`);
   }
 }
