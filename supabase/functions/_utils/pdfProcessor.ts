@@ -1,16 +1,20 @@
-import { extractText } from 'npm:unpdf@0.12.1';
-
 export async function processPdf(pdfBuffer: Uint8Array): Promise<string> {
   try {
-    const { text } = await extractText(pdfBuffer);
+    const decoder = new TextDecoder('utf-8', { fatal: false });
+    let text = decoder.decode(pdfBuffer);
 
-    if (!text) {
-      throw new Error("Could not extract text from PDF.");
+    text = text
+      .replace(/[^\x20-\x7E\n\r\t]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!text || text.length < 50) {
+      throw new Error("Could not extract sufficient text from PDF.");
     }
 
-    return text.replace(/\s\s+/g, ' ').trim();
+    return text;
   } catch (error) {
-    console.error("Error processing PDF with unpdf:", error);
+    console.error("Error processing PDF:", error);
     throw new Error(`Failed to parse PDF content: ${error.message}`);
   }
 }
