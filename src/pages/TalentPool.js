@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase, SUPABASE_URL_BASE } from '../services/supabaseClient';
 import * as mammoth from 'mammoth';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Pen, Trash, ChevronDown, ChevronUp, X, Filter, Clipboard } from 'lucide-react';
@@ -206,6 +206,7 @@ function TalentPool() {
   const { fetchAllOutreachRecords, refreshData } = useData();
   const [candidates, setCandidates] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
   const [showPipelineModal, setShowPipelineModal] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -306,7 +307,8 @@ function TalentPool() {
     }
   }, [skillSearchTerm]);
   
-  const BUCKET_NAME = 'resumes'; 
+  const BUCKET_NAME = 'resumes';
+  const EDGE_FUNCTION_URL = `${SUPABASE_URL_BASE}/functions/v1/ai-parser-test`; 
   const stages = ['Screening', 'Secondary Screening', 'Technical Interview', 'Team Interview', 'Offer', 'Hired', 'Rejected'];
 
   const convertWordToHtml = async (fileUrl) => {
@@ -836,7 +838,75 @@ function TalentPool() {
 
   function handleOpenForm() {
     if (editingCandidate) return;
+    setShowAiModal(false);
     setShowForm(true);
+  }
+
+  async function handleAiParseSubmit(file) {
+    if (!file) {
+      showConfirmation({ type: 'error', title: 'Error', message: 'Please select a file first.' });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const filePath = `${BUCKET_NAME}/${new Date().getTime()}_${file.name.replace(/\s/g, '_')}`;
+      const { error: uploadError } = await supabase.storage.from(BUCKET_NAME).upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
+      const resumeUrl = publicUrlData.publicUrl;
+
+      const { data: invokeData, error: invokeError } = await supabase.functions.invoke('ai-parser-test', {
+        body: { fileUrl: resumeUrl }
+      });
+
+      if (invokeError) {
+        throw new Error(`Edge Function error: ${invokeError.message}`);
+      }
+
+      if (invokeData.error) {
+        throw new Error(invokeData.error);
+      }
+
+      const structuredData = invokeData.parsedData;
+
+      setCandidateFormData({
+        name: structuredData.name || '',
+        email: structuredData.email || '',
+        phone: structuredData.phone || '',
+        location: '',
+        linkedin_url: structuredData.linkedin_url || '',
+        skills: structuredData.skills || [],
+        notes: structuredData.summary || '',
+        resume_url: resumeUrl,
+        document_type: 'Resume',
+        created_by_recruiter: ''
+      });
+
+      setShowAiModal(false);
+      setEditingCandidate(null);
+      setShowForm(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      showConfirmation({
+        type: 'success',
+        title: 'Success!',
+        message: 'Resume parsed successfully! Review and submit the form.'
+      });
+
+    } catch (error) {
+      console.error('AI Parse Error:', error);
+      showConfirmation({
+        type: 'error',
+        title: 'Parse Failed',
+        message: `Could not parse resume: ${error.message}`
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   const totalPages = Math.ceil(filteredCandidates.length / candidatesPerPage);
@@ -936,7 +1006,13 @@ function TalentPool() {
 
   return (
     <div className="page-container">
-      <div className="page-header"><h1>Talent Pool</h1><button className="btn-primary" onClick={handleOpenForm} disabled={!!editingCandidate}>+ Add Candidate</button></div>
+      <div className="page-header">
+        <h1>Talent Pool</h1>
+        <div className="header-actions">
+          <button className="btn-ai-parse" onClick={() => setShowAiModal(true)} disabled={!!editingCandidate}>AI Parse Resume</button>
+          <button className="btn-primary" onClick={handleOpenForm} disabled={!!editingCandidate}>+ Add Candidate</button>
+        </div>
+      </div>
       {showForm && (<><div className="form-close-bar"><button className="btn-secondary" onClick={resetForm}>Cancel / Close</button></div>{renderSplitScreenForm()}</>)}
       <AdvancedFilterPanel
         expanded={filterPanelExpanded}
@@ -1113,6 +1189,39 @@ function TalentPool() {
       </div>
       <div className="pagination-controls"><button onClick={goToPreviousPage} disabled={currentPage === 1} className="btn-secondary">Previous</button><span>Page {currentPage} of {totalPages}</span><button onClick={goToNextPage} disabled={currentPage === totalPages} className="btn-secondary">Next</button></div>
       <WordDocViewerModal isOpen={showWordDocModal} onClose={() => setShowWordDocModal(false)} resumeUrl={wordDocUrl} candidateName={wordDocCandidateName} />
+      {showAiModal && (
+        <div className="modal-overlay" onClick={() => setShowAiModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>AI Resume Parser</h2>
+            <p className="ai-modal-description">Upload a resume (PDF or DOCX) to automatically extract candidate information using AI.</p>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const fileInput = e.target.querySelector('input[type="file"]');
+              if (fileInput.files[0]) {
+                handleAiParseSubmit(fileInput.files[0]);
+              }
+            }}>
+              <div className="form-group">
+                <label>Select Resume File</label>
+                <input
+                  type="file"
+                  accept=".pdf,.docx"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="btn-primary" disabled={loading}>
+                  {loading ? 'Processing...' : 'Parse Resume'}
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => setShowAiModal(false)} disabled={loading}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {showPipelineModal && <div className="modal-overlay" onClick={closePipelineModal}><div className="modal-content" onClick={(e) => e.stopPropagation()}><h2>Add {selectedCandidate?.name} to Pipeline</h2><form onSubmit={handlePipelineSubmit}><div className="form-group"><label>Position *</label><select value={pipelineData.position_id} onChange={(e) => setPipelineData({...pipelineData, position_id: e.target.value})} required><option value="">Select...</option>{positions.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></div><div className="form-group"><label>Stage</label><select value={pipelineData.stage} onChange={(e) => setPipelineData({...pipelineData, stage: e.target.value})}>{stages.map(s=><option key={s} value={s}>{s}</option>)}</select></div><div className="form-actions"><button type="submit" className="btn-primary">Add to Pipeline</button><button type="button" className="btn-secondary" onClick={closePipelineModal}>Cancel</button></div></form></div></div>}
       {showCommentsModal && <div className="modal-overlay" onClick={closeCommentsModal}><div className="modal-content" onClick={(e) => e.stopPropagation()}><h2>Comments for {selectedCandidate?.name}</h2><form onSubmit={(e)=>{e.preventDefault(); handleAddComment(e.target.commentText.value); e.target.reset();}}><div className="form-group"><label>New Comment</label><textarea name="commentText" rows="3"></textarea></div><button type="submit" className="btn-primary">Add</button></form><div className="comments-list">{comments.length>0?comments.map(c=><div key={c.id} className="comment-card">{editingCommentId===c.id?(<div><textarea value={editingCommentText} onChange={e=>setEditingCommentText(e.target.value)}/><button onClick={()=>handleSaveEditComment(c.id)}>Save</button><button onClick={()=>setEditingCommentId(null)}>Cancel</button></div>):(<div><p><strong>{c.author_name}:</strong> {c.comment_text}</p><p className="comment-date">{new Date(c.created_at).toLocaleDateString()}</p><button onClick={()=>handleEditComment(c)}><Pen size={14}/></button><button onClick={()=>handleDeleteComment(c.id)}><Trash size={14}/></button></div>)}</div>):<p>No comments.</p>}</div><button type="button" className="btn-secondary" onClick={closeCommentsModal}>Close</button></div></div>}
     </div>

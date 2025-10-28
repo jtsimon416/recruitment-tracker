@@ -20,6 +20,12 @@
   font-weight: 700;
 }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
   color: white;
@@ -36,6 +42,30 @@
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(122, 162, 247, 0.4);
+}
+
+.btn-ai-parse {
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(158, 206, 106, 0.3);
+}
+
+.btn-ai-parse:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(158, 206, 106, 0.4);
+}
+
+.btn-ai-parse:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .form-card {
@@ -572,6 +602,13 @@
   margin-bottom: 20px;
   font-size: 16px;
   font-weight: 600;
+}
+
+.ai-modal-description {
+  color: var(--text-secondary);
+  margin-bottom: 25px;
+  line-height: 1.6;
+  font-size: 14px;
 }
 
 .modal-actions {

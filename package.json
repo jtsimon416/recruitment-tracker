@@ -35,7 +35,14 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "preinstall": "true"
+  },
+  "overrides": {
+    "react-multi-select-component": {
+      "react": "^19.2.0",
+      "react-dom": "^19.2.0"
+    }
   },
   "eslintConfig": {
     "extends": [
