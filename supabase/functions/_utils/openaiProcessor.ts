@@ -1,6 +1,6 @@
-import { Anthropic } from 'https://esm.sh/@anthropic-ai/sdk@0.17.0'; // Using the Anthropic SDK
+import { GoogleGenerativeAI } from 'https://esm.sh/@google/generative-ai@0.1.0';
 
-// 1. Define the exact, strict output structure (Schema) for the AI
+// Define the exact, strict output structure for the AI
 export interface ResumeData {
   name: string;
   email: string;
@@ -10,7 +10,6 @@ export interface ResumeData {
   total_years_experience: number | null;
   most_recent_title: string | null;
   most_recent_company: string | null;
-  // Arrays for structured data
   skills: string[];
   education: Array<{
     institution: string;
@@ -26,88 +25,158 @@ export interface ResumeData {
   }>;
 }
 
-// 2. Initialize the Anthropic Client
-const anthropic = new Anthropic({
-    apiKey: Deno.env.get("ANTHROPIC_API_KEY"), // Key loaded from the ANTHROPIC_API_KEY secret
-});
+// JSON Schema for structured output
+const RESUME_SCHEMA = {
+  type: "object",
+  properties: {
+    name: {
+      type: "string",
+      description: "Full name of the candidate"
+    },
+    email: {
+      type: "string",
+      description: "Email address of the candidate"
+    },
+    phone: {
+      type: "string",
+      description: "Phone number of the candidate"
+    },
+    linkedin_url: {
+      type: ["string", "null"],
+      description: "LinkedIn profile URL if available, otherwise null"
+    },
+    summary: {
+      type: ["string", "null"],
+      description: "Brief professional summary or objective statement (max 100 words)"
+    },
+    total_years_experience: {
+      type: ["number", "null"],
+      description: "Total years of professional experience calculated from work history"
+    },
+    most_recent_title: {
+      type: ["string", "null"],
+      description: "Job title of the most recent position"
+    },
+    most_recent_company: {
+      type: ["string", "null"],
+      description: "Company name of the most recent position"
+    },
+    skills: {
+      type: "array",
+      items: {
+        type: "string"
+      },
+      description: "List of professional skills"
+    },
+    education: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          institution: {
+            type: "string",
+            description: "Name of the educational institution"
+          },
+          degree: {
+            type: "string",
+            description: "Degree or certification obtained"
+          },
+          year: {
+            type: ["number", "null"],
+            description: "Graduation year if available"
+          }
+        },
+        required: ["institution", "degree"]
+      },
+      description: "Educational background"
+    },
+    experience: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          title: {
+            type: "string",
+            description: "Job title"
+          },
+          company: {
+            type: "string",
+            description: "Company name"
+          },
+          start_date: {
+            type: "string",
+            description: "Start date in format like 'Jan 2020' or '2020'"
+          },
+          end_date: {
+            type: ["string", "null"],
+            description: "End date in same format as start_date, or null if current position"
+          },
+          description_summary: {
+            type: ["string", "null"],
+            description: "Brief summary of responsibilities and achievements"
+          }
+        },
+        required: ["title", "company", "start_date"]
+      },
+      description: "Work experience history"
+    }
+  },
+  required: ["name", "email", "phone", "skills", "education", "experience"]
+};
 
 /**
- * Uses Anthropic Claude to parse raw text into a structured JSON object.
+ * Uses Google Gemini AI to parse raw resume text into a structured JSON object.
  * @param resumeText The raw text extracted from the resume file.
  * @returns A promise resolving to the structured ResumeData object.
  */
 export async function parseResumeWithAI(resumeText: string): Promise<ResumeData> {
-    const prompt = `
-        You are an expert recruitment data parser. Your task is to accurately extract all relevant candidate information from the provided resume text and return it strictly in the required JSON object format.
+  const apiKey = Deno.env.get("GEMINI_API_KEY");
 
-        INSTRUCTIONS:
-        1. Extract all contact information (name, email, phone, LinkedIn URL).
-        2. Calculate the total years of professional experience based on the start/end dates in the experience section. Return only the numerical value.
-        3. Summarize the resume into a short paragraph (max 100 words).
-        4. Extract all skills as a clean list of strings (e.g., ["Python", "SQL", "Scrum"]).
-        5. For Experience and Education, map the data directly into the arrays as structured objects.
-        6. You must return only the JSON object.
-    `;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY environment variable is not set");
+  }
 
-    try {
-        const message = await anthropic.messages.create({
-            model: "claude-3-haiku-20240307", // The guaranteed working free model
-            max_tokens: 4096, 
-            messages: [
-                { role: "user", content: `${prompt}\n\nRESUME TEXT:\n\n${resumeText}` }
-            ],
-            // CRUCIAL: Use the Anthropic tool for structured JSON output
-            tool_choice: { type: "tool", name: "resume_parser" }, 
-            tools: [{
-                name: "resume_parser",
-                description: "Parses a resume and returns a structured JSON object.",
-                input_schema: {
-                    type: "object",
-                    properties: {
-                         // This is the structure the AI must return
-                        data: {
-                            type: "object",
-                            properties: {
-                                name: { type: "string" },
-                                email: { type: "string" },
-                                phone: { type: "string" },
-                                linkedin_url: { type: "string", nullable: true },
-                                summary: { type: "string", nullable: true },
-                                total_years_experience: { type: "number", nullable: true },
-                                most_recent_title: { type: "string", nullable: true },
-                                most_recent_company: { type: "string", nullable: true },
-                                skills: { type: "array", items: { type: "string" } },
-                                education: { type: "array", items: { type: "object", properties: {
-                                    institution: { type: "string" },
-                                    degree: { type: "string" },
-                                    year: { type: "number", nullable: true }
-                                }, required: ["institution", "degree"] }},
-                                experience: { type: "array", items: { type: "object", properties: {
-                                    title: { type: "string" },
-                                    company: { type: "string" },
-                                    start_date: { type: "string" },
-                                    end_date: { type: "string", nullable: true },
-                                    description_summary: { type: "string", nullable: true }
-                                }, required: ["title", "company", "start_date"] }}
-                            },
-                            required: ["name", "email", "phone", "skills"]
-                        }
-                    }
-                }
-            }]
-        });
+  const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Extract the JSON data from the tool call result
-        const toolCall = message.content.find(c => c.type === 'tool_use');
-        
-        if (toolCall && toolCall.type === 'tool_use') {
-            return toolCall.input.data as ResumeData;
-        }
+  const systemInstruction = `You are an expert recruitment data parser with deep expertise in extracting and structuring candidate information from resumes.
 
-        throw new Error("Anthropic did not return the required structured JSON data.");
+Your responsibilities:
+1. Extract all contact information accurately (name, email, phone, LinkedIn URL)
+2. Calculate total_years_experience by analyzing all work experience entries and their date ranges
+3. Identify the most recent job title and company from the work history
+4. Create a concise professional summary (max 100 words) that captures key qualifications
+5. Extract all technical and professional skills as a clean list
+6. Structure education history with institution, degree, and graduation year
+7. Structure work experience with titles, companies, dates, and brief description summaries
+8. Return data in strict JSON format matching the provided schema
+9. Use null for missing optional fields rather than empty strings or placeholder text
+10. For dates, use formats like "Jan 2020" or "2020" for start_date and end_date fields
 
-    } catch (error) {
-        console.error("Anthropic API Error:", error);
-        throw new Error(`Failed to parse resume with AI: ${error.message}`);
-    }
+Be thorough, accurate, and consistent in your extraction.`;
+
+  try {
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: systemInstruction,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: RESUME_SCHEMA
+      }
+    });
+
+    const result = await model.generateContent(
+      `Parse the following resume text and extract all relevant information:\n\n${resumeText}`
+    );
+
+    const response = await result.response;
+    const text = response.text();
+
+    const parsedData = JSON.parse(text) as ResumeData;
+
+    return parsedData;
+
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    throw new Error(`Failed to parse resume with AI: ${error.message}`);
+  }
 }
