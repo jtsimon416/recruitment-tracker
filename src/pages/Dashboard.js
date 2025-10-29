@@ -966,15 +966,9 @@ function Dashboard() {
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Tab Content */}
-      <AnimatePresence mode="wait">
+      <div>
         {activeTab === 'overview' && (
-          <motion.div
-            key="overview"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div>
             {/* Metrics Grid */}
             <div className="metrics-grid">
               <AnimatedMetricCard
@@ -1019,12 +1013,7 @@ function Dashboard() {
             </div>
 
             {/* Quick Pipeline Funnel */}
-            <motion.div
-              className="chart-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
+            <div className="chart-card">
               <h2><Briefcase size={24} /> Team Pipeline Overview</h2>
               <PipelineFunnel
                 data={Object.values(pipelineMetrics).reduce((acc, pos) => {
@@ -1037,66 +1026,42 @@ function Dashboard() {
                 }, [])}
                 stages={['Screening', 'Submit to Client', 'Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired']}
               />
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
 
         {activeTab === 'performance' && (
-          <motion.div
-            key="performance"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div>
             <PerformanceTab
               stats={executiveStats}
               historicalData={historicalData}
               roleHealth={roleHealth}
             />
-          </motion.div>
+          </div>
         )}
 
         {activeTab === 'team' && (
-          <motion.div
-            key="team"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div>
             <TeamMetricsTab recruiterStats={recruiterStats} />
-          </motion.div>
+          </div>
         )}
 
         {activeTab === 'operations' && (
-          <motion.div
-            key="operations"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div>
             <DailyOperationsTab callsData={callsData} interviewsData={interviewsData} />
-          </motion.div>
+          </div>
         )}
 
         {activeTab === 'pipeline' && (
-          <motion.div
-            key="pipeline"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div>
             <PipelineDeepDiveTab
               pipelineMetrics={pipelineMetrics}
               roleHealth={roleHealth}
               navigate={navigate}
             />
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }
