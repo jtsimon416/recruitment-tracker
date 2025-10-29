@@ -115,7 +115,17 @@ export function DataProvider({ children }) {
   }
   
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) {
+        console.error('Logout error:', error);
+      }
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Unexpected logout error:', err);
+      await supabase.auth.signOut({ scope: 'local' });
+      window.location.href = '/';
+    }
   };
 
   // -------------------------------------------------------------------
