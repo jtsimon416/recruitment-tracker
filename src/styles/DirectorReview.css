@@ -1077,17 +1077,16 @@
   display: flex;
   gap: 0.5rem;
   border-bottom: 2px solid var(--border-color);
-  overflow-x: auto;
-  scrollbar-width: thin;
-  padding-bottom: 0;
-  margin-bottom: -2px;
+  overflow-x: visible;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .tab-button {
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  padding: 1rem 1.5rem 1.25rem 1.5rem;
+  padding: 1rem 1.5rem;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -1098,7 +1097,6 @@
   transition: all 0.3s ease;
   border-bottom: 3px solid transparent;
   white-space: nowrap;
-  margin-bottom: -2px;
 }
 
 .tab-button:hover {
@@ -1113,14 +1111,18 @@
 }
 
 .tab-badge {
+  position: absolute;
+  bottom: 0.25rem;
+  right: 0.5rem;
   background: var(--rose-gold);
   color: var(--main-bg);
   padding: 0.15rem 0.5rem;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   min-width: 20px;
   text-align: center;
+  line-height: 1;
 }
 
 .tab-button.active .tab-badge {
