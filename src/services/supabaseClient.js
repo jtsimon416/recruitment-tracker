@@ -5,6 +5,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 console.log('🔧 Supabase Client Initialized with URL:', supabaseUrl);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const SUPABASE_URL_BASE = supabaseUrl;
 
-export const SUPABASE_URL_BASE = supabaseUrl;
+export { supabase, SUPABASE_URL_BASE };
