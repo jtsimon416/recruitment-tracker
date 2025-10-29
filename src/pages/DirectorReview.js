@@ -1,29 +1,28 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
 import { useConfirmation } from '../contexts/ConfirmationContext';
-import { FaFileAlt, FaExclamationCircle, FaLightbulb } from 'react-icons/fa'; // Removed FaUserTie
+import { FaFileAlt, FaExclamationCircle, FaLightbulb } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Check, X, Archive, Send, MessageSquare, ExternalLink, ChevronDown, ChevronUp, Edit, Trash2 } from 'lucide-react';
+import { Eye, Check, X, Archive, Send, MessageSquare, ExternalLink, ChevronDown, ChevronUp, Edit, Trash2, TrendingUp, Clock, BarChart3, AlertCircle } from 'lucide-react';
 import '../styles/DirectorReview.css';
 
 // --- CommentsModal Component ---
-// Receives state and handlers from DirectorReview
 const CommentsModal = ({
     pipelineEntry,
-    comments, // New comment text state { [pipelineEntry.id]: "text" }
-    handleCommentChange, // Function to update ^
+    comments,
+    handleCommentChange,
     handleFinalDecision,
     onClose,
     userProfile,
-    // Edit/Delete state and handlers passed down
     editingComment,
     setEditingComment,
     editingText,
     setEditingText,
-    handleUpdateComment, // Function defined in parent
-    handleDeleteComment, // Function defined in parent
-    fetchCandidatesForReview // Pass this down for refresh
+    handleUpdateComment,
+    handleDeleteComment,
+    fetchCandidatesForReview,
+    commentTemplates
 }) => {
 
     // Handlers for managing the edit state *within the modal*
@@ -106,9 +105,23 @@ const CommentsModal = ({
                         ) : <p className="no-comments-message">No comment history for this candidate.</p>}
                     </div>
 
-                    {/* New Comment Input */}
                     <div className="form-group">
                       <label htmlFor="decision-comments">Your Decision & Comment</label>
+                      <div className="quick-templates">
+                        <label className="templates-label">Quick Templates:</label>
+                        <div className="template-buttons">
+                          {commentTemplates.map((template, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              className="template-btn"
+                              onClick={() => handleCommentChange(pipelineEntry.id, template)}
+                            >
+                              {template}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <textarea
                           id="decision-comments"
                           value={comments[pipelineEntry.id] || ''}
@@ -223,22 +236,20 @@ const AgingWarningBox = ({ candidates, level }) => {
 
 
 // --- Main DirectorReview Component ---
-// Holds the state and logic for edit/delete/alerts
 function DirectorReview() {
-    const { user, userProfile, refreshData, createNotification } = useData();
-    // --- State definitions moved here ---
+    const { user, userProfile, createNotification } = useData();
     const [candidatesForReview, setCandidatesForReview] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [comments, setComments] = useState({}); // State for NEW comments
-    const [showAlert, setShowAlert] = useState(false); // For simple alerts
-    const [alertMessage, setAlertMessage] = useState(""); // Alert text
-    const [alertType, setAlertType] = useState("success"); // Alert type (success, error, warning, info)
+    const [comments, setComments] = useState({});
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState("");
+    const [alertType, setAlertType] = useState("success");
     const [showCommentsModal, setShowCommentsModal] = useState(false);
     const [selectedCandidateForComments, setSelectedCandidateForComments] = useState(null);
-    const [editingComment, setEditingComment] = useState(null); // State for the comment being edited
-    const [editingText, setEditingText] = useState(''); // State for the text during edit
-    // --- End state definitions ---
+    const [editingComment, setEditingComment] = useState(null);
+    const [editingText, setEditingText] = useState('');
+    const [activeTab, setActiveTab] = useState('needs-review');
 
     const { showConfirmation } = useConfirmation(); // For confirmation popups
 
@@ -294,8 +305,7 @@ function DirectorReview() {
     const handleUpdateComment = async () => {
         if (!editingComment || !editingText.trim()) return;
         const commentIdToUpdate = editingComment.id;
-        const candidateIdForUpdate = editingComment.candidate_id; // Need this for refresh
-        const originalText = editingComment.comment_text; // Store original text
+        const candidateIdForUpdate = editingComment.candidate_id;
 
         // Clear editing state immediately for better UX
         setEditingComment(null);
@@ -495,18 +505,55 @@ function DirectorReview() {
         return Math.floor(diffTime / (1000 * 60 * 60 * 24));
     };
 
-    // Separate lists based on fetched data
-    const screeningQueue = candidatesForReview.filter(p => p.stage === 'Screening' && p.status !== 'Hold');
-    const holdQueue = candidatesForReview.filter(p => p.status === 'Hold');
+    // Calculate all candidate metrics
+    const needsReviewQueue = candidatesForReview.filter(p => p.stage === 'Screening' && p.status !== 'Hold').sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const onHoldQueue = candidatesForReview.filter(p => p.status === 'Hold').sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    // --- NEW: Calculate candidates for aging warnings ---
+    // Recent decisions (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [recentDecisions, setRecentDecisions] = useState([]);
+
+    useEffect(() => {
+        const fetchRecentDecisions = async () => {
+            const { data, error } = await supabase
+                .from('pipeline')
+                .select(`id, candidates ( name ), positions ( title, clients ( company_name ) ), stage, status, updated_at`)
+                .or('stage.eq.Submitted to Client,stage.eq.Reject')
+                .gte('updated_at', thirtyDaysAgo.toISOString())
+                .order('updated_at', { ascending: false })
+                .limit(50);
+            if (!error && data) setRecentDecisions(data);
+        };
+        if (activeTab === 'recent-decisions') fetchRecentDecisions();
+    }, [activeTab]);
+
     const candidatesWithDays = candidatesForReview.map(p => ({
         ...p,
         daysInStage: calculateDaysInStage(p.created_at)
     }));
 
+    const urgentCandidates = candidatesWithDays.filter(p => p.daysInStage > 3);
     const redWarningCandidates = candidatesWithDays.filter(p => p.daysInStage > 5);
     const yellowWarningCandidates = candidatesWithDays.filter(p => p.daysInStage > 3 && p.daysInStage <= 5);
+
+    // Calculate stats
+    const totalReviewed = recentDecisions.length;
+    const approvedCount = recentDecisions.filter(p => p.stage === 'Submitted to Client').length;
+    const rejectedCount = recentDecisions.filter(p => p.stage === 'Reject').length;
+    const approvalRate = totalReviewed > 0 ? ((approvedCount / totalReviewed) * 100).toFixed(1) : 0;
+    const avgReviewTime = candidatesWithDays.length > 0 ? (candidatesWithDays.reduce((sum, c) => sum + c.daysInStage, 0) / candidatesWithDays.length).toFixed(1) : 0;
+
+    // Quick comment templates
+    const commentTemplates = [
+        "Needs more relevant experience in core technology stack",
+        "Salary expectations exceed budget range",
+        "Location requirements don't align with position",
+        "Qualifications don't match minimum requirements",
+        "Strong candidate - moving forward to client",
+        "Need additional information before decision"
+    ];
 
     // Loading and Error States
     if (loading) return <div className="loading-state">Loading reviews...</div>;
@@ -556,10 +603,147 @@ function DirectorReview() {
         );
     };
 
-    // Main component render
+    const renderTabContent = () => {
+        switch(activeTab) {
+            case 'needs-review':
+                return (
+                    <div className="tab-content">
+                        {redWarningCandidates.length > 0 && <AgingWarningBox level="red" candidates={redWarningCandidates} />}
+                        {yellowWarningCandidates.length > 0 && redWarningCandidates.length === 0 && <AgingWarningBox level="yellow" candidates={yellowWarningCandidates} />}
+                        <div className="review-section">
+                            <div className="section-header">
+                                <h2><Check size={24} /> Awaiting Your Review</h2>
+                                <p className="section-subtitle">Candidates sorted by oldest submission first</p>
+                            </div>
+                            {renderCandidateList(needsReviewQueue, "Needs Review")}
+                        </div>
+                    </div>
+                );
+            case 'on-hold':
+                return (
+                    <div className="tab-content">
+                        <div className="review-section">
+                            <div className="section-header">
+                                <h2><Archive size={24} /> On Hold</h2>
+                                <p className="section-subtitle">Candidates you've placed on hold with feedback</p>
+                            </div>
+                            {renderCandidateList(onHoldQueue, "On Hold")}
+                        </div>
+                    </div>
+                );
+            case 'recent-decisions':
+                return (
+                    <div className="tab-content">
+                        <div className="review-section">
+                            <div className="section-header">
+                                <h2><Clock size={24} /> Recent Decisions</h2>
+                                <p className="section-subtitle">Your decisions from the last 30 days</p>
+                            </div>
+                            {recentDecisions.length === 0 ? (
+                                <div className="no-candidates-message">No recent decisions in the last 30 days.</div>
+                            ) : (
+                                <div className="decisions-list">
+                                    {recentDecisions.map(p => (
+                                        <div key={p.id} className={`decision-card ${p.stage === 'Submitted to Client' ? 'approved' : 'rejected'}`}>
+                                            <div className="decision-info">
+                                                <div className="decision-name">{p.candidates?.name || 'Unknown'}</div>
+                                                <div className="decision-position">{p.positions?.title || 'Unknown Position'} • {p.positions?.clients?.company_name || 'N/A'}</div>
+                                            </div>
+                                            <div className="decision-status">
+                                                <span className={`status-badge ${p.stage === 'Submitted to Client' ? 'approved' : 'rejected'}`}>
+                                                    {p.stage === 'Submitted to Client' ? <Check size={14} /> : <X size={14} />}
+                                                    {p.stage === 'Submitted to Client' ? 'Approved' : 'Rejected'}
+                                                </span>
+                                                <div className="decision-date">{new Date(p.updated_at).toLocaleDateString()}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            case 'my-stats':
+                return (
+                    <div className="tab-content">
+                        <div className="stats-dashboard">
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <div className="stat-icon" style={{background: 'linear-gradient(135deg, #7aa2f7, #6a91e7)'}}>
+                                        <BarChart3 size={24} />
+                                    </div>
+                                    <div className="stat-content">
+                                        <div className="stat-label">Total Reviewed (30d)</div>
+                                        <div className="stat-value">{totalReviewed}</div>
+                                    </div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-icon" style={{background: 'linear-gradient(135deg, #9ece6a, #8ebe5a)'}}>
+                                        <Check size={24} />
+                                    </div>
+                                    <div className="stat-content">
+                                        <div className="stat-label">Approval Rate</div>
+                                        <div className="stat-value">{approvalRate}%</div>
+                                        <div className="stat-detail">{approvedCount} approved</div>
+                                    </div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-icon" style={{background: 'linear-gradient(135deg, #f7768e, #e7667e)'}}>
+                                        <X size={24} />
+                                    </div>
+                                    <div className="stat-content">
+                                        <div className="stat-label">Rejection Rate</div>
+                                        <div className="stat-value">{totalReviewed > 0 ? ((rejectedCount / totalReviewed) * 100).toFixed(1) : 0}%</div>
+                                        <div className="stat-detail">{rejectedCount} rejected</div>
+                                    </div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-icon" style={{background: 'linear-gradient(135deg, #ebbcba, #dba89a)'}}>
+                                        <Clock size={24} />
+                                    </div>
+                                    <div className="stat-content">
+                                        <div className="stat-label">Avg Review Time</div>
+                                        <div className="stat-value">{avgReviewTime} days</div>
+                                    </div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-icon" style={{background: 'linear-gradient(135deg, #ff9e64, #ef8e54)'}}>
+                                        <AlertCircle size={24} />
+                                    </div>
+                                    <div className="stat-content">
+                                        <div className="stat-label">Awaiting Review</div>
+                                        <div className="stat-value">{needsReviewQueue.length}</div>
+                                        <div className="stat-detail">{urgentCandidates.length} urgent (3+ days)</div>
+                                    </div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-icon" style={{background: 'linear-gradient(135deg, #c0caf5, #b0bae5)'}}>
+                                        <Archive size={24} />
+                                    </div>
+                                    <div className="stat-content">
+                                        <div className="stat-label">On Hold</div>
+                                        <div className="stat-value">{onHoldQueue.length}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {urgentCandidates.length > 0 && (
+                                <div className="bottleneck-alert">
+                                    <AlertCircle size={20} />
+                                    <div>
+                                        <strong>Bottleneck Alert:</strong> {urgentCandidates.length} candidate{urgentCandidates.length !== 1 ? 's have' : ' has'} been waiting 3+ days for your review.
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
     return (
         <div className="director-review-container">
-            {/* Alert message display */}
             <AnimatePresence>
                 {showAlert && (
                     <motion.div
@@ -574,37 +758,75 @@ function DirectorReview() {
                 )}
             </AnimatePresence>
 
-            <div className="page-header"> <h1>Director Review Queue</h1> </div>
-            
-            {/* --- NEW: Conditional Rendering for Aging Warning Boxes --- */}
-            {redWarningCandidates.length > 0 ? (
-                <AgingWarningBox level="red" candidates={redWarningCandidates} />
-            ) : yellowWarningCandidates.length > 0 ? (
-                <AgingWarningBox level="yellow" candidates={yellowWarningCandidates} />
-            ) : null}
+            <div className="page-header">
+                <div className="header-content">
+                    <h1>Director Review</h1>
+                    {urgentCandidates.length > 0 && (
+                        <div className="header-alert">
+                            <AlertCircle size={18} />
+                            <span>{urgentCandidates.length} candidate{urgentCandidates.length !== 1 ? 's need' : ' needs'} attention</span>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             <ReviewHeader />
-            <div className="review-section"> <h2><Check size={28} /> Screening Queue ({screeningQueue.length})</h2> {renderCandidateList(screeningQueue, "Screening Queue")} </div>
-            <div className="review-section"> <h2><Archive size={28} /> Hold Queue ({holdQueue.length})</h2> {renderCandidateList(holdQueue, "Hold Queue")} </div>
+
+            <div className="tabs-container">
+                <div className="tabs-nav">
+                    <button
+                        className={`tab-button ${activeTab === 'needs-review' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('needs-review')}
+                    >
+                        <Check size={18} />
+                        Needs Review
+                        {needsReviewQueue.length > 0 && <span className="tab-badge">{needsReviewQueue.length}</span>}
+                    </button>
+                    <button
+                        className={`tab-button ${activeTab === 'on-hold' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('on-hold')}
+                    >
+                        <Archive size={18} />
+                        On Hold
+                        {onHoldQueue.length > 0 && <span className="tab-badge">{onHoldQueue.length}</span>}
+                    </button>
+                    <button
+                        className={`tab-button ${activeTab === 'recent-decisions' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('recent-decisions')}
+                    >
+                        <Clock size={18} />
+                        Recent Decisions
+                    </button>
+                    <button
+                        className={`tab-button ${activeTab === 'my-stats' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('my-stats')}
+                    >
+                        <TrendingUp size={18} />
+                        My Stats
+                    </button>
+                </div>
+            </div>
+
+            {renderTabContent()}
 
             {/* Modal Rendering */}
             <AnimatePresence>
                 {showCommentsModal && selectedCandidateForComments && (
                     <CommentsModal
                         pipelineEntry={selectedCandidateForComments}
-                        comments={comments} 
+                        comments={comments}
                         handleCommentChange={handleCommentChange}
                         handleFinalDecision={handleFinalDecision}
                         onClose={closeCommentsModal}
                         userProfile={userProfile}
-                        // Pass ALL edit/delete state and handlers
                         editingComment={editingComment}
                         setEditingComment={setEditingComment}
                         editingText={editingText}
                         setEditingText={setEditingText}
-                        handleUpdateComment={handleUpdateComment} 
-                        handleDeleteComment={handleDeleteComment} 
+                        handleUpdateComment={handleUpdateComment}
+                        handleDeleteComment={handleDeleteComment}
                         fetchCandidatesForReview={fetchCandidatesForReview}
+                        commentTemplates={commentTemplates}
                     />
                 )}
             </AnimatePresence>
