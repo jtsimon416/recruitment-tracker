@@ -2,19 +2,22 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with, accept, accept-language, accept-encoding',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 Deno.serve(async (req) => {
-  console.log('Function invoked, method:', req.method);
+  console.log('=== Function invoked ===-');
+  console.log('Method:', req.method);
+  console.log('Headers:', JSON.stringify(Object.fromEntries(req.headers.entries())));
   
   try {
     if (req.method === 'OPTIONS') {
-      console.log('Handling OPTIONS request');
-      return new Response('ok', {
+      console.log('Handling OPTIONS/preflight request');
+      return new Response(null, {
         headers: corsHeaders,
-        status: 200,
+        status: 204,
       });
     }
 
@@ -28,7 +31,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { fileUrl } = await req.json();
+    const body = await req.json();
+    console.log('Request body:', JSON.stringify(body));
+    const { fileUrl } = body;
 
     if (!fileUrl) {
       return new Response(
