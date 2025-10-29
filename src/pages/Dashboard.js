@@ -765,8 +765,6 @@ function Dashboard() {
     sevenDaysAgo.setDate(today.getDate() - 7);
     const endOfWeek = new Date(today);
     endOfWeek.setDate(today.getDate() + 7);
-    const fourteenDaysAgo = new Date();
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
     const results = await Promise.allSettled([
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).in('stage', ['Offer', 'Interview 3']).eq('status', 'Active'),
@@ -774,7 +772,7 @@ function Dashboard() {
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).eq('stage', 'Submit to Client').gte('created_at', sevenDaysAgo.toISOString()),
       supabase.from('pipeline').select('id, positions!inner(status)', { count: 'exact'}).eq('status', 'Active').eq('positions.status', 'Open'),
       supabase.from('recruiter_outreach').select('activity_status', { count: 'exact' }).gte('created_at', sevenDaysAgo.toISOString()),
-      supabase.from('pipeline').select('position_id, created_at, updated_at').neq('stage', 'Archived').eq('positions.status', 'Open')
+      supabase.from('positions').select('id', { count: 'exact', head: true }).eq('status', 'Open')
     ]);
 
     const getCount = (index) => {
@@ -794,29 +792,8 @@ function Dashboard() {
     const replies = outreachData?.filter(o => replyStatuses.includes(o.activity_status)).length || 0;
     const replyRate = outreachCount > 0 ? parseFloat(((replies / outreachCount) * 100).toFixed(1)) : 0;
 
-    const pipelinePositions = results[5].status === 'fulfilled' ? results[5].value.data || [] : [];
-    const positionActivityMap = {};
-
-    pipelinePositions.forEach(p => {
-      const posId = p.position_id;
-      if (!posId) return;
-
-      const activityDate = new Date(p.updated_at || p.created_at);
-      if (!positionActivityMap[posId] || activityDate > positionActivityMap[posId]) {
-        positionActivityMap[posId] = activityDate;
-      }
-    });
-
-    let rolesNeedingAttention = 0;
-    Object.values(positionActivityMap).forEach(lastActivity => {
-      const daysSinceActivity = Math.floor((today - lastActivity) / (1000 * 60 * 60 * 24));
-      if (daysSinceActivity > 7) {
-        rolesNeedingAttention++;
-      }
-    });
-
     setExecutiveStats({
-      rolesNeedingAttention,
+      rolesNeedingAttention: getCount(5),
       closeToHiring: getCount(0),
       interviewsThisWeek: getCount(1),
       submissionsThisWeek: getCount(2),
@@ -990,9 +967,8 @@ function Dashboard() {
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Tab Content */}
-      <div>
-        {activeTab === 'overview' && (
-          <div>
+      {activeTab === 'overview' && (
+        <div>
             {/* Metrics Grid */}
             <div className="metrics-grid">
               <AnimatedMetricCard
@@ -1051,41 +1027,40 @@ function Dashboard() {
                 stages={['Screening', 'Submit to Client', 'Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired']}
               />
             </div>
-          </div>
-        )}
+        </div>
+      )}
 
-        {activeTab === 'performance' && (
-          <div>
-            <PerformanceTab
-              stats={executiveStats}
-              historicalData={historicalData}
-              roleHealth={roleHealth}
-            />
-          </div>
-        )}
+      {activeTab === 'performance' && (
+        <div>
+          <PerformanceTab
+            stats={executiveStats}
+            historicalData={historicalData}
+            roleHealth={roleHealth}
+          />
+        </div>
+      )}
 
-        {activeTab === 'team' && (
-          <div>
-            <TeamMetricsTab recruiterStats={recruiterStats} />
-          </div>
-        )}
+      {activeTab === 'team' && (
+        <div>
+          <TeamMetricsTab recruiterStats={recruiterStats} />
+        </div>
+      )}
 
-        {activeTab === 'operations' && (
-          <div>
-            <DailyOperationsTab callsData={callsData} interviewsData={interviewsData} />
-          </div>
-        )}
+      {activeTab === 'operations' && (
+        <div>
+          <DailyOperationsTab callsData={callsData} interviewsData={interviewsData} />
+        </div>
+      )}
 
-        {activeTab === 'pipeline' && (
-          <div>
-            <PipelineDeepDiveTab
-              pipelineMetrics={pipelineMetrics}
-              roleHealth={roleHealth}
-              navigate={navigate}
-            />
-          </div>
-        )}
-      </div>
+      {activeTab === 'pipeline' && (
+        <div>
+          <PipelineDeepDiveTab
+            pipelineMetrics={pipelineMetrics}
+            roleHealth={roleHealth}
+            navigate={navigate}
+          />
+        </div>
+      )}
     </div>
   );
 }
