@@ -60,7 +60,7 @@ function App() {
   return (
     <SplashScreen>
       <DataProvider>
-        <Router basename="/recruitment-tracker"> {/* Your basename */}
+        <Router basename={process.env.PUBLIC_URL}> {/* Uses PUBLIC_URL from package.json */}
           <AppContent>
             {/* --- REMOVED: The 'AnimatePresence' and 'TabReturnSplash' components are gone. --- */}
 
