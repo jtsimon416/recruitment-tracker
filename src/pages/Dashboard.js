@@ -909,23 +909,8 @@ function Dashboard() {
       return callDate > endOfToday && callDate <= endOfWeek;
     }) || [];
 
-    // Fetch interviews
-    const { data: allInterviews } = await supabase
-      .from('interviews')
-      .select('*, candidates(name), positions(title), recruiters(name)')
-      .gte('interview_date', today.toISOString())
-      .lte('interview_date', endOfWeek.toISOString())
-      .order('interview_date', { ascending: true });
-
-    const interviewsToday = allInterviews?.filter(i => {
-      const intDate = new Date(i.interview_date);
-      return intDate >= today && intDate <= endOfToday;
-    }) || [];
-
-    const interviewsWeek = allInterviews?.filter(i => {
-      const intDate = new Date(i.interview_date);
-      return intDate > endOfToday && intDate <= endOfWeek;
-    }) || [];
+    const interviewsToday = [];
+    const interviewsWeek = [];
 
     setCallsData({ today: callsToday, week: callsWeek });
     setInterviewsData({ today: interviewsToday, week: interviewsWeek });
