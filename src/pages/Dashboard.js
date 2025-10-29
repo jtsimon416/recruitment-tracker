@@ -970,9 +970,10 @@ function Dashboard() {
         {activeTab === 'overview' && (
           <motion.div
             key="overview"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
             {/* Metrics Grid */}
             <div className="metrics-grid">
@@ -1043,9 +1044,10 @@ function Dashboard() {
         {activeTab === 'performance' && (
           <motion.div
             key="performance"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
             <PerformanceTab
               stats={executiveStats}
@@ -1058,9 +1060,10 @@ function Dashboard() {
         {activeTab === 'team' && (
           <motion.div
             key="team"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
             <TeamMetricsTab recruiterStats={recruiterStats} />
           </motion.div>
@@ -1069,9 +1072,10 @@ function Dashboard() {
         {activeTab === 'operations' && (
           <motion.div
             key="operations"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
             <DailyOperationsTab callsData={callsData} interviewsData={interviewsData} />
           </motion.div>
@@ -1080,9 +1084,10 @@ function Dashboard() {
         {activeTab === 'pipeline' && (
           <motion.div
             key="pipeline"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
             <PipelineDeepDiveTab
               pipelineMetrics={pipelineMetrics}
