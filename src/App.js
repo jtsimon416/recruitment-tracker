@@ -60,7 +60,7 @@ function App() {
   return (
     <SplashScreen>
       <DataProvider>
-        <Router basename={process.env.PUBLIC_URL}> {/* Uses PUBLIC_URL from package.json */}
+        <Router basename={process.env.NODE_ENV === 'production' ? process.env.PUBLIC_URL : ''}> {/* Only use basename in production */}
           <AppContent>
             {/* --- REMOVED: The 'AnimatePresence' and 'TabReturnSplash' components are gone. --- */}
 
