@@ -295,8 +295,18 @@ const MyActiveRoles = ({ userProfile }) => {
 
         console.log('✅ Document marked as viewed');
 
-        // Refresh active roles and instructions
-        await fetchMyActiveRoles();
+        // Optimistic update - update local state instead of full reload
+        setRoleInstructions(prev => {
+          const updated = { ...prev };
+          if (updated[positionId]) {
+            updated[positionId] = updated[positionId].map(doc =>
+              doc.id === documentId
+                ? { ...doc, viewed_by: [...viewedBy, userProfile.id] }
+                : doc
+            );
+          }
+          return updated;
+        });
       }
     } catch (error) {
       console.error('❌ Error marking document as viewed:', error);
@@ -1006,7 +1016,7 @@ function RecruiterOutreach() {
   const handleQuickRatingComplete = async () => {
     setShowQuickRating(false);
     setNewlyAddedContacts([]);
-    await loadData();
+    // No need to reload - ratings are already saved
   };
 
   // ===================================
@@ -1203,7 +1213,8 @@ function RecruiterOutreach() {
     const { success } = await deleteOutreachActivity(activityId);
 
     if (success) {
-      await loadData();
+      // Optimistic update - remove from local state instead of full reload
+      setOutreachActivities(prev => prev.filter(act => act.id !== activityId));
     } else {
       showConfirmation({
         type: 'error',
@@ -1268,7 +1279,10 @@ function RecruiterOutreach() {
 
     if (success) {
       setEditingActivity(null);
-      await loadData();
+      // Optimistic update - update local state instead of full reload
+      setOutreachActivities(prev => prev.map(act =>
+        act.id === editingActivity.id ? { ...act, ...updates } : act
+      ));
     } else {
       showConfirmation({
         type: 'error',
@@ -1344,8 +1358,10 @@ function RecruiterOutreach() {
     if (success) {
       // Close the dropdown
       setQuickEditingStageId(null);
-      // Refresh the data in the table
-      await loadData();
+      // Optimistic update - update local state instead of full reload
+      setOutreachActivities(prev => prev.map(act =>
+        act.id === activityId ? { ...act, ...updates } : act
+      ));
     } else {
       showConfirmation({
         type: 'error',
