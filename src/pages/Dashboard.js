@@ -38,6 +38,7 @@ const TabNavigation = ({ activeTab, setActiveTab }) => {
     { id: 'overview', label: 'Command Center', icon: Activity },
     { id: 'performance', label: 'Performance', icon: TrendingUp },
     { id: 'team', label: 'Team Metrics', icon: Users },
+    { id: 'operations', label: 'Daily Operations', icon: Calendar },
     { id: 'pipeline', label: 'Pipeline Deep Dive', icon: Briefcase }
   ];
 
@@ -137,7 +138,9 @@ const PerformanceTab = ({ stats, historicalData, roleHealth }) => {
               <XAxis dataKey="stage" stroke="#a0a0a0" />
               <YAxis stroke="#a0a0a0" />
               <Tooltip
-                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', color: '#ffffff' }}
+                labelStyle={{ color: '#ffffff' }}
+                itemStyle={{ color: '#ffffff' }}
                 formatter={(value, name, props) => [`${value} (${props.payload.percentage}%)`, 'Count']}
               />
               <Bar dataKey="value" fill="#E8B4B8" radius={[8, 8, 0, 0]}>
@@ -174,7 +177,11 @@ const PerformanceTab = ({ stats, historicalData, roleHealth }) => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', color: '#ffffff' }}
+                itemStyle={{ color: '#ffffff' }}
+                labelStyle={{ color: '#ffffff' }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </motion.div>
@@ -202,7 +209,11 @@ const PerformanceTab = ({ stats, historicalData, roleHealth }) => {
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
               <XAxis dataKey="day" stroke="#a0a0a0" />
               <YAxis stroke="#a0a0a0" />
-              <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', color: '#ffffff' }}
+                itemStyle={{ color: '#ffffff' }}
+                labelStyle={{ color: '#ffffff' }}
+              />
               <Legend />
               <Area type="monotone" dataKey="outreach" stroke="#E8B4B8" fillOpacity={1} fill="url(#colorOutreach)" />
               <Area type="monotone" dataKey="submissions" stroke="#7AA2F7" fillOpacity={1} fill="url(#colorSubmissions)" />
@@ -231,6 +242,7 @@ const TeamMetricsTab = ({ recruiterStats }) => {
       name: rec.name.split(' ')[0],
       outreach: rec.totalOutreach,
       replies: rec.replies,
+      submissions: rec.internalSubmissions || 0,
       replyRate: rec.replyRate
     }));
   }, [recruiterStats]);
@@ -265,6 +277,10 @@ const TeamMetricsTab = ({ recruiterStats }) => {
                   <span>{recruiter.replies} replies</span>
                 </div>
                 <div className="stat-item">
+                  <CheckCircle size={16} />
+                  <span>{recruiter.internalSubmissions || 0} screened</span>
+                </div>
+                <div className="stat-item">
                   <Flame size={16} />
                   <span>{recruiter.replyRate}% rate</span>
                 </div>
@@ -286,10 +302,15 @@ const TeamMetricsTab = ({ recruiterStats }) => {
             <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
             <XAxis dataKey="name" stroke="#a0a0a0" />
             <YAxis stroke="#a0a0a0" />
-            <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }} />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', color: '#ffffff' }}
+              itemStyle={{ color: '#ffffff' }}
+              labelStyle={{ color: '#ffffff' }}
+            />
             <Legend />
             <Bar dataKey="outreach" fill="#E8B4B8" name="Outreach Sent" radius={[8, 8, 0, 0]} />
             <Bar dataKey="replies" fill="#B8D4D0" name="Replies" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="submissions" fill="#7AA2F7" name="Internal Submissions" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </motion.div>
@@ -301,6 +322,7 @@ const TeamMetricsTab = ({ recruiterStats }) => {
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="sort-select">
             <option value="totalOutreach">Most Outreach</option>
             <option value="replies">Most Replies</option>
+            <option value="internalSubmissions">Most Submissions</option>
             <option value="replyRate">Best Reply Rate</option>
           </select>
         </div>
@@ -318,6 +340,7 @@ const TeamMetricsTab = ({ recruiterStats }) => {
               <div className="leaderboard-stats">
                 <span className="stat-badge">{recruiter.totalOutreach} sent</span>
                 <span className="stat-badge">{recruiter.replies} replied</span>
+                <span className="stat-badge">{recruiter.internalSubmissions || 0} screened</span>
                 <span className={`stat-badge ${recruiter.replyRate >= 35 ? 'success' : recruiter.replyRate >= 20 ? 'warning' : 'critical'}`}>
                   {recruiter.replyRate}% rate
                 </span>
@@ -325,6 +348,164 @@ const TeamMetricsTab = ({ recruiterStats }) => {
             </motion.div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+};
+
+// =========================================================================
+// DAILY OPERATIONS TAB
+// =========================================================================
+const DailyOperationsTab = ({ callsData, interviewsData }) => {
+  const formatTime = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    } catch {
+      return 'Invalid Time';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
+  return (
+    <div className="daily-operations-tab">
+      <h2><Calendar size={24} /> Today's Schedule & This Week's Activities</h2>
+
+      <div className="operations-grid">
+        {/* Calls Today */}
+        <motion.div
+          className="operations-card"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <div className="operations-card-header">
+            <Phone size={20} color="#E8B4B8" />
+            <h3>Calls Scheduled Today</h3>
+            <span className="count-badge">{callsData.today.length}</span>
+          </div>
+          <div className="operations-list">
+            {callsData.today.length === 0 ? (
+              <p className="empty-message">No calls scheduled for today</p>
+            ) : (
+              callsData.today.map(call => (
+                <div key={call.id} className="operation-item">
+                  <div className="operation-time">{formatTime(call.scheduled_call_date)}</div>
+                  <div className="operation-details">
+                    <strong>{call.candidate_name}</strong>
+                    <span>{call.positions?.title || 'N/A'}</span>
+                    <span className="recruiter-name">with {call.recruiters?.name || 'N/A'}</span>
+                  </div>
+                  {call.linkedin_url && (
+                    <a href={call.linkedin_url} target="_blank" rel="noopener noreferrer" className="btn-link">
+                      <ExternalLink size={16} />
+                    </a>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </motion.div>
+
+        {/* Calls This Week */}
+        <motion.div
+          className="operations-card"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="operations-card-header">
+            <Phone size={20} color="#B8D4D0" />
+            <h3>Calls This Week</h3>
+            <span className="count-badge">{callsData.week.length}</span>
+          </div>
+          <div className="operations-list">
+            {callsData.week.length === 0 ? (
+              <p className="empty-message">No upcoming calls this week</p>
+            ) : (
+              callsData.week.map(call => (
+                <div key={call.id} className="operation-item">
+                  <div className="operation-date">{formatDate(call.scheduled_call_date)}</div>
+                  <div className="operation-details">
+                    <strong>{call.candidate_name}</strong>
+                    <span>{call.positions?.title || 'N/A'}</span>
+                    <span className="recruiter-name">with {call.recruiters?.name || 'N/A'}</span>
+                  </div>
+                  {call.linkedin_url && (
+                    <a href={call.linkedin_url} target="_blank" rel="noopener noreferrer" className="btn-link">
+                      <ExternalLink size={16} />
+                    </a>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </motion.div>
+
+        {/* Interviews Today */}
+        <motion.div
+          className="operations-card"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="operations-card-header">
+            <Calendar size={20} color="#C5B9D6" />
+            <h3>Interviews Today</h3>
+            <span className="count-badge">{interviewsData.today.length}</span>
+          </div>
+          <div className="operations-list">
+            {interviewsData.today.length === 0 ? (
+              <p className="empty-message">No interviews scheduled for today</p>
+            ) : (
+              interviewsData.today.map(interview => (
+                <div key={interview.id} className="operation-item">
+                  <div className="operation-time">{formatTime(interview.interview_date)}</div>
+                  <div className="operation-details">
+                    <strong>{interview.candidates?.name || 'N/A'}</strong>
+                    <span>{interview.positions?.title || 'N/A'}</span>
+                    <span className="recruiter-name">with {interview.recruiters?.name || 'N/A'}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </motion.div>
+
+        {/* Interviews This Week */}
+        <motion.div
+          className="operations-card"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="operations-card-header">
+            <Calendar size={20} color="#F4C2A8" />
+            <h3>Interviews This Week</h3>
+            <span className="count-badge">{interviewsData.week.length}</span>
+          </div>
+          <div className="operations-list">
+            {interviewsData.week.length === 0 ? (
+              <p className="empty-message">No upcoming interviews this week</p>
+            ) : (
+              interviewsData.week.map(interview => (
+                <div key={interview.id} className="operation-item">
+                  <div className="operation-date">{formatDate(interview.interview_date)}</div>
+                  <div className="operation-details">
+                    <strong>{interview.candidates?.name || 'N/A'}</strong>
+                    <span>{interview.positions?.title || 'N/A'}</span>
+                    <span className="recruiter-name">with {interview.recruiters?.name || 'N/A'}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -457,6 +638,8 @@ function Dashboard() {
   const [roleHealth, setRoleHealth] = useState({});
   const [historicalData, setHistoricalData] = useState([]);
   const [recruiterStats, setRecruiterStats] = useState([]);
+  const [callsData, setCallsData] = useState({ today: [], week: [] });
+  const [interviewsData, setInterviewsData] = useState({ today: [], week: [] });
   const [loading, setLoading] = useState(true);
 
   const fetchAllData = useCallback(async () => {
@@ -466,7 +649,8 @@ function Dashboard() {
         fetchPipelineMetrics(),
         fetchExecutiveStats(),
         fetchHistoricalData(),
-        fetchRecruiterStats()
+        fetchRecruiterStats(),
+        fetchCallsAndInterviews()
       ]);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -658,13 +842,19 @@ function Dashboard() {
       .select('recruiter_id, activity_status, recruiters(name, role)')
       .gte('created_at', sevenDaysAgo.toISOString());
 
+    const { data: pipelineData } = await supabase
+      .from('pipeline')
+      .select('recruiter_id, stage, created_at')
+      .eq('stage', 'Screening')
+      .gte('created_at', sevenDaysAgo.toISOString());
+
     const breakdownMap = {};
     const replyStatuses = ['reply_received', 'accepted', 'call_scheduled', 'declined', 'ready_for_submission'];
 
     recruiters.forEach(r => {
       const role = r?.role?.toLowerCase() || '';
       if (r?.id && role !== 'director' && !role.includes('manager')) {
-        breakdownMap[r.id] = { id: r.id, name: r.name, totalOutreach: 0, replies: 0, replyRate: 0 };
+        breakdownMap[r.id] = { id: r.id, name: r.name, totalOutreach: 0, replies: 0, internalSubmissions: 0, replyRate: 0 };
       }
     });
 
@@ -677,12 +867,68 @@ function Dashboard() {
       }
     });
 
+    pipelineData?.forEach(p => {
+      if (breakdownMap[p.recruiter_id]) {
+        breakdownMap[p.recruiter_id].internalSubmissions++;
+      }
+    });
+
     const stats = Object.values(breakdownMap).map(rec => {
       rec.replyRate = rec.totalOutreach > 0 ? parseFloat(((rec.replies / rec.totalOutreach) * 100).toFixed(1)) : 0;
       return rec;
     });
 
     setRecruiterStats(stats);
+  }
+
+  async function fetchCallsAndInterviews() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(today);
+    endOfToday.setHours(23, 59, 59, 999);
+    const endOfWeek = new Date(today);
+    endOfWeek.setDate(today.getDate() + 7);
+
+    // Fetch calls
+    const { data: allCalls } = await supabase
+      .from('recruiter_outreach')
+      .select('*, positions(title), recruiters(name)')
+      .eq('activity_status', 'call_scheduled')
+      .not('scheduled_call_date', 'is', null)
+      .gte('scheduled_call_date', today.toISOString())
+      .lte('scheduled_call_date', endOfWeek.toISOString())
+      .order('scheduled_call_date', { ascending: true });
+
+    const callsToday = allCalls?.filter(c => {
+      const callDate = new Date(c.scheduled_call_date);
+      return callDate >= today && callDate <= endOfToday;
+    }) || [];
+
+    const callsWeek = allCalls?.filter(c => {
+      const callDate = new Date(c.scheduled_call_date);
+      return callDate > endOfToday && callDate <= endOfWeek;
+    }) || [];
+
+    // Fetch interviews
+    const { data: allInterviews } = await supabase
+      .from('interviews')
+      .select('*, candidates(name), positions(title), recruiters(name)')
+      .gte('interview_date', today.toISOString())
+      .lte('interview_date', endOfWeek.toISOString())
+      .order('interview_date', { ascending: true });
+
+    const interviewsToday = allInterviews?.filter(i => {
+      const intDate = new Date(i.interview_date);
+      return intDate >= today && intDate <= endOfToday;
+    }) || [];
+
+    const interviewsWeek = allInterviews?.filter(i => {
+      const intDate = new Date(i.interview_date);
+      return intDate > endOfToday && intDate <= endOfWeek;
+    }) || [];
+
+    setCallsData({ today: callsToday, week: callsWeek });
+    setInterviewsData({ today: interviewsToday, week: interviewsWeek });
   }
 
   if (loading) {
@@ -817,6 +1063,17 @@ function Dashboard() {
             exit={{ opacity: 0, y: -20 }}
           >
             <TeamMetricsTab recruiterStats={recruiterStats} />
+          </motion.div>
+        )}
+
+        {activeTab === 'operations' && (
+          <motion.div
+            key="operations"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <DailyOperationsTab callsData={callsData} interviewsData={interviewsData} />
           </motion.div>
         )}
 
