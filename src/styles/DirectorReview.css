@@ -1079,13 +1079,15 @@
   border-bottom: 2px solid var(--border-color);
   overflow-x: auto;
   scrollbar-width: thin;
+  padding-bottom: 0;
+  margin-bottom: -2px;
 }
 
 .tab-button {
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  padding: 1rem 1.5rem;
+  padding: 1rem 1.5rem 1.25rem 1.5rem;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -1096,6 +1098,7 @@
   transition: all 0.3s ease;
   border-bottom: 3px solid transparent;
   white-space: nowrap;
+  margin-bottom: -2px;
 }
 
 .tab-button:hover {
