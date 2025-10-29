@@ -162,44 +162,6 @@ const CommentsModal = ({
     );
 };
 
-// --- ReviewHeader Component --- (No Changes Needed)
-const ReviewHeader = () => {
-    const [isExpanded, setIsExpanded] = useState(false);
-    const toggleExpand = () => setIsExpanded(!isExpanded);
-    // ... (rest of ReviewHeader component is unchanged) ...
-     return (
-        <div className="review-header-container">
-            <div className="review-header-title" onClick={toggleExpand}>
-                <div className="review-header-left">
-                  <FaLightbulb className="lightbulb-icon" />
-                  <h3>Director Review Workflow</h3>
-                </div>
-                <button className="btn-toggle-panel">
-                  {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                </button>
-            </div>
-            
-            <AnimatePresence>
-            {isExpanded && (
-                <motion.div 
-                  className="review-header-content"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
-                >
-                    <p>This dashboard is your <strong>action center</strong> for all candidates entering or needing a decision before client submission.</p>
-                    <ul>
-                        <li><strong>Screening Queue:</strong> Candidates submitted by Recruiters and awaiting your initial <strong>Go/No-Go</strong> decision.</li>
-                        <li><strong>Hold Queue:</strong> Candidates previously marked <strong>Hold</strong> that require re-review or further action.</li>
-                        <li><strong>Key Actions:</strong> Use <strong>Submit</strong> to move a candidate to the client pipeline. Use <strong>Hold/Reject</strong> <em>with a comment</em> to notify the Recruiter with feedback.</li>
-                    </ul>
-                </motion.div>
-            )}
-            </AnimatePresence>
-        </div>
-    );
-};
 
 // --- NEW: Aging Candidate Warning Box Component ---
 const AgingWarningBox = ({ candidates, level }) => {
@@ -769,8 +731,6 @@ function DirectorReview() {
                     )}
                 </div>
             </div>
-
-            <ReviewHeader />
 
             <div className="tabs-container">
                 <div className="tabs-nav">
