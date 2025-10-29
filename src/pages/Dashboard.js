@@ -765,13 +765,16 @@ function Dashboard() {
     sevenDaysAgo.setDate(today.getDate() - 7);
     const endOfWeek = new Date(today);
     endOfWeek.setDate(today.getDate() + 7);
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
     const results = await Promise.allSettled([
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).in('stage', ['Offer', 'Interview 3']).eq('status', 'Active'),
       supabase.from('interviews').select('*', { count: 'exact', head: true }).gte('interview_date', today.toISOString()).lte('interview_date', endOfWeek.toISOString()),
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).eq('stage', 'Submit to Client').gte('created_at', sevenDaysAgo.toISOString()),
       supabase.from('pipeline').select('id, positions!inner(status)', { count: 'exact'}).eq('status', 'Active').eq('positions.status', 'Open'),
-      supabase.from('recruiter_outreach').select('activity_status', { count: 'exact' }).gte('created_at', sevenDaysAgo.toISOString())
+      supabase.from('recruiter_outreach').select('activity_status', { count: 'exact' }).gte('created_at', sevenDaysAgo.toISOString()),
+      supabase.from('pipeline').select('position_id, created_at, updated_at').neq('stage', 'Archived').eq('positions.status', 'Open')
     ]);
 
     const getCount = (index) => {
@@ -791,8 +794,29 @@ function Dashboard() {
     const replies = outreachData?.filter(o => replyStatuses.includes(o.activity_status)).length || 0;
     const replyRate = outreachCount > 0 ? parseFloat(((replies / outreachCount) * 100).toFixed(1)) : 0;
 
+    const pipelinePositions = results[5].status === 'fulfilled' ? results[5].value.data || [] : [];
+    const positionActivityMap = {};
+
+    pipelinePositions.forEach(p => {
+      const posId = p.position_id;
+      if (!posId) return;
+
+      const activityDate = new Date(p.updated_at || p.created_at);
+      if (!positionActivityMap[posId] || activityDate > positionActivityMap[posId]) {
+        positionActivityMap[posId] = activityDate;
+      }
+    });
+
+    let rolesNeedingAttention = 0;
+    Object.values(positionActivityMap).forEach(lastActivity => {
+      const daysSinceActivity = Math.floor((today - lastActivity) / (1000 * 60 * 60 * 24));
+      if (daysSinceActivity > 7) {
+        rolesNeedingAttention++;
+      }
+    });
+
     setExecutiveStats({
-      rolesNeedingAttention: Object.values(roleHealth).filter(r => r.health === 'critical' || r.health === 'warning').length,
+      rolesNeedingAttention,
       closeToHiring: getCount(0),
       interviewsThisWeek: getCount(1),
       submissionsThisWeek: getCount(2),
