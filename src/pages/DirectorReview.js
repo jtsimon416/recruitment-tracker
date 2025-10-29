@@ -700,7 +700,19 @@ function DirectorReview() {
                     </div>
                 );
             default:
-                return null;
+                return (
+                    <div className="tab-content">
+                        {redWarningCandidates.length > 0 && <AgingWarningBox level="red" candidates={redWarningCandidates} />}
+                        {yellowWarningCandidates.length > 0 && redWarningCandidates.length === 0 && <AgingWarningBox level="yellow" candidates={yellowWarningCandidates} />}
+                        <div className="review-section">
+                            <div className="section-header">
+                                <h2><Check size={24} /> Awaiting Your Review</h2>
+                                <p className="section-subtitle">Candidates sorted by oldest submission first</p>
+                            </div>
+                            {renderCandidateList(needsReviewQueue, "Needs Review")}
+                        </div>
+                    </div>
+                );
         }
     };
 

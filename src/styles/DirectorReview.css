@@ -1112,16 +1112,18 @@
 
 .tab-badge {
   position: absolute;
-  bottom: 0.25rem;
+  top: 0.5rem;
   right: 0.5rem;
   background: var(--rose-gold);
   color: var(--main-bg);
-  padding: 0.15rem 0.5rem;
-  border-radius: 12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   font-size: 0.7rem;
   font-weight: 700;
-  min-width: 20px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
