@@ -768,7 +768,7 @@ function Dashboard() {
 
     const results = await Promise.allSettled([
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).in('stage', ['Offer', 'Interview 3']).eq('status', 'Active'),
-      supabase.from('interviews').select('id', { count: 'exact', head: true }).gte('interview_date', today.toISOString()).lte('interview_date', endOfWeek.toISOString()),
+      supabase.from('interviews').select('*', { count: 'exact', head: true }).gte('interview_date', today.toISOString()).lte('interview_date', endOfWeek.toISOString()),
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).eq('stage', 'Submit to Client').gte('created_at', sevenDaysAgo.toISOString()),
       supabase.from('pipeline').select('id, positions!inner(status)', { count: 'exact'}).eq('status', 'Active').eq('positions.status', 'Open'),
       supabase.from('recruiter_outreach').select('activity_status', { count: 'exact' }).gte('created_at', sevenDaysAgo.toISOString())
