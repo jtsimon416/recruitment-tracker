@@ -768,7 +768,6 @@ function Dashboard() {
 
     const results = await Promise.allSettled([
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).in('stage', ['Offer', 'Interview 3']).eq('status', 'Active'),
-      supabase.from('interviews').select('*', { count: 'exact', head: true }).gte('interview_date', today.toISOString()).lte('interview_date', endOfWeek.toISOString()),
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).eq('stage', 'Submit to Client').gte('created_at', sevenDaysAgo.toISOString()),
       supabase.from('pipeline').select('id, positions!inner(status)', { count: 'exact'}).eq('status', 'Active').eq('positions.status', 'Open'),
       supabase.from('recruiter_outreach').select('activity_status', { count: 'exact' }).gte('created_at', sevenDaysAgo.toISOString()),
@@ -781,7 +780,7 @@ function Dashboard() {
       return response.value.count ?? 0;
     };
 
-    const outreachCount = getCount(4);
+    const outreachCount = getCount(3);
     const replyStatuses = ['reply_received', 'accepted', 'call_scheduled', 'declined', 'ready_for_submission'];
 
     const { data: outreachData } = await supabase
@@ -793,11 +792,11 @@ function Dashboard() {
     const replyRate = outreachCount > 0 ? parseFloat(((replies / outreachCount) * 100).toFixed(1)) : 0;
 
     setExecutiveStats({
-      rolesNeedingAttention: getCount(5),
+      rolesNeedingAttention: getCount(4),
       closeToHiring: getCount(0),
-      interviewsThisWeek: getCount(1),
-      submissionsThisWeek: getCount(2),
-      activeCandidates: getCount(3),
+      interviewsThisWeek: 0,
+      submissionsThisWeek: getCount(1),
+      activeCandidates: getCount(2),
       outreachThisWeek: outreachCount,
       replyRate: replyRate
     });
