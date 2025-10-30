@@ -774,10 +774,17 @@ function Dashboard() {
       supabase.from('positions').select('id', { count: 'exact', head: true }).eq('status', 'Open')
     ]);
 
+    console.log('📊 Dashboard Query Results:', results);
+
     const getCount = (index) => {
       const response = results[index];
-      if (response.status === 'rejected') return 0;
-      return response.value.count ?? 0;
+      if (response.status === 'rejected') {
+        console.log(`❌ Query ${index} rejected:`, response.reason);
+        return 0;
+      }
+      const count = response.value.count ?? 0;
+      console.log(`✅ Query ${index} count:`, count);
+      return count;
     };
 
     const outreachCount = getCount(3);
@@ -791,7 +798,7 @@ function Dashboard() {
     const replies = outreachData?.filter(o => replyStatuses.includes(o.activity_status)).length || 0;
     const replyRate = outreachCount > 0 ? parseFloat(((replies / outreachCount) * 100).toFixed(1)) : 0;
 
-    setExecutiveStats({
+    const stats = {
       rolesNeedingAttention: getCount(4),
       closeToHiring: getCount(0),
       interviewsThisWeek: 0,
@@ -799,7 +806,10 @@ function Dashboard() {
       activeCandidates: getCount(2),
       outreachThisWeek: outreachCount,
       replyRate: replyRate
-    });
+    };
+
+    console.log('📈 Final Executive Stats:', stats);
+    setExecutiveStats(stats);
   }
 
   async function fetchHistoricalData() {
