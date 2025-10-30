@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const AnimatedCounter = ({ value, duration = 1.5, suffix = '' }) => {
+const AnimatedCounter = ({ end, duration = 1500, suffix = '' }) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const numericValue = typeof value === 'number' ? value : parseFloat(value) || 0;
+    console.log('🔢 AnimatedCounter received value:', end);
+    const numericValue = typeof end === 'number' ? end : parseFloat(end) || 0;
     let startTime = null;
     const startValue = 0;
     const endValue = numericValue;
@@ -29,9 +30,9 @@ const AnimatedCounter = ({ value, duration = 1.5, suffix = '' }) => {
     };
 
     requestAnimationFrame(animate);
-  }, [value, duration]);
+  }, [end, duration]);
 
-  const displayValue = typeof value === 'number' && value % 1 !== 0
+  const displayValue = typeof end === 'number' && end % 1 !== 0
     ? count.toFixed(1)
     : Math.round(count);
 

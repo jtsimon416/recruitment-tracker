@@ -971,6 +971,7 @@ function Dashboard() {
                 label="Roles Need Attention"
                 color="#F7A9BA"
               />
+              {console.log('🎯 Rendering metric - rolesNeedingAttention:', executiveStats.rolesNeedingAttention)}
               <AnimatedMetricCard
                 icon={Target}
                 value={executiveStats.closeToHiring || 0}
