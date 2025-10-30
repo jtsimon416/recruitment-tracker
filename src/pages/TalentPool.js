@@ -1009,7 +1009,7 @@ function TalentPool() {
       <div className="page-header">
         <h1>Talent Pool</h1>
         <div className="header-actions">
-          <button className="btn-ai-parse" onClick={() => setShowAiModal(true)} disabled={!!editingCandidate}>AI Parse Resume</button>
+          {/* <button className="btn-ai-parse" onClick={() => setShowAiModal(true)} disabled={!!editingCandidate}>AI Parse Resume</button> */}
           <button className="btn-primary" onClick={handleOpenForm} disabled={!!editingCandidate}>+ Add Candidate</button>
         </div>
       </div>
