@@ -80,7 +80,7 @@ const AnimatedMetricCard = ({ icon: Icon, value, label, color, trend, trendValue
         <Icon size={32} />
       </div>
       <div className="metric-value">
-        <AnimatedCounter end={value} duration={1500} />
+        <AnimatedCounter end={value} duration={800} />
       </div>
       <div className="metric-label">{label}</div>
       {trend && (

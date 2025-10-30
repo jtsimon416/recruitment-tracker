@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const AnimatedCounter = ({ end, duration = 1500, suffix = '' }) => {
+const AnimatedCounter = ({ end, duration = 800, suffix = '' }) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -10,7 +10,7 @@ const AnimatedCounter = ({ end, duration = 1500, suffix = '' }) => {
     let startTime = null;
     const startValue = 0;
     const endValue = numericValue;
-    const totalDuration = duration * 1000;
+    const totalDuration = duration;
 
     const animate = (currentTime) => {
       if (!startTime) startTime = currentTime;
