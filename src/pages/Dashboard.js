@@ -64,9 +64,47 @@ const TabNavigation = ({ activeTab, setActiveTab }) => {
 };
 
 // =========================================================================
+// METRIC TOOLTIP
+// =========================================================================
+const MetricTooltip = ({ items, color }) => {
+  if (!items || items.length === 0) return null;
+
+  return (
+    <motion.div
+      className="metric-tooltip"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.2 }}
+      style={{ borderTopColor: color }}
+    >
+      <div className="tooltip-arrow" style={{ borderBottomColor: 'var(--card-bg)' }} />
+      <div className="tooltip-content">
+        {items.map((item, index) => (
+          <div key={index} className="tooltip-item">
+            {item.icon && <span className="tooltip-icon">{item.icon}</span>}
+            <div className="tooltip-text">
+              <div className="tooltip-primary">{item.primary}</div>
+              {item.secondary && <div className="tooltip-secondary">{item.secondary}</div>}
+            </div>
+            {item.badge && (
+              <span className={`tooltip-badge ${item.badgeClass || ''}`}>
+                {item.badge}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+// =========================================================================
 // ANIMATED METRIC CARD
 // =========================================================================
-const AnimatedMetricCard = ({ icon: Icon, value, label, color, trend, trendValue, onClick }) => {
+const AnimatedMetricCard = ({ icon: Icon, value, label, color, trend, trendValue, onClick, tooltipItems }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
     <motion.div
       className={`metric-card ${onClick ? 'clickable' : ''}`}
@@ -74,7 +112,9 @@ const AnimatedMetricCard = ({ icon: Icon, value, label, color, trend, trendValue
       animate={{ opacity: 1, y: 0 }}
       whileHover={onClick ? { scale: 1.05, y: -5 } : {}}
       onClick={onClick}
-      style={{ borderTop: `4px solid ${color}` }}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+      style={{ borderTop: `4px solid ${color}`, position: 'relative' }}
     >
       <div className="metric-icon" style={{ color }}>
         <Icon size={32} />
@@ -89,6 +129,11 @@ const AnimatedMetricCard = ({ icon: Icon, value, label, color, trend, trendValue
           <span>{trendValue}</span>
         </div>
       )}
+      <AnimatePresence>
+        {showTooltip && tooltipItems && tooltipItems.length > 0 && (
+          <MetricTooltip items={tooltipItems} color={color} />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
@@ -771,7 +816,8 @@ function Dashboard() {
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).eq('stage', 'Submit to Client').gte('created_at', sevenDaysAgo.toISOString()),
       supabase.from('pipeline').select('id, positions!inner(status)', { count: 'exact'}).eq('status', 'Active').eq('positions.status', 'Open'),
       supabase.from('recruiter_outreach').select('activity_status', { count: 'exact' }).gte('created_at', sevenDaysAgo.toISOString()),
-      supabase.from('positions').select('id', { count: 'exact', head: true }).eq('status', 'Open')
+      supabase.from('positions').select('id', { count: 'exact', head: true }).eq('status', 'Open'),
+      supabase.from('interviews').select('id', { count: 'exact', head: true }).gte('interview_date', today.toISOString()).lte('interview_date', endOfWeek.toISOString())
     ]);
 
     console.log('📊 Dashboard Query Results:', results);
@@ -801,7 +847,7 @@ function Dashboard() {
     const stats = {
       rolesNeedingAttention: getCount(4),
       closeToHiring: getCount(0),
-      interviewsThisWeek: 0,
+      interviewsThisWeek: getCount(5),
       submissionsThisWeek: getCount(1),
       activeCandidates: getCount(2),
       outreachThisWeek: outreachCount,
@@ -919,12 +965,182 @@ function Dashboard() {
       return callDate > endOfToday && callDate <= endOfWeek;
     }) || [];
 
-    const interviewsToday = [];
-    const interviewsWeek = [];
+    // Fetch interviews - Filter logic verified to match working calls pattern
+    const { data: allInterviews } = await supabase
+      .from('interviews')
+      .select('*, candidates(name, email), positions(title, clients(company_name)), recruiters(name)')
+      .gte('interview_date', today.toISOString())
+      .lte('interview_date', endOfWeek.toISOString())
+      .order('interview_date', { ascending: true });
+
+    // Interviews Today - Shows interviews happening today only (verified pattern matches callsToday)
+    const interviewsToday = allInterviews?.filter(i => {
+      const interviewDate = new Date(i.interview_date);
+      return interviewDate >= today && interviewDate <= endOfToday;
+    }) || [];
+
+    // Interviews This Week - Shows ALL interviews from today through next 7 days (FIXED: changed from > endOfToday to >= today)
+    const interviewsWeek = allInterviews?.filter(i => {
+      const interviewDate = new Date(i.interview_date);
+      return interviewDate >= today && interviewDate <= endOfWeek;
+    }) || [];
 
     setCallsData({ today: callsToday, week: callsWeek });
     setInterviewsData({ today: interviewsToday, week: interviewsWeek });
   }
+
+  // =========================================================================
+  // TOOLTIP DATA GENERATORS
+  // =========================================================================
+  const getRolesNeedingAttentionTooltip = useMemo(() => {
+    if (!roleHealth || Object.keys(roleHealth).length === 0) return [];
+
+    const criticalAndWarning = Object.entries(roleHealth)
+      .filter(([_, health]) => health.health === 'critical' || health.health === 'warning')
+      .sort((a, b) => {
+        const order = { critical: 0, warning: 1 };
+        return order[a[1].health] - order[b[1].health];
+      })
+      .slice(0, 6);
+
+    const items = criticalAndWarning.map(([posId, health]) => ({
+      primary: health.title,
+      secondary: `${health.outreach} outreach last 7 days • ${health.replyRate}% reply rate`,
+      badge: health.health === 'critical' ? 'Critical' : 'Warning',
+      badgeClass: health.health === 'critical' ? 'badge-critical' : 'badge-warning'
+    }));
+
+    if (Object.keys(roleHealth).length > 6) {
+      items.push({
+        primary: `and ${Object.keys(roleHealth).length - 6} more roles...`,
+        secondary: null
+      });
+    }
+
+    return items.length > 0 ? items : [{ primary: 'All roles are healthy!', secondary: 'Great job!' }];
+  }, [roleHealth]);
+
+  const getCloseToHiringTooltip = useMemo(() => {
+    if (!pipeline || pipeline.length === 0) return [];
+
+    const closeToHire = pipeline
+      .filter(p => (p.stage === 'Offer' || p.stage === 'Interview 3') && p.status === 'Active')
+      .slice(0, 6);
+
+    const items = closeToHire.map(p => {
+      const positionTitle = positions.find(pos => pos.id === p.position_id)?.title || 'Unknown Position';
+      return {
+        primary: p.candidates?.name || 'Unknown Candidate',
+        secondary: `${positionTitle} • ${p.stage}`,
+        badge: p.stage === 'Offer' ? '🎯' : '📋'
+      };
+    });
+
+    if (pipeline.filter(p => (p.stage === 'Offer' || p.stage === 'Interview 3') && p.status === 'Active').length > 6) {
+      items.push({
+        primary: `and ${pipeline.filter(p => (p.stage === 'Offer' || p.stage === 'Interview 3') && p.status === 'Active').length - 6} more...`,
+        secondary: null
+      });
+    }
+
+    return items.length > 0 ? items : [{ primary: 'No candidates in final stages', secondary: 'Focus on pipeline progression' }];
+  }, [pipeline, positions]);
+
+  const getInterviewsThisWeekTooltip = useMemo(() => {
+    if (!interviewsData.week || interviewsData.week.length === 0) return [];
+
+    const items = interviewsData.week.slice(0, 6).map(interview => ({
+      primary: interview.candidates?.name || 'Unknown Candidate',
+      secondary: `${interview.positions?.title || 'Unknown Position'} • ${new Date(interview.interview_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`,
+      badge: new Date(interview.interview_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    }));
+
+    if (interviewsData.week.length > 6) {
+      items.push({
+        primary: `and ${interviewsData.week.length - 6} more interviews...`,
+        secondary: null
+      });
+    }
+
+    return items.length > 0 ? items : [{ primary: 'No interviews scheduled', secondary: 'Schedule interviews for active candidates' }];
+  }, [interviewsData]);
+
+  const getSubmissionsThisWeekTooltip = useMemo(() => {
+    if (!pipeline || pipeline.length === 0) return [];
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recentSubmissions = pipeline
+      .filter(p => p.stage === 'Submit to Client' && new Date(p.created_at) >= sevenDaysAgo)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 6);
+
+    const items = recentSubmissions.map(p => {
+      const positionTitle = positions.find(pos => pos.id === p.position_id)?.title || 'Unknown Position';
+      return {
+        primary: p.candidates?.name || 'Unknown Candidate',
+        secondary: `${positionTitle}`,
+        badge: new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      };
+    });
+
+    if (pipeline.filter(p => p.stage === 'Submit to Client' && new Date(p.created_at) >= sevenDaysAgo).length > 6) {
+      items.push({
+        primary: `and ${pipeline.filter(p => p.stage === 'Submit to Client' && new Date(p.created_at) >= sevenDaysAgo).length - 6} more...`,
+        secondary: null
+      });
+    }
+
+    return items.length > 0 ? items : [{ primary: 'No recent submissions', secondary: 'Move qualified candidates to client submission' }];
+  }, [pipeline, positions]);
+
+  const getActiveCandidatesTooltip = useMemo(() => {
+    if (!pipelineMetrics || Object.keys(pipelineMetrics).length === 0) return [];
+
+    const topRoles = Object.entries(pipelineMetrics)
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 6);
+
+    const items = topRoles.map(([posId, data]) => ({
+      primary: data.title,
+      secondary: `${data.company}`,
+      badge: `${data.count} candidates`
+    }));
+
+    if (Object.keys(pipelineMetrics).length > 6) {
+      items.push({
+        primary: `and ${Object.keys(pipelineMetrics).length - 6} more roles...`,
+        secondary: null
+      });
+    }
+
+    return items.length > 0 ? items : [{ primary: 'No active candidates', secondary: 'Start recruiting for open positions' }];
+  }, [pipelineMetrics]);
+
+  const getTeamOutreachTooltip = useMemo(() => {
+    if (!recruiterStats || recruiterStats.length === 0) return [];
+
+    const topRecruiters = [...recruiterStats]
+      .sort((a, b) => b.totalOutreach - a.totalOutreach)
+      .slice(0, 6);
+
+    const items = topRecruiters.map(rec => ({
+      primary: rec.name,
+      secondary: `${rec.replies} replies • ${rec.internalSubmissions || 0} screened`,
+      badge: `${rec.totalOutreach} sent`,
+      badgeClass: rec.replyRate >= 35 ? 'badge-success' : rec.replyRate >= 20 ? 'badge-warning' : 'badge-critical'
+    }));
+
+    if (recruiterStats.length > 6) {
+      items.push({
+        primary: `and ${recruiterStats.length - 6} more recruiters...`,
+        secondary: null
+      });
+    }
+
+    return items.length > 0 ? items : [{ primary: 'No outreach data', secondary: 'Encourage team to send outreach messages' }];
+  }, [recruiterStats]);
 
   if (loading) {
     return (
@@ -970,13 +1186,14 @@ function Dashboard() {
                 value={executiveStats.rolesNeedingAttention || 0}
                 label="Roles Need Attention"
                 color="#F7A9BA"
+                tooltipItems={getRolesNeedingAttentionTooltip}
               />
-              {console.log('🎯 Rendering metric - rolesNeedingAttention:', executiveStats.rolesNeedingAttention)}
               <AnimatedMetricCard
                 icon={Target}
                 value={executiveStats.closeToHiring || 0}
                 label="Close to Hiring"
                 color="#B8D4D0"
+                tooltipItems={getCloseToHiringTooltip}
               />
               <AnimatedMetricCard
                 icon={Calendar}
@@ -984,18 +1201,21 @@ function Dashboard() {
                 label="Interviews This Week"
                 color="#C5B9D6"
                 onClick={() => navigate('/interview-hub')}
+                tooltipItems={getInterviewsThisWeekTooltip}
               />
               <AnimatedMetricCard
                 icon={CheckCircle}
                 value={executiveStats.submissionsThisWeek || 0}
                 label="Submissions This Week"
                 color="#F4C2A8"
+                tooltipItems={getSubmissionsThisWeekTooltip}
               />
               <AnimatedMetricCard
                 icon={Users}
                 value={executiveStats.activeCandidates || 0}
                 label="Active Candidates"
                 color="#E8B4B8"
+                tooltipItems={getActiveCandidatesTooltip}
               />
               <AnimatedMetricCard
                 icon={TrendingUp}
@@ -1004,6 +1224,7 @@ function Dashboard() {
                 color="#7AA2F7"
                 trend={executiveStats.replyRate >= 35 ? 'up' : 'down'}
                 trendValue={`${executiveStats.replyRate || 0}% reply`}
+                tooltipItems={getTeamOutreachTooltip}
               />
             </div>
 

@@ -1676,3 +1676,163 @@
 .operations-list::-webkit-scrollbar-thumb:hover {
   background: var(--rose-gold-main);
 }
+
+/* =========================================================================
+   METRIC CARD TOOLTIPS
+   ========================================================================= */
+
+.metric-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-top: 3px solid;
+  border-radius: var(--border-radius-polished);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2);
+  min-width: 320px;
+  max-width: 400px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid;
+}
+
+.tooltip-content {
+  padding: 0.75rem;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.tooltip-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tooltip-content::-webkit-scrollbar-track {
+  background: var(--primary-bg);
+  border-radius: 3px;
+}
+
+.tooltip-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.tooltip-content::-webkit-scrollbar-thumb:hover {
+  background: var(--rose-gold-main);
+}
+
+.tooltip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--primary-bg);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.tooltip-item:last-child {
+  margin-bottom: 0;
+}
+
+.tooltip-item:hover {
+  background: rgba(235, 188, 186, 0.08);
+  transform: translateX(4px);
+}
+
+.tooltip-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tooltip-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.tooltip-primary {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tooltip-secondary {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.tooltip-badge {
+  flex-shrink: 0;
+  padding: 0.25rem 0.65rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--secondary-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.tooltip-badge.badge-critical {
+  background: rgba(247, 169, 186, 0.15);
+  color: #F7A9BA;
+  border-color: rgba(247, 169, 186, 0.3);
+}
+
+.tooltip-badge.badge-warning {
+  background: rgba(244, 194, 168, 0.15);
+  color: #F4C2A8;
+  border-color: rgba(244, 194, 168, 0.3);
+}
+
+.tooltip-badge.badge-success {
+  background: rgba(184, 212, 208, 0.15);
+  color: #B8D4D0;
+  border-color: rgba(184, 212, 208, 0.3);
+}
+
+/* Ensure metric cards are positioned relative for tooltip positioning */
+.metric-card {
+  position: relative;
+}
+
+/* Responsive tooltip adjustments */
+@media (max-width: 768px) {
+  .metric-tooltip {
+    min-width: 280px;
+    max-width: 320px;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    transform: none;
+  }
+
+  .tooltip-arrow {
+    left: 50%;
+  }
+
+  .tooltip-primary {
+    white-space: normal;
+  }
+}
