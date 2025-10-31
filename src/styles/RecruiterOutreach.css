@@ -565,9 +565,9 @@
 }
 
 .status-badge.gone-cold {
-  background: rgba(100, 116, 139, 0.15);
-  color: #64748b;
-  border: 1px solid #64748b;
+  background: rgba(122, 162, 247, 0.15);
+  color: #7aa2f7;
+  border: 1px solid #7aa2f7;
 }
 
 /* ===================================

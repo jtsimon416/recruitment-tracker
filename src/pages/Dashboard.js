@@ -514,7 +514,7 @@ const DailyOperationsTab = ({ callsData, interviewsData }) => {
                   <div className="operation-details">
                     <strong>{interview.candidates?.name || 'N/A'}</strong>
                     <span>{interview.positions?.title || 'N/A'}</span>
-                    <span className="recruiter-name">with {interview.recruiters?.name || 'N/A'}</span>
+                    <span className="recruiter-name">with {interview.interviewer_name || 'N/A'}</span>
                   </div>
                 </div>
               ))
@@ -544,7 +544,7 @@ const DailyOperationsTab = ({ callsData, interviewsData }) => {
                   <div className="operation-details">
                     <strong>{interview.candidates?.name || 'N/A'}</strong>
                     <span>{interview.positions?.title || 'N/A'}</span>
-                    <span className="recruiter-name">with {interview.recruiters?.name || 'N/A'}</span>
+                    <span className="recruiter-name">with {interview.interviewer_name || 'N/A'}</span>
                   </div>
                 </div>
               ))
@@ -754,6 +754,11 @@ function Dashboard() {
     const positionIds = Object.keys(metrics);
     if (positionIds.length === 0) {
       setRoleHealth({});
+      // Update rolesNeedingAttention count based on health data
+      setExecutiveStats(prev => ({
+        ...prev,
+        rolesNeedingAttention: 0
+      }));
       return;
     }
 
@@ -802,10 +807,25 @@ function Dashboard() {
     }
 
     setRoleHealth(healthMap);
+
+    // Calculate and update rolesNeedingAttention count based on health data
+    const rolesNeedingAttentionCount = Object.values(healthMap).filter(
+      role => role.health === 'critical' || role.health === 'warning'
+    ).length;
+
+    console.log('📊 Roles Health Data:', healthMap);
+    console.log('📊 Roles Needing Attention Count:', rolesNeedingAttentionCount);
+
+    setExecutiveStats(prev => ({
+      ...prev,
+      rolesNeedingAttention: rolesNeedingAttentionCount
+    }));
   }
 
   async function fetchExecutiveStats() {
-    const today = new Date();
+    // Use local timezone to match user's actual "today"
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(today.getDate() - 7);
     const endOfWeek = new Date(today);
@@ -816,7 +836,6 @@ function Dashboard() {
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).eq('stage', 'Submit to Client').gte('created_at', sevenDaysAgo.toISOString()),
       supabase.from('pipeline').select('id, positions!inner(status)', { count: 'exact'}).eq('status', 'Active').eq('positions.status', 'Open'),
       supabase.from('recruiter_outreach').select('activity_status', { count: 'exact' }).gte('created_at', sevenDaysAgo.toISOString()),
-      supabase.from('positions').select('id', { count: 'exact', head: true }).eq('status', 'Open'),
       supabase.from('interviews').select('id', { count: 'exact', head: true }).gte('interview_date', today.toISOString()).lte('interview_date', endOfWeek.toISOString())
     ]);
 
@@ -845,9 +864,9 @@ function Dashboard() {
     const replyRate = outreachCount > 0 ? parseFloat(((replies / outreachCount) * 100).toFixed(1)) : 0;
 
     const stats = {
-      rolesNeedingAttention: getCount(4),
+      rolesNeedingAttention: 0, // Will be updated by calculateRoleHealth() based on critical/warning roles
       closeToHiring: getCount(0),
-      interviewsThisWeek: getCount(5),
+      interviewsThisWeek: getCount(4), // Updated index after removing positions query
       submissionsThisWeek: getCount(1),
       activeCandidates: getCount(2),
       outreachThisWeek: outreachCount,
@@ -938,10 +957,10 @@ function Dashboard() {
   }
 
   async function fetchCallsAndInterviews() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(today);
-    endOfToday.setHours(23, 59, 59, 999);
+    // Use local timezone to match user's actual "today"
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     const endOfWeek = new Date(today);
     endOfWeek.setDate(today.getDate() + 7);
 
@@ -965,13 +984,20 @@ function Dashboard() {
       return callDate > endOfToday && callDate <= endOfWeek;
     }) || [];
 
-    // Fetch interviews - Filter logic verified to match working calls pattern
-    const { data: allInterviews } = await supabase
+    // Fetch interviews - Fixed to match correct schema (no recruiters FK)
+    const { data: allInterviews, error: interviewError } = await supabase
       .from('interviews')
-      .select('*, candidates(name, email), positions(title, clients(company_name)), recruiters(name)')
+      .select('*, candidates(name, email), positions(title, clients(company_name))')
       .gte('interview_date', today.toISOString())
       .lte('interview_date', endOfWeek.toISOString())
       .order('interview_date', { ascending: true });
+
+    console.log('📅 Interview Query Debug:', {
+      today: today.toISOString(),
+      endOfWeek: endOfWeek.toISOString(),
+      allInterviews,
+      error: interviewError
+    });
 
     // Interviews Today - Shows interviews happening today only (verified pattern matches callsToday)
     const interviewsToday = allInterviews?.filter(i => {
@@ -984,6 +1010,13 @@ function Dashboard() {
       const interviewDate = new Date(i.interview_date);
       return interviewDate >= today && interviewDate <= endOfWeek;
     }) || [];
+
+    console.log('📅 Filtered Interviews:', {
+      today: interviewsToday.length,
+      week: interviewsWeek.length,
+      todayData: interviewsToday,
+      weekData: interviewsWeek
+    });
 
     setCallsData({ today: callsToday, week: callsWeek });
     setInterviewsData({ today: interviewsToday, week: interviewsWeek });
@@ -1003,6 +1036,8 @@ function Dashboard() {
       })
       .slice(0, 6);
 
+    console.log('📊 Tooltip - Critical/Warning Roles:', criticalAndWarning.length);
+
     const items = criticalAndWarning.map(([posId, health]) => ({
       primary: health.title,
       secondary: `${health.outreach} outreach last 7 days • ${health.replyRate}% reply rate`,
@@ -1010,12 +1045,18 @@ function Dashboard() {
       badgeClass: health.health === 'critical' ? 'badge-critical' : 'badge-warning'
     }));
 
-    if (Object.keys(roleHealth).length > 6) {
+    const totalCriticalWarning = Object.entries(roleHealth).filter(
+      ([_, health]) => health.health === 'critical' || health.health === 'warning'
+    ).length;
+
+    if (totalCriticalWarning > 6) {
       items.push({
-        primary: `and ${Object.keys(roleHealth).length - 6} more roles...`,
+        primary: `and ${totalCriticalWarning - 6} more roles...`,
         secondary: null
       });
     }
+
+    console.log('📊 Tooltip Data Items:', items);
 
     return items.length > 0 ? items : [{ primary: 'All roles are healthy!', secondary: 'Great job!' }];
   }, [roleHealth]);

@@ -5,7 +5,15 @@
       "Bash(npm start)",
       "Bash(npm run build)",
       "Bash(find:*)",
-      "Bash(npm run db:migrate:*)"
+      "Bash(npm run db:migrate:*)",
+      "Bash(timeout 30 bash:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout /t 15 /nobreak)",
+      "Bash(powershell -Command \"Start-Sleep -Seconds 20\")",
+      "Bash(node -e:*)",
+      "Bash(powershell -Command \"Start-Sleep -Seconds 5\")"
     ],
     "deny": [],
     "ask": []

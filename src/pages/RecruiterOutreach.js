@@ -95,7 +95,7 @@ const getStatusBadge = (status) => {
     'call_scheduled': { label: 'Call Scheduled', emoji: '🔵', class: 'call-scheduled', color: '#7aa2f7' },
     'declined': { label: 'Declined', emoji: '❌', class: 'declined', color: '#f7768e' },
     'ready_for_submission': { label: 'Ready for Submission', emoji: '🚀', class: 'ready-submission', color: '#bb9af7' },
-    'gone_cold': { label: 'Gone Cold', emoji: '❄️', class: 'gone-cold', color: '#64748b' },
+    'gone_cold': { label: 'Gone Cold', emoji: '❄️', class: 'gone-cold', color: '#7aa2f7' },
     'archived': { label: 'Archived', emoji: '📦', class: 'archived', color: '#a9b1d6' }
   };
 
@@ -751,9 +751,56 @@ function RecruiterOutreach() {
     }
   }, [userProfile]);
 
+  // ===================================
+  // AUTO-UPDATE GONE COLD CONTACTS
+  // ===================================
+  // Automatically update contacts to "gone_cold" after 5 days with no response
+  const autoUpdateGoneCold = async () => {
+    if (!userProfile?.id) return;
+
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+
+    try {
+      // Find all outreach records that are 5+ days old with status 'outreach_sent'
+      const { data: staleOutreach, error: fetchError } = await supabase
+        .from('recruiter_outreach')
+        .select('id, candidate_name')
+        .eq('recruiter_id', userProfile.id)
+        .eq('activity_status', 'outreach_sent')
+        .lte('created_at', fiveDaysAgo.toISOString());
+
+      if (fetchError) throw fetchError;
+
+      if (staleOutreach && staleOutreach.length > 0) {
+        // Update all stale records to 'gone_cold'
+        const { error: updateError } = await supabase
+          .from('recruiter_outreach')
+          .update({
+            activity_status: 'gone_cold',
+            updated_at: new Date().toISOString()
+          })
+          .in('id', staleOutreach.map(r => r.id));
+
+        if (updateError) throw updateError;
+
+        console.log(`✅ Auto-updated ${staleOutreach.length} contacts to "Gone Cold"`);
+
+        // Refresh the outreach list
+        const activities = await fetchMyOutreachActivities(userProfile.id);
+        if (activities) {
+          setOutreachActivities(activities);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error auto-updating gone cold contacts:', error);
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     await fetchPositions();
+    await autoUpdateGoneCold(); // Auto-update stale contacts to "Gone Cold"
     const activities = await fetchMyOutreachActivities(userProfile.id);
     if (activities) {
       setOutreachActivities(activities);
@@ -1114,15 +1161,15 @@ function RecruiterOutreach() {
 
   const totalPages = Math.ceil(sortedOutreach.length / itemsPerPage);
 
-  // --- ADDED: Identify outreach items going cold (4+ days old with status 'outreach_sent') ---
+  // --- ADDED: Identify outreach items going cold (5+ days old with status 'outreach_sent') ---
   const goingColdOutreach = useMemo(() => {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
 
     return outreachActivities.filter(activity => {
       if (activity.activity_status !== 'outreach_sent') return false;
       const createdDate = new Date(activity.created_at);
-      return createdDate <= sevenDaysAgo;
+      return createdDate <= fiveDaysAgo;
     });
   }, [outreachActivities]);
   // ----------------------------------------------------
@@ -1484,9 +1531,9 @@ function RecruiterOutreach() {
       {showGoneColdBanner && goingColdOutreach.length > 0 && (
         <div className="gone-cold-notification-banner">
           <div className="banner-content">
-            <div className="banner-icon">⚠️</div>
+            <div className="banner-icon">❄️</div>
             <div className="banner-message">
-              <strong>The following contacts will be moved to 'Gone Cold' (no response in 4+ days):</strong>
+              <strong>The following contacts have been automatically moved to 'Gone Cold' (no response in 5+ days):</strong>
               <span className="banner-names">
                 {goingColdOutreach.map((activity, index) => (
                   <span key={activity.id}>

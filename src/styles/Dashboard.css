@@ -1018,7 +1018,7 @@
   box-shadow: var(--shadow-polished);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; - REMOVED to allow tooltips to display outside card boundaries */
 }
 
 .metric-card.clickable {
@@ -1809,11 +1809,6 @@
   background: rgba(184, 212, 208, 0.15);
   color: #B8D4D0;
   border-color: rgba(184, 212, 208, 0.3);
-}
-
-/* Ensure metric cards are positioned relative for tooltip positioning */
-.metric-card {
-  position: relative;
 }
 
 /* Responsive tooltip adjustments */
