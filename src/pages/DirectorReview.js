@@ -358,7 +358,7 @@ function DirectorReview() {
 
         if (isHold) newStatus = "Hold";
         else if (isReject) { newStatus = "Reject"; if (pipelineEntry.stage === 'Screening') newStage = 'Reject'; }
-        else if (isSubmit) { newStage = "Submitted to Client"; newStatus = "Active"; }
+        else if (isSubmit) { newStage = "Submit to Client"; newStatus = "Active"; }
         else if (isCommentOnly && !commentText.trim()) {
             displayAlert(`Comment was empty, no action taken.`, 'info');
             closeCommentsModal(); 
@@ -482,7 +482,7 @@ function DirectorReview() {
             const { data, error } = await supabase
                 .from('pipeline')
                 .select(`id, candidates ( name ), positions ( title, clients ( company_name ) ), stage, status, updated_at`)
-                .or('stage.eq.Submitted to Client,stage.eq.Reject')
+                .or('stage.eq.Submit to Client,stage.eq.Reject')
                 .gte('updated_at', thirtyDaysAgo.toISOString())
                 .order('updated_at', { ascending: false })
                 .limit(50);
@@ -502,7 +502,7 @@ function DirectorReview() {
 
     // Calculate stats
     const totalReviewed = recentDecisions.length;
-    const approvedCount = recentDecisions.filter(p => p.stage === 'Submitted to Client').length;
+    const approvedCount = recentDecisions.filter(p => p.stage === 'Submit to Client').length;
     const rejectedCount = recentDecisions.filter(p => p.stage === 'Reject').length;
     const approvalRate = totalReviewed > 0 ? ((approvedCount / totalReviewed) * 100).toFixed(1) : 0;
     const avgReviewTime = candidatesWithDays.length > 0 ? (candidatesWithDays.reduce((sum, c) => sum + c.daysInStage, 0) / candidatesWithDays.length).toFixed(1) : 0;
@@ -606,15 +606,15 @@ function DirectorReview() {
                             ) : (
                                 <div className="decisions-list">
                                     {recentDecisions.map(p => (
-                                        <div key={p.id} className={`decision-card ${p.stage === 'Submitted to Client' ? 'approved' : 'rejected'}`}>
+                                        <div key={p.id} className={`decision-card ${p.stage === 'Submit to Client' ? 'approved' : 'rejected'}`}>
                                             <div className="decision-info">
                                                 <div className="decision-name">{p.candidates?.name || 'Unknown'}</div>
                                                 <div className="decision-position">{p.positions?.title || 'Unknown Position'} • {p.positions?.clients?.company_name || 'N/A'}</div>
                                             </div>
                                             <div className="decision-status">
-                                                <span className={`status-badge ${p.stage === 'Submitted to Client' ? 'approved' : 'rejected'}`}>
-                                                    {p.stage === 'Submitted to Client' ? <Check size={14} /> : <X size={14} />}
-                                                    {p.stage === 'Submitted to Client' ? 'Approved' : 'Rejected'}
+                                                <span className={`status-badge ${p.stage === 'Submit to Client' ? 'approved' : 'rejected'}`}>
+                                                    {p.stage === 'Submit to Client' ? <Check size={14} /> : <X size={14} />}
+                                                    {p.stage === 'Submit to Client' ? 'Approved' : 'Rejected'}
                                                 </span>
                                                 <div className="decision-date">{new Date(p.updated_at).toLocaleDateString()}</div>
                                             </div>
