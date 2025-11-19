@@ -26,7 +26,8 @@ body {
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start; /* Align items to the start vertically */
+  align-items: flex-start;
+  /* Align items to the start vertically */
   margin-bottom: 15px;
   padding-bottom: 20px;
   border-bottom: 2px solid var(--border-color);
@@ -38,7 +39,8 @@ body {
 .header-content {
   display: flex;
   flex-direction: column;
-  gap: 5px; /* Space between h1 and p */
+  gap: 5px;
+  /* Space between h1 and p */
 }
 
 .page-header h1 {
@@ -46,22 +48,26 @@ body {
   background: var(--rose-gold-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin: 0; /* Remove default margin */
+  margin: 0;
+  /* Remove default margin */
   font-weight: 700;
 }
 
 .page-header p {
   color: var(--text-secondary);
   font-size: 1.05rem;
-  margin: 0; /* Remove default margin */
+  margin: 0;
+  /* Remove default margin */
 }
 
 .header-alert {
   display: flex;
   align-items: center;
   gap: 10px;
-  background-color: var(--status-red-light); /* A light red background */
-  color: var(--status-red); /* Red text */
+  background-color: var(--status-red-light);
+  /* A light red background */
+  color: var(--status-red);
+  /* Red text */
   padding: 12px 20px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -88,7 +94,8 @@ body {
 }
 
 .filter-section {
-  margin-top: 20px; /* Space between header and filters */
+  margin-top: 20px;
+  /* Space between header and filters */
   margin-bottom: 30px;
   padding-bottom: 20px;
   border-bottom: 2px solid var(--border-color);
@@ -96,10 +103,14 @@ body {
 
 .header-controls {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Two columns, equal width */
-  gap: 10px; /* Gap between grid items */
-  width: 100%; /* Span full width */
-  flex-wrap: wrap; /* Ensure wrapping behavior */
+  grid-template-columns: repeat(2, 1fr);
+  /* Two columns, equal width */
+  gap: 10px;
+  /* Gap between grid items */
+  width: 100%;
+  /* Span full width */
+  flex-wrap: wrap;
+  /* Ensure wrapping behavior */
 }
 
 .position-filter {
@@ -112,7 +123,8 @@ body {
   cursor: pointer;
   transition: all 0.2s;
   min-width: 140px;
-  width: 100%; /* Ensure filters take full width of their grid cell */
+  width: 100%;
+  /* Ensure filters take full width of their grid cell */
 }
 
 .position-filter:focus {
@@ -135,7 +147,8 @@ body {
   border-radius: 8px;
   padding: 4px;
   border: 1px solid var(--border-color);
-  margin-top: 10px; /* Added margin-top */
+  margin-top: 10px;
+  /* Added margin-top */
 }
 
 .toggle-btn {
@@ -191,7 +204,7 @@ body {
 
 .pipeline-header {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr 1.5fr; 
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr 1.5fr;
   gap: 15px;
   padding: 15px 20px;
   background: var(--secondary-bg);
@@ -203,7 +216,7 @@ body {
   border-bottom: 2px solid var(--border-color);
 }
 
-.pipeline-header > div {
+.pipeline-header>div {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -211,13 +224,18 @@ body {
   transition: color 0.2s;
 }
 
-.pipeline-header > div:hover {
+.pipeline-header>div:hover {
   color: var(--rose-gold-shine);
+}
+
+/* Right-align the Actions header to match the buttons */
+.pipeline-header>div:last-child {
+  justify-content: flex-end;
 }
 
 .pipeline-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr 1.5fr; 
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr 1.5fr;
   gap: 15px;
   padding: 20px;
   border-bottom: 1px solid var(--border-color);
@@ -239,20 +257,24 @@ body {
 .candidate-name-and-icons {
   display: flex;
   align-items: center;
-  gap: 8px; /* Space between name and icons */
+  gap: 8px;
+  /* Space between name and icons */
 }
 
 .candidate-icons {
   display: flex;
   align-items: center;
-  gap: 5px; /* Space between icons */
+  gap: 5px;
+  /* Space between icons */
 }
 
 .candidate-name-cell {
   display: flex;
-  align-items: center;  /* NOT flex-start */
+  align-items: center;
+  /* NOT flex-start */
   gap: 10px;
-  flex-direction: row;  /* ADD THIS - forces horizontal */
+  flex-direction: row;
+  /* ADD THIS - forces horizontal */
 }
 
 .candidate-name-cell strong {
@@ -368,32 +390,40 @@ body {
 
 /* ADDED: Styles for the AI Analyze Fit button */
 .btn-analyze-fit {
-  background: transparent; /* No background */
-  border: 1px solid var(--border-color); /* Subtle border */
-  padding: 6px 8px; /* Smaller padding */
+  background: transparent;
+  /* No background */
+  border: 1px solid var(--border-color);
+  /* Subtle border */
+  padding: 6px 8px;
+  /* Smaller padding */
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex; /* To center the icon */
+  display: flex;
+  /* To center the icon */
   align-items: center;
   justify-content: center;
-  color: var(--rose-gold-main); /* Set icon color */
+  color: var(--rose-gold-main);
+  /* Set icon color */
 }
 
 .btn-analyze-fit:hover {
-  background: rgba(235, 188, 186, 0.1); /* Subtle hover effect using rose-gold-main RGB */
+  background: rgba(235, 188, 186, 0.1);
+  /* Subtle hover effect using rose-gold-main RGB */
   border-color: var(--rose-gold-main);
   transform: translateY(-1px);
 }
 
 .btn-analyze-fit svg {
-  color: var(--rose-gold-main); /* Ensure icon color */
+  color: var(--rose-gold-main);
+  /* Ensure icon color */
 }
 
 /* ========== PIPELINE VIEW - ONLY THIS SCROLLS ========== */
 .pipeline-view {
   width: 100%;
-  overflow-x: auto !important; /* THIS scrolls */
+  overflow-x: auto !important;
+  /* THIS scrolls */
   overflow-y: visible;
   padding-bottom: 10px;
   /* Prevent this from affecting parent */
@@ -405,7 +435,8 @@ body {
   gap: 20px;
   min-width: min-content;
   padding-bottom: 20px;
-  width: fit-content; /* Important: only as wide as content */
+  width: fit-content;
+  /* Important: only as wide as content */
 }
 
 .pipeline-column {
@@ -692,9 +723,11 @@ body {
 
 .comment-form textarea {
   /* This is the white box visible in the screenshot */
-  background: var(--card-bg); /* Dark background for input box */
+  background: var(--card-bg);
+  /* Dark background for input box */
   border: 1px solid var(--border-color);
-  color: var(--text-primary); /* Light text */
+  color: var(--text-primary);
+  /* Light text */
   padding: 10px;
   border-radius: 6px;
   resize: vertical;
@@ -831,14 +864,22 @@ body {
 
 /* ========== NOTIFICATION INDICATORS ========== */
 @keyframes ripple-small {
-  0% { transform: scale(0.8); opacity: 0.7; }
-  100% { transform: scale(3); opacity: 0; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
 }
 
 @keyframes pulse {
   from {
     box-shadow: 0 0 0 0 rgba(247, 162, 198, 0.4);
   }
+
   to {
     box-shadow: 0 0 0 5px rgba(247, 162, 198, 0);
   }
@@ -857,7 +898,7 @@ body {
 .indicator-dot-small {
   width: 10px;
   height: 10px;
-  background-color: #ff4d4d !important; 
+  background-color: #ff4d4d !important;
   border-radius: 50%;
   position: relative;
 }
@@ -870,7 +911,7 @@ body {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 1px solid #ff4d4d !important; 
+  border: 1px solid #ff4d4d !important;
   animation: ripple-small 1.5s infinite ease-in-out;
 }
 
@@ -901,8 +942,13 @@ body {
 }
 
 @keyframes slideIn {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 
 .sidebar-header-custom {
@@ -996,13 +1042,14 @@ body {
   .pipeline-columns {
     gap: 15px;
   }
-  
+
   .pipeline-column {
     min-width: 280px;
   }
 }
 
 @media (max-width: 1200px) {
+
   .pipeline-header,
   .pipeline-row {
     grid-template-columns: 1.3fr 0.9fr 0.9fr 0.9fr 1fr 1.3fr;
@@ -1016,43 +1063,43 @@ body {
     align-items: flex-start;
     gap: 15px;
   }
-  
+
   .header-controls {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .position-filter {
     width: 100%;
   }
-  
+
   .pipeline-header {
     display: none;
   }
-  
+
   .pipeline-row {
     display: flex;
     flex-direction: column;
     gap: 10px;
     align-items: flex-start;
   }
-  
+
   .actions-cell {
     width: 100%;
     justify-content: flex-start;
   }
-  
+
   .pipeline-columns {
     flex-direction: column;
   }
-  
-.pipeline-column {
-    min-width: 100%;
-}
 
-.info-sidebar {
+  .pipeline-column {
+    min-width: 100%;
+  }
+
+  .info-sidebar {
     width: 100%;
-}
+  }
 }
 
 /* ========== COMMENT STYLING ========== */
@@ -1134,14 +1181,18 @@ body {
 .pipeline-card .card-body {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* Adds spacing between rows */
-  padding-top: 10px; /* Adds a bit of space below the card header */
+  gap: 8px;
+  /* Adds spacing between rows */
+  padding-top: 10px;
+  /* Adds a bit of space below the card header */
 }
 
 .card-info-row {
   display: grid;
-  grid-template-columns: 70px 1fr; /* 70px label column, value takes the rest */
-  gap: 8px; /* Space between label and value */
+  grid-template-columns: 70px 1fr;
+  /* 70px label column, value takes the rest */
+  gap: 8px;
+  /* Space between label and value */
   align-items: start;
 }
 
@@ -1154,25 +1205,30 @@ body {
 
 .card-value {
   font-size: 0.9em;
-  word-break: break-word; /* Prevents long values from overflowing */
+  word-break: break-word;
+  /* Prevents long values from overflowing */
 }
 
 /* Ensures the status select aligns nicely */
 .pipeline-card .status-select {
-  margin-top: 4px; 
+  margin-top: 4px;
 }
 
 .pipeline-card .card-body {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* Adds spacing between rows */
-  padding-top: 10px; /* Adds a bit of space below the card header */
+  gap: 8px;
+  /* Adds spacing between rows */
+  padding-top: 10px;
+  /* Adds a bit of space below the card header */
 }
 
 .card-info-row {
   display: grid;
-  grid-template-columns: 70px 1fr; /* 70px label column, value takes the rest */
-  gap: 8px; /* Space between label and value */
+  grid-template-columns: 70px 1fr;
+  /* 70px label column, value takes the rest */
+  gap: 8px;
+  /* Space between label and value */
   align-items: start;
 }
 
@@ -1185,10 +1241,76 @@ body {
 
 .card-value {
   font-size: 0.9em;
-  word-break: break-word; /* Prevents long values from overflowing */
+  word-break: break-word;
+  /* Prevents long values from overflowing */
 }
 
 /* Ensures the status select aligns nicely */
 .pipeline-card .status-select {
-  margin-top: 4px; 
+  margin-top: 4px;
+}
+
+/* Standardized Icon Action Button */
+.btn-icon-action {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  padding: 6px;
+  /* Square-ish aspect ratio */
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  width: 32px;
+  /* Fixed width for consistency */
+  height: 32px;
+  /* Fixed height for consistency */
+}
+
+.btn-icon-action:hover {
+  background: var(--hover-bg);
+  transform: translateY(-1px);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+/* Specific hover colors for semantic actions */
+.btn-icon-action.comments:hover {
+  color: var(--status-blue);
+  border-color: var(--status-blue);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.btn-icon-action.schedule:hover {
+  color: var(--status-purple);
+  border-color: var(--status-purple);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.btn-icon-action.analyze:hover {
+  color: var(--rose-gold-main);
+  border-color: var(--rose-gold-main);
+  background: rgba(235, 188, 186, 0.1);
+}
+
+.btn-icon-action.remove:hover {
+  color: var(--status-red);
+  border-color: var(--status-red);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Update actions container to align items nicely */
+.actions-cell,
+.card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* For the pipeline card actions, ensure they flow horizontally or wrap nicely */
+.card-actions {
+  flex-direction: row;
+  justify-content: flex-end;
 }

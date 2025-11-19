@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import * as mammoth from 'mammoth'; // ADDED
 import * as pdfjsLib from 'pdfjs-dist'; // ADDED
-import { Search, ChevronDown, ChevronUp, Eye, FileText, Sparkles, AlertCircle, Video, VideoOff } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Eye, FileText, Sparkles, AlertCircle, Video, VideoOff, MessageSquare, Calendar, Trash2 } from 'lucide-react';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import PageTransition from '../components/PageTransition';
 import WordDocViewerModal from '../components/Worddocviewermodal';
@@ -873,30 +873,36 @@ function ActiveTracker() {
                         </select>
                       </div>
                       <div className="actions-cell">
-                        <div className="comments-button-wrapper">
-                          <button className="btn-comments" onClick={(e) => { e.stopPropagation(); openCommentsModal(item); }}>Comments</button>
-                        </div>
                         <button
-                          className="btn-secondary"
-                          onClick={(e) => { e.stopPropagation(); handleScheduleInterview(item.candidates.id, item.candidates.name, item.position_id, item.positions.title); }}
+                          className="btn-icon-action comments"
+                          onClick={(e) => { e.stopPropagation(); openCommentsModal(item); }}
+                          title="View Comments"
                         >
-                          Schedule Interview
+                          <MessageSquare size={16} />
                         </button>
                         <button
-                          className="btn-analyze-fit"
+                          className="btn-icon-action schedule"
+                          onClick={(e) => { e.stopPropagation(); handleScheduleInterview(item.candidates.id, item.candidates.name, item.position_id, item.positions.title); }}
+                          title="Schedule Interview"
+                        >
+                          <Calendar size={16} />
+                        </button>
+                        <button
+                          className="btn-icon-action analyze"
                           onClick={(e) => { e.stopPropagation(); handleAnalyzeFit(item); }}
                           title="Hire Logic AI Analysis"
                         >
                           <Sparkles size={16} />
                         </button>
                         <button
-                          className="btn-remove"
+                          className="btn-icon-action remove"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRemove(item.id, item.candidates?.name, item.positions?.title);
                           }}
+                          title="Remove Candidate"
                         >
-                          Remove
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </div>
@@ -989,27 +995,35 @@ function ActiveTracker() {
                                     </select>
                                   </div>
                                   <div className="card-actions">
-                                    <button className="btn-comments" onClick={() => openCommentsModal(item)}>Comments</button>
                                     <button
-                                      className="btn-secondary"
-                                      onClick={() => handleScheduleInterview(item.candidate_id, item.candidates.name, item.position_id, item.positions.title)}
+                                      className="btn-icon-action comments"
+                                      onClick={() => openCommentsModal(item)}
+                                      title="View Comments"
                                     >
-                                      Schedule Interview
+                                      <MessageSquare size={16} />
                                     </button>
                                     <button
-                                      className="btn-analyze-fit"
+                                      className="btn-icon-action schedule"
+                                      onClick={() => handleScheduleInterview(item.candidate_id, item.candidates.name, item.position_id, item.positions.title)}
+                                      title="Schedule Interview"
+                                    >
+                                      <Calendar size={16} />
+                                    </button>
+                                    <button
+                                      className="btn-icon-action analyze"
                                       onClick={() => handleAnalyzeFit(item)}
                                       title="Hire Logic AI Analysis"
                                     >
                                       <Sparkles size={16} />
                                     </button>
                                     <button
-                                      className="btn-remove"
+                                      className="btn-icon-action remove"
                                       onClick={() => {
                                         handleRemove(item.id, item.candidates?.name, item.positions?.title);
                                       }}
+                                      title="Remove Candidate"
                                     >
-                                      Remove
+                                      <Trash2 size={16} />
                                     </button>
                                   </div>
                                 </div>
