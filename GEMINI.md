@@ -97,3 +97,70 @@ This session began with a request to implement a new "Video Screened" compliance
 ### Session Outcome
 
 The local development environment is now stable and fully functional. The "Video Screened" feature has been implemented end-to-end as per the user's request. A summary file (`SESSION_SUMMARY_20251104.md`) was created to document the extensive changes and provide testing instructions for the user.
+
+---
+
+## Session: AI Boolean Search Polish & Deployment (Nov 19, 2025)
+
+This session focused on debugging, refining, and deploying the AI Boolean Search Generator feature.
+
+### Fixes & Features Implemented
+
+*   **Debugging & Fixes:**
+    *   Resolved a 400 Bad Request error by deploying the updated `hire-logic-ai` Supabase Edge Function.
+    *   Fixed a client-side syntax error (duplicate imports) in `useOutreachSearch.js`.
+    *   Improved error handling in `useOutreachSearch.js` to provide more detailed feedback from the server.
+
+*   **UI/UX Overhaul:**
+    *   **Redesigned `MyOutreachTab`:** Implemented a professional, card-based layout for the search generator form.
+    *   **Redesigned `SearchResultBox`:** Created a polished display for search results with:
+        *   Dark, syntax-highlighted code blocks for search strings.
+        *   Color-coded headers for different tiers (Unicorn - Purple, Strong - Blue, Acceptable - Green).
+        *   Integrated "Copy" buttons with visual feedback.
+    *   **Persistence:** Implemented `localStorage` persistence so search results are saved and restored when navigating between pages or selecting roles.
+    *   **Role State Persistence:** Fixed an issue where the selected role would reset on navigation by saving the `selectedRoleId` to `localStorage`.
+
+*   **Deployment:**
+    *   Successfully built and deployed the updated application to GitHub Pages.
+
+
+---
+
+## Session: Talent Pool Filter Fixes (Nov 19, 2025)
+
+This session focused on debugging and improving the filtering experience in the Talent Pool, specifically for "LinkedIn Profiles Only" and the associated "Sourcing Smart Filters".
+
+### Fixes & Features Implemented
+
+*   **Fixed Filter Accumulation:**
+    *   Replaced the standard `<select multiple>` dropdowns in `TalentPool.js` with custom **checkbox lists**.
+    *   This resolves the issue where selecting one filter would deselect others unless Ctrl/Cmd was held.
+
+*   **Improved Data Matching:**
+    *   Implemented `normalizeLinkedInUrl` logic in `TalentPool.js` to ensure robust matching of candidates to outreach history, regardless of URL formatting (e.g., `http` vs `https`, trailing slashes).
+
+*   **Increased Data Visibility:**
+    *   Increased the `fetchAllOutreachRecords` limit to **10,000** in `DataContext.js` to prevent data truncation.
+
+*   **New "Profile Type" Filter:**
+    *   Added a new **"Profile Type"** filter to the Sourcing Smart Filters.
+    *   Allows users to filter by `Shell Profile (LinkedIn Only)` vs `Full Candidate Profile`.
+
+### Session Outcome
+The Talent Pool filters now function correctly with cumulative selection. The "missing data" issue was investigated and confirmed to be due to intentional logic (excluding "Ready for Submission" candidates from archives). The user verified the fixes and the new Profile Type filter.
+
+---
+
+## Session: Talent Pool Redesign (Nov 19, 2025)
+
+This session focused on redesigning the "Advanced Filter Panel" in the Talent Pool to be more compact and space-efficient.
+
+### Features Implemented
+
+*   **Compact Filter Panel:**
+    *   Moved the main **Search Bar** to the panel header, making it always visible and accessible without expanding the filters.
+    *   Restructured the expanded panel into a **3-column grid layout** (Skills, Properties, Toggles) to utilize horizontal space better.
+    *   Reduced padding and margins for a cleaner, dashboard-like appearance.
+
+### Session Outcome
+The Talent Pool filter panel is now significantly more compact and organized, addressing the user's concern about wasted space. The changes have been deployed to the live application.

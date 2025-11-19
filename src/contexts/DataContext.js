@@ -14,7 +14,7 @@ export function DataProvider({ children }) {
   const [outreachActivities, setOutreachActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newCommentCandidateIds, setNewCommentCandidateIds] = useState([]);
-  
+
   const [session, setSession] = useState(null);
   const [loadingSession, setLoadingSession] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
@@ -27,7 +27,7 @@ export function DataProvider({ children }) {
     };
 
     getSession();
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (loadingSession) setLoadingSession(false);
@@ -41,7 +41,7 @@ export function DataProvider({ children }) {
   useEffect(() => {
     if (session) {
       loadAllData();
-      
+
       const commentsSubscription = supabase
         .channel('public:comments')
         .on(
@@ -58,19 +58,19 @@ export function DataProvider({ children }) {
           }
         )
         .subscribe();
-        
+
       return () => {
         supabase.removeChannel(commentsSubscription);
       };
     } else {
-        setClients([]);
-        setPositions([]);
-        setCandidates([]);
-        setRecruiters([]);
-        setPipeline([]);
-        setInterviews([]);
-        setOutreachActivities([]);
-        setLoading(false);
+      setClients([]);
+      setPositions([]);
+      setCandidates([]);
+      setRecruiters([]);
+      setPipeline([]);
+      setInterviews([]);
+      setOutreachActivities([]);
+      setLoading(false);
     }
   }, [session]);
 
@@ -82,7 +82,7 @@ export function DataProvider({ children }) {
       setUserProfile(null);
     }
   }, [session, recruiters]);
-  
+
   async function loadAllData() {
     setLoading(true);
 
@@ -104,7 +104,7 @@ export function DataProvider({ children }) {
     setOutreachActivities(outreachRes.data || []);
     setLoading(false);
   }
-  
+
   const clearCommentNotifications = (candidateId) => {
     setNewCommentCandidateIds(prevIds => prevIds.filter(id => id !== candidateId));
   };
@@ -112,7 +112,7 @@ export function DataProvider({ children }) {
   async function refreshData() {
     await loadAllData();
   }
-  
+
   const handleLogout = async () => {
     try {
       console.log('🚪 Logging out...');
@@ -150,12 +150,12 @@ export function DataProvider({ children }) {
       console.error('--- DEBUG ERROR: Notification payload is incomplete (missing recipient, message, or type).', payload);
       return false;
     }
-    
+
     // 2. Format the data for the database's 'payload' column
     const notificationPayload = {
-        recipient_email: payload.recipient,
-        message: payload.message,
-        type: payload.type,
+      recipient_email: payload.recipient,
+      message: payload.message,
+      type: payload.type,
     };
 
     // --- DEBUG STEP 2: Confirm payload passed validation ---
@@ -293,7 +293,8 @@ export function DataProvider({ children }) {
   async function fetchAllOutreachRecords() {
     const { data, error } = await supabase
       .from('recruiter_outreach')
-      .select('*, positions(title), recruiters(name)');
+      .select('*, positions(title), recruiters(name)')
+      .limit(10000);
 
     if (error) {
       console.error('Error fetching outreach records:', error);

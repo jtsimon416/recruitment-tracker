@@ -4,7 +4,7 @@ import { supabase } from '../services/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  Line, BarChart, Bar, PieChart, Pie, Cell,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, ResponsiveContainer, RadarChart, PolarGrid,
   PolarAngleAxis, PolarRadiusAxis, Radar
@@ -22,12 +22,12 @@ import '../styles/Dashboard.css';
 const COLORS = ['#E8B4B8', '#B8D4D0', '#C5B9D6', '#F4C2A8', '#7AA2F7', '#F7A9BA'];
 
 const calculateDaysDifference = (dateString) => {
-    if (!dateString) return 0;
-    const now = new Date();
-    const then = new Date(dateString);
-    if (isNaN(then.getTime())) return Infinity;
-    const diffTime = Math.abs(now.getTime() - then.getTime());
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  if (!dateString) return 0;
+  const now = new Date();
+  const then = new Date(dateString);
+  if (isNaN(then.getTime())) return Infinity;
+  const diffTime = Math.abs(now.getTime() - then.getTime());
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 };
 
 // =========================================================================
@@ -66,19 +66,24 @@ const TabNavigation = ({ activeTab, setActiveTab }) => {
 // =========================================================================
 // METRIC TOOLTIP
 // =========================================================================
-const MetricTooltip = ({ items, color, align = 'center' }) => {
+const MetricTooltip = ({ items, color, align = 'center', position = 'bottom' }) => {
   if (!items || items.length === 0) return null;
 
   return (
     <motion.div
-      className={`metric-tooltip metric-tooltip--align-${align}`}
-      initial={{ opacity: 0, y: 10 }}
+      className={`metric-tooltip metric-tooltip--align-${align} metric-tooltip--position-${position}`}
+      initial={{ opacity: 0, y: position === 'top' ? 10 : -10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
+      exit={{ opacity: 0, y: position === 'top' ? 10 : -10 }}
       transition={{ duration: 0.2 }}
-      style={{ borderTopColor: color }}
+      style={{
+        [position === 'top' ? 'borderBottomColor' : 'borderTopColor']: color
+      }}
     >
-      <div className="tooltip-arrow" style={{ borderBottomColor: 'var(--card-bg)' }} />
+      <div
+        className={`tooltip-arrow tooltip-arrow--${position}`}
+        style={{ [position === 'top' ? 'borderTopColor' : 'borderBottomColor']: 'var(--card-bg)' }}
+      />
       <div className="tooltip-content">
         {items.map((item, index) => (
           <div key={index} className="tooltip-item">
@@ -105,22 +110,34 @@ const MetricTooltip = ({ items, color, align = 'center' }) => {
 const AnimatedMetricCard = ({ icon: Icon, value, label, color, trend, trendValue, onClick, tooltipItems }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipAlign, setTooltipAlign] = useState('center');
+  const [tooltipPosition, setTooltipPosition] = useState('bottom');
   const cardRef = useRef(null);
 
   const handleMouseEnter = () => {
     if (cardRef.current) {
       const cardRect = cardRef.current.getBoundingClientRect();
       const tooltipWidth = 320; // min-width from CSS
+      const tooltipHeight = 200; // Estimated max height
       const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
 
       const cardCenter = cardRect.left + cardRect.width / 2;
 
+      // Horizontal Alignment
       if (cardCenter - tooltipWidth / 2 < 10) { // Too close to the left edge
         setTooltipAlign('left');
       } else if (cardCenter + tooltipWidth / 2 > viewportWidth - 10) { // Too close to the right edge
         setTooltipAlign('right');
       } else {
         setTooltipAlign('center');
+      }
+
+      // Vertical Positioning
+      // If there's not enough space below, and there is space above, put it on top
+      if (cardRect.bottom + tooltipHeight > viewportHeight && cardRect.top - tooltipHeight > 0) {
+        setTooltipPosition('top');
+      } else {
+        setTooltipPosition('bottom');
       }
     }
     setShowTooltip(true);
@@ -153,7 +170,7 @@ const AnimatedMetricCard = ({ icon: Icon, value, label, color, trend, trendValue
       )}
       <AnimatePresence>
         {showTooltip && tooltipItems && tooltipItems.length > 0 && (
-          <MetricTooltip items={tooltipItems} color={color} align={tooltipAlign} />
+          <MetricTooltip items={tooltipItems} color={color} align={tooltipAlign} position={tooltipPosition} />
         )}
       </AnimatePresence>
     </motion.div>
@@ -325,12 +342,12 @@ const PerformanceTab = ({ stats, historicalData, roleHealth, groupedRolesByHealt
             <AreaChart data={historicalData}>
               <defs>
                 <linearGradient id="colorOutreach" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#E8B4B8" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#E8B4B8" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#E8B4B8" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#E8B4B8" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorSubmissions" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7AA2F7" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#7AA2F7" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#7AA2F7" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#7AA2F7" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
@@ -658,7 +675,7 @@ const PipelineDeepDiveTab = ({ pipelineMetrics, roleHealth, navigate }) => {
   }, [pipelineMetrics, roleHealth]);
 
   const getHealthColor = (health) => {
-    switch(health) {
+    switch (health) {
       case 'critical': return '#F7A9BA';
       case 'warning': return '#F4C2A8';
       default: return '#B8D4D0';
@@ -758,13 +775,13 @@ const PipelineDeepDiveTab = ({ pipelineMetrics, roleHealth, navigate }) => {
 // =========================================================================
 function Dashboard() {
   const navigate = useNavigate();
-  const { 
-    outreachActivities = [], 
-    userProfile, 
-    positions = [], 
-    pipeline = [], 
-    recruiters = [], 
-    loading: dataContextLoading 
+  const {
+    outreachActivities = [],
+    userProfile,
+    positions = [],
+    pipeline = [],
+    recruiters = [],
+    loading: dataContextLoading
   } = useData();
   const [activeTab, setActiveTab] = useState('overview');
   const [pipelineMetrics, setPipelineMetrics] = useState({});
@@ -805,7 +822,7 @@ function Dashboard() {
   async function fetchPipelineMetrics() {
     const { data, error } = await supabase
       .from('pipeline')
-      .select('*, positions(*, clients(company_name)), candidates(name)')
+      .select('*, positions!inner(*, clients(company_name)), candidates(name)')
       .neq('stage', 'Archived')
       .eq('positions.status', 'Open');
 
@@ -944,7 +961,7 @@ function Dashboard() {
     const results = await Promise.allSettled([
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).in('stage', ['Offer', 'Interview 3']).eq('status', 'Active'),
       supabase.from('pipeline').select('id', { count: 'exact', head: true }).eq('stage', 'Submit to Client').gte('created_at', startOfWeek.toISOString()),
-      supabase.from('pipeline').select('id, positions!inner(status)', { count: 'exact'}).eq('status', 'Active').neq('stage', 'Archived').neq('stage', 'Hired').eq('positions.status', 'Open'),
+      supabase.from('pipeline').select('id, positions!inner(status)', { count: 'exact' }).eq('status', 'Active').neq('stage', 'Archived').neq('stage', 'Hired').eq('positions.status', 'Open'),
       supabase.from('recruiter_outreach').select('activity_status', { count: 'exact' }).gte('created_at', startOfWeek.toISOString()),
       supabase.from('interviews').select('id', { count: 'exact', head: true }).gte('interview_date', today.toISOString()).lte('interview_date', endOfWeek.toISOString())
     ]);
@@ -1144,8 +1161,9 @@ function Dashboard() {
 
     const { data: outreachData, error } = await supabase
       .from('recruiter_outreach')
-      .select('position_id, positions(title)')
-      .gte('created_at', startOfWeek.toISOString());
+      .select('position_id, positions!inner(title)')
+      .gte('created_at', startOfWeek.toISOString())
+      .eq('positions.status', 'Open');
 
     if (error || !outreachData) {
       console.error('Error fetching weekly outreach by position:', error);
@@ -1370,83 +1388,83 @@ function Dashboard() {
       {/* Tab Content */}
       {activeTab === 'overview' && (
         <div>
-            {/* Quick Pipeline Funnel */}
-            <div className="chart-card">
-              <h2><Briefcase size={24} /> Team Pipeline Overview</h2>
-              <PipelineFunnel
-                data={Object.values(pipelineMetrics).reduce((acc, pos) => {
-                  Object.entries(pos.stages).forEach(([stage, count]) => {
-                    const existing = acc.find(s => s.stage === stage);
-                    if (existing) existing.count += count;
-                    else acc.push({ stage, count });
-                  });
-                  return acc;
-                }, [])}
-                stages={['Screening', 'Submit to Client', 'Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired']}
-              />
-            </div>
-
-            {/* Metrics Grid */}
-            <div className="metrics-grid">
-              <AnimatedMetricCard
-                icon={AlertTriangle}
-                value={executiveStats.rolesNeedingAttention || 0}
-                label="Roles Need Attention"
-                color="#F7A9BA"
-                tooltipItems={getRolesNeedingAttentionTooltip}
-              />
-              <AnimatedMetricCard
-                icon={Target}
-                value={executiveStats.closeToHiring || 0}
-                label="Close to Hiring"
-                color="#B8D4D0"
-                tooltipItems={getCloseToHiringTooltip}
-              />
-              <AnimatedMetricCard
-                icon={Calendar}
-                value={executiveStats.interviewsThisWeek || 0}
-                label="Interviews This Week"
-                color="#C5B9D6"
-                onClick={() => navigate('/interview-hub')}
-                tooltipItems={getInterviewsThisWeekTooltip}
-              />
-              <AnimatedMetricCard
-                icon={CheckCircle}
-                value={executiveStats.submissionsThisWeek || 0}
-                label="Submissions This Week"
-                color="#F4C2A8"
-                tooltipItems={getSubmissionsThisWeekTooltip}
-              />
-              <AnimatedMetricCard
-                icon={Users}
-                value={executiveStats.activeCandidates || 0}
-                label="Active Candidates"
-                color="#E8B4B8"
-                tooltipItems={getActiveCandidatesTooltip}
-              />
-              <AnimatedMetricCard
-                icon={TrendingUp}
-                value={executiveStats.outreachThisWeek || 0}
-                label="Team Outreach"
-                color="#7AA2F7"
-                trend={executiveStats.replyRate >= 35 ? 'up' : 'down'}
-                trendValue={`${executiveStats.replyRate || 0}% reply`}
-                tooltipItems={getTeamOutreachTooltip}
-              />
-              <AnimatedMetricCard
-                icon={TrendingUpIcon}
-                value={weeklyOutreachByPosition.length}
-                label="Positions Outreach This Week"
-                color="#F7A9BA"
-                tooltipItems={
-                  weeklyOutreachByPosition.length > 0 ?
+          {/* Metrics Grid */}
+          <div className="metrics-grid">
+            <AnimatedMetricCard
+              icon={AlertTriangle}
+              value={executiveStats.rolesNeedingAttention || 0}
+              label="Roles Need Attention"
+              color="#F7A9BA"
+              tooltipItems={getRolesNeedingAttentionTooltip}
+            />
+            <AnimatedMetricCard
+              icon={Target}
+              value={executiveStats.closeToHiring || 0}
+              label="Close to Hiring"
+              color="#B8D4D0"
+              tooltipItems={getCloseToHiringTooltip}
+            />
+            <AnimatedMetricCard
+              icon={Calendar}
+              value={executiveStats.interviewsThisWeek || 0}
+              label="Interviews This Week"
+              color="#C5B9D6"
+              onClick={() => navigate('/interview-hub')}
+              tooltipItems={getInterviewsThisWeekTooltip}
+            />
+            <AnimatedMetricCard
+              icon={CheckCircle}
+              value={executiveStats.submissionsThisWeek || 0}
+              label="Submissions This Week"
+              color="#F4C2A8"
+              tooltipItems={getSubmissionsThisWeekTooltip}
+            />
+            <AnimatedMetricCard
+              icon={Users}
+              value={executiveStats.activeCandidates || 0}
+              label="Active Candidates"
+              color="#E8B4B8"
+              tooltipItems={getActiveCandidatesTooltip}
+            />
+            <AnimatedMetricCard
+              icon={TrendingUp}
+              value={executiveStats.outreachThisWeek || 0}
+              label="Team Outreach"
+              color="#7AA2F7"
+              trend={executiveStats.replyRate >= 35 ? 'up' : 'down'}
+              trendValue={`${executiveStats.replyRate || 0}% reply`}
+              tooltipItems={getTeamOutreachTooltip}
+            />
+            <AnimatedMetricCard
+              icon={TrendingUpIcon}
+              value={weeklyOutreachByPosition.length}
+              label="Positions Outreach This Week"
+              color="#F7A9BA"
+              tooltipItems={
+                weeklyOutreachByPosition.length > 0 ?
                   weeklyOutreachByPosition.map(pos => ({
                     primary: pos.title,
                     badge: `${pos.count} outreach`,
-                  })) : [{primary: "No outreach for any position this week."}]
-                }
-              />
-            </div>
+                  })) : [{ primary: "No outreach for any position this week." }]
+              }
+            />
+          </div>
+
+          {/* Quick Pipeline Funnel */}
+          <div className="chart-card">
+            <h2><Briefcase size={24} /> Team Pipeline Overview</h2>
+            <PipelineFunnel
+              data={Object.values(pipelineMetrics).reduce((acc, pos) => {
+                Object.entries(pos.stages).forEach(([stage, count]) => {
+                  const existing = acc.find(s => s.stage === stage);
+                  if (existing) existing.count += count;
+                  else acc.push({ stage, count });
+                });
+                return acc;
+              }, [])}
+              stages={['Screening', 'Submit to Client', 'Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired']}
+            />
+          </div>
         </div>
       )}
 

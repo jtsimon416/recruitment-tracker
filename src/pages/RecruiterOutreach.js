@@ -15,6 +15,7 @@ import DocumentViewerModal from '../components/DocumentViewerModal';
 // --- ADDED: Imports for the new Date/Time Picker ---
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import MyOutreachTab from '../components/MyOutreachTab'; // ADDED: Import the new tab component
 // ---------------------------------------------------
 
 import '../styles/RecruiterOutreach.css';
@@ -182,7 +183,7 @@ const MyActiveRoles = ({ userProfile }) => {
         .eq('status', 'Open'); // No ordering here, we sort later
 
       if (positionsError) throw positionsError;
-      
+
       const openPositions = positionsData || [];
       console.log('✅ Fetched all open roles:', openPositions);
       setActiveRoles(openPositions); // Set unsorted roles first
@@ -192,7 +193,7 @@ const MyActiveRoles = ({ userProfile }) => {
         const positionIds = openPositions.map(p => p.id);
         await fetchRoleInstructionsForPositions(positionIds);
       }
-      
+
     } catch (error) {
       console.error('❌ Error fetching active roles:', error);
     } finally {
@@ -247,7 +248,7 @@ const MyActiveRoles = ({ userProfile }) => {
       // If only B has instructions, it comes first
       if (mostRecentB) return 1;
       // If neither has instructions, keep original order
-      return 0; 
+      return 0;
     });
   }, [activeRoles, roleInstructions]);
 
@@ -347,7 +348,7 @@ const MyActiveRoles = ({ userProfile }) => {
           {/* UPDATED: Map over sortedActiveRoles instead of activeRoles */}
           {sortedActiveRoles.map((position) => {
             const documents = roleInstructions[position.id] || [];
-            
+
             return (
               <motion.div
                 key={position.id}
@@ -472,11 +473,11 @@ const MyCallsDashboard = ({ outreachActivities }) => {
   // Filter calls scheduled this week
   const callsThisWeek = outreachActivities.filter(activity => {
     if (!activity.scheduled_call_date) return false;
-    
+
     // --- MODIFIED: Added check for activity status ---
     if (activity.activity_status !== 'call_scheduled') return false;
     // -------------------------------------------------
-    
+
     const callDate = new Date(activity.scheduled_call_date);
     return callDate > endOfToday && callDate <= endOfWeek;
   });
@@ -730,7 +731,7 @@ function RecruiterOutreach() {
 
   // Edit Modal State
   const [editingActivity, setEditingActivity] = useState(null);
-  
+
   // --- ADDED: State for new note in edit modal ---
   const [newNoteText, setNewNoteText] = useState('');
   // ----------------------------------------------------
@@ -1127,7 +1128,7 @@ function RecruiterOutreach() {
     sorted.sort((a, b) => {
       let aValue, bValue;
 
-      switch(sortConfig.key) {
+      switch (sortConfig.key) {
         case 'name':
           aValue = (a.candidate_name || '').toLowerCase();
           bValue = (b.candidate_name || '').toLowerCase();
@@ -1196,47 +1197,34 @@ function RecruiterOutreach() {
     }));
   };
 
-  // --- MODIFIED: Quick filters are now toggleable ---
+  // --- MODIFIED: Quick filters are now toggleable and accumulative ---
   const setQuickFilter = (type) => {
-    switch(type) {
+    switch (type) {
       case 'today':
-        setFilters(prev => ({ 
-          ...prev, 
-          // If it's already 'today', toggle it off, otherwise set it to 'today'
-          dateRange: prev.dateRange === 'today' ? '' : 'today', 
-          // Deactivate other quick filters
-          followup_needed: false,
-          rating: '' 
+        setFilters(prev => ({
+          ...prev,
+          // Toggle 'today', but if switching from 'week', just set to 'today'
+          dateRange: prev.dateRange === 'today' ? '' : 'today'
         }));
         break;
       case 'week':
-        setFilters(prev => ({ 
-          ...prev, 
-          // If it's already 'week', toggle it off, otherwise set it to 'week'
-          dateRange: prev.dateRange === 'week' ? '' : 'week', 
-          // Deactivate other quick filters
-          followup_needed: false,
-          rating: '' 
+        setFilters(prev => ({
+          ...prev,
+          // Toggle 'week', but if switching from 'today', just set to 'week'
+          dateRange: prev.dateRange === 'week' ? '' : 'week'
         }));
         break;
       case 'followup':
-        setFilters(prev => ({ 
-          ...prev, 
-          // Toggle followup_needed
-          followup_needed: !prev.followup_needed,
-          // Deactivate other quick filters
-          dateRange: '',
-          rating: ''
+        setFilters(prev => ({
+          ...prev,
+          followup_needed: !prev.followup_needed
         }));
         break;
       case 'hotleads':
-        setFilters(prev => ({ 
-          ...prev, 
-          // If it's already '5', toggle it off, otherwise set it to '5'
-          rating: prev.rating === '5' ? '' : '5',
-          // Deactivate other quick filters
-          dateRange: '',
-          followup_needed: false
+        setFilters(prev => ({
+          ...prev,
+          // Toggle rating filter
+          rating: prev.rating === '5' ? '' : '5'
         }));
         break;
       case 'clear':
@@ -1305,7 +1293,7 @@ function RecruiterOutreach() {
       notes: notesArray // --- MODIFIED: Set as array ---
     });
     setNewNoteText(''); // Clear new note text when opening modal
-    
+
     // --- ADDED: Reset inline edit state ---
     setEditingNoteIndex(null);
     setEditingNoteText('');
@@ -1357,31 +1345,31 @@ function RecruiterOutreach() {
       // Find the activity details first
       const activityToEdit = outreachActivities.find(act => act.id === activityId);
       if (activityToEdit) {
-        
+
         // --- ADDED: Immediately update status before opening modal ---
         try {
-            const updates = {
-                activity_status: newStage,
-                updated_at: new Date().toISOString(),
-                // Auto-set followup needed
-                followup_needed: false 
-            };
-            const { success } = await updateOutreachActivity(activityId, updates);
-            if (!success) {
-                throw new Error("Failed to pre-update status.");
-            }
-            // Update the local state immediately for the modal
-            setOutreachActivities(prev => prev.map(act => act.id === activityId ? {...act, ...updates} : act));
-             
-            // Open the edit modal
-            handleEdit({...activityToEdit, ...updates}); // Pass updated activity to modal
+          const updates = {
+            activity_status: newStage,
+            updated_at: new Date().toISOString(),
+            // Auto-set followup needed
+            followup_needed: false
+          };
+          const { success } = await updateOutreachActivity(activityId, updates);
+          if (!success) {
+            throw new Error("Failed to pre-update status.");
+          }
+          // Update the local state immediately for the modal
+          setOutreachActivities(prev => prev.map(act => act.id === activityId ? { ...act, ...updates } : act));
+
+          // Open the edit modal
+          handleEdit({ ...activityToEdit, ...updates }); // Pass updated activity to modal
         } catch (error) {
-             console.error("Error pre-updating status:", error);
-             showConfirmation({
-               type: 'error',
-               title: 'Error',
-               message: 'Could not update status before opening modal. Please try again.'
-             });
+          console.error("Error pre-updating status:", error);
+          showConfirmation({
+            type: 'error',
+            title: 'Error',
+            message: 'Could not update status before opening modal. Please try again.'
+          });
         }
         // ------------------------------------------------------------------
 
@@ -1453,15 +1441,15 @@ function RecruiterOutreach() {
     } else {
       // SCENARIO 1: New Candidate
       // Redirect to Talent Pool with state
-      navigate('/talent-pool', { 
-        state: { 
+      navigate('/talent-pool', {
+        state: {
           fromOutreach: {
             name: outreach.candidate_name,
             linkedin_url: outreach.linkedin_url,
             notes: outreach.notes, // This will pass the notes array
             position_id: outreach.position_id
           }
-        } 
+        }
       });
     }
   };
@@ -1535,6 +1523,14 @@ function RecruiterOutreach() {
         >
           Sourcing & Outreach
         </button>
+        <button
+          className={activeTab === 'ai-search' ? 'active' : ''}
+          onClick={() => setActiveTab('ai-search')}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            AI Search Generator <span style={{ fontSize: '0.8em' }}>✨</span>
+          </span>
+        </button>
       </div>
 
       {activeTab === 'roles' && (
@@ -1542,36 +1538,42 @@ function RecruiterOutreach() {
           {/* MY ACTIVE ROLES Section */}
           <MyActiveRoles userProfile={userProfile} />
           {/* --- ADDED: Gone Cold Notification Banner --- */}
-      {showGoneColdBanner && goingColdOutreach.length > 0 && (
-        <div className="gone-cold-notification-banner">
-          <div className="banner-content">
-            <div className="banner-icon">❄️</div>
-            <div className="banner-message">
-              <strong>The following contacts have been automatically moved to 'Gone Cold' (no response in 5+ days):</strong>
-              <span className="banner-names">
-                {goingColdOutreach.map((activity, index) => (
-                  <span key={activity.id}>
-                    {activity.candidate_name || 'Unknown'}
-                    {index < goingColdOutreach.length - 1 ? ', ' : ''}
+          {showGoneColdBanner && goingColdOutreach.length > 0 && (
+            <div className="gone-cold-notification-banner">
+              <div className="banner-content">
+                <div className="banner-icon">❄️</div>
+                <div className="banner-message">
+                  <strong>The following contacts have been automatically moved to 'Gone Cold' (no response in 5+ days):</strong>
+                  <span className="banner-names">
+                    {goingColdOutreach.map((activity, index) => (
+                      <span key={activity.id}>
+                        {activity.candidate_name || 'Unknown'}
+                        {index < goingColdOutreach.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}
                   </span>
-                ))}
-              </span>
-              <p className="banner-note">Don't worry - if they reply later, you can still update their status!</p>
+                  <p className="banner-note">Don't worry - if they reply later, you can still update their status!</p>
+                </div>
+              </div>
+              <button
+                className="banner-close-btn"
+                onClick={() => setShowGoneColdBanner(false)}
+                title="Dismiss notification"
+              >
+                <X size={20} />
+              </button>
             </div>
-          </div>
-          <button
-            className="banner-close-btn"
-            onClick={() => setShowGoneColdBanner(false)}
-            title="Dismiss notification"
-          >
-            <X size={20} />
-          </button>
-        </div>
-      )}
-      {/* -------------------------------------------- */}
+          )}
+          {/* -------------------------------------------- */}
 
           {/* Calls Dashboard */}
           <MyCallsDashboard outreachActivities={outreachActivities} />
+        </div>
+      )}
+
+      {activeTab === 'ai-search' && (
+        <div className="tab-content">
+          <MyOutreachTab />
         </div>
       )}
 
@@ -1580,500 +1582,500 @@ function RecruiterOutreach() {
           <div className="outreach-table-section">
             {/* Bulk Upload Card */}
             <div className="bulk-upload-card">
-        <h3><Upload size={20} /> BULK UPLOAD OUTREACH</h3>
+              <h3><Upload size={20} /> BULK UPLOAD OUTREACH</h3>
 
-        {!bulkPreview ? (
-          <>
-            <textarea
-              className="bulk-upload-textarea"
-              placeholder="Paste LinkedIn URLs (one per line):&#10;https://linkedin.com/in/john-smith-12345&#10;https://linkedin.com/in/jane-doe-67890&#10;https://linkedin.com/in/mike-johnson-54321"
-              value={bulkUploadText}
-              onChange={(e) => setBulkUploadText(e.target.value)}
-            />
+              {!bulkPreview ? (
+                <>
+                  <textarea
+                    className="bulk-upload-textarea"
+                    placeholder="Paste LinkedIn URLs (one per line):&#10;https://linkedin.com/in/john-smith-12345&#10;https://linkedin.com/in/jane-doe-67890&#10;https://linkedin.com/in/mike-johnson-54321"
+                    value={bulkUploadText}
+                    onChange={(e) => setBulkUploadText(e.target.value)}
+                  />
 
-            <select
-              className="bulk-upload-position-select"
-              value={selectedBulkPosition}
-              onChange={(e) => setSelectedBulkPosition(e.target.value)}
-            >
-              <option value="">Select Position</option>
-              {openPositions.map(pos => (
-                <option key={pos.id} value={pos.id}>
-                  {pos.title} @ {pos.clients?.company_name || 'N/A'}
-                </option>
-              ))}
-            </select>
+                  <select
+                    className="bulk-upload-position-select"
+                    value={selectedBulkPosition}
+                    onChange={(e) => setSelectedBulkPosition(e.target.value)}
+                  >
+                    <option value="">Select Position</option>
+                    {openPositions.map(pos => (
+                      <option key={pos.id} value={pos.id}>
+                        {pos.title} @ {pos.clients?.company_name || 'N/A'}
+                      </option>
+                    ))}
+                  </select>
 
-            <button
-              className="btn-process-bulk"
-              onClick={processBulkURLs}
-              disabled={!bulkUploadText.trim() || !selectedBulkPosition}
-            >
-              <Upload size={16} />
-              Process & Add ({bulkUploadText.split('\n').filter(l => l.trim() && l.includes('linkedin.com')).length} URLs detected)
-            </button>
-          </>
-        ) : (
-          <div className="bulk-upload-preview">
-            <h4>✅ Preview ({bulkPreview.length} contacts):</h4>
-            <ul>
-              {bulkPreview.map(contact => (
-                <li key={contact.id}>
-                  {contact.editable ? (
-                    <input
-                      type="text"
-                      value={contact.name}
-                      onChange={(e) => editBulkName(contact.id, e.target.value)}
-                      style={{
-                        background: 'var(--secondary-bg)',
-                        border: '1px solid var(--border-color)',
-                        color: 'var(--text-primary)',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '4px'
-                      }}
-                    />
-                  ) : (
-                    contact.name
-                  )}
-                </li>
-              ))}
-            </ul>
-            <div className="bulk-upload-actions">
-              <button className="btn-confirm-bulk" onClick={confirmBulkUpload} disabled={processingBulk || checkingDuplicates}>
-                {checkingDuplicates ? 'Checking for duplicates...' : processingBulk ? 'Adding...' : '✅ Confirm & Add All'}
-              </button>
-              <button className="btn-cancel-bulk" onClick={cancelBulkUpload}>
-                ❌ Cancel
-              </button>
+                  <button
+                    className="btn-process-bulk"
+                    onClick={processBulkURLs}
+                    disabled={!bulkUploadText.trim() || !selectedBulkPosition}
+                  >
+                    <Upload size={16} />
+                    Process & Add ({bulkUploadText.split('\n').filter(l => l.trim() && l.includes('linkedin.com')).length} URLs detected)
+                  </button>
+                </>
+              ) : (
+                <div className="bulk-upload-preview">
+                  <h4>✅ Preview ({bulkPreview.length} contacts):</h4>
+                  <ul>
+                    {bulkPreview.map(contact => (
+                      <li key={contact.id}>
+                        {contact.editable ? (
+                          <input
+                            type="text"
+                            value={contact.name}
+                            onChange={(e) => editBulkName(contact.id, e.target.value)}
+                            style={{
+                              background: 'var(--secondary-bg)',
+                              border: '1px solid var(--border-color)',
+                              color: 'var(--text-primary)',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '4px'
+                            }}
+                          />
+                        ) : (
+                          contact.name
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="bulk-upload-actions">
+                    <button className="btn-confirm-bulk" onClick={confirmBulkUpload} disabled={processingBulk || checkingDuplicates}>
+                      {checkingDuplicates ? 'Checking for duplicates...' : processingBulk ? 'Adding...' : '✅ Confirm & Add All'}
+                    </button>
+                    <button className="btn-cancel-bulk" onClick={cancelBulkUpload}>
+                      ❌ Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
-      </div>
             {/* Filters Card */}
             <div className="filters-card">
-        <h3><Filter size={20} /> FILTERS & SEARCH</h3>
+              <h3><Filter size={20} /> FILTERS & SEARCH</h3>
 
-        <div className="filters-grid">
-          <div className="filter-group">
-            <label>Position:</label>
-            <select
-              className="filter-select"
-              value={filters.positionId}
-              onChange={(e) => setFilters(prev => ({ ...prev, positionId: e.target.value }))}
-            >
-              <option value="">All Positions</option>
-              {openPositions.map(pos => (
-                <option key={pos.id} value={pos.id}>
-                  {pos.title}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div className="filters-grid">
+                <div className="filter-group">
+                  <label>Position:</label>
+                  <select
+                    className="filter-select"
+                    value={filters.positionId}
+                    onChange={(e) => setFilters(prev => ({ ...prev, positionId: e.target.value }))}
+                  >
+                    <option value="">All Positions</option>
+                    {openPositions.map(pos => (
+                      <option key={pos.id} value={pos.id}>
+                        {pos.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <div className="filter-group">
-            <label>Status:</label>
-            <select
-              className="filter-select"
-              value={filters.status}
-              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-            >
-              <option value="">All Statuses</option>
-              {/* --- MODIFIED: Using the stages array for consistency --- */}
-              {outreachStages.map(stage => (
-                <option key={stage.value} value={stage.value}>{stage.label}</option>
-              ))}
-            </select>
-          </div>
+                <div className="filter-group">
+                  <label>Status:</label>
+                  <select
+                    className="filter-select"
+                    value={filters.status}
+                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                  >
+                    <option value="">All Statuses</option>
+                    {/* --- MODIFIED: Using the stages array for consistency --- */}
+                    {outreachStages.map(stage => (
+                      <option key={stage.value} value={stage.value}>{stage.label}</option>
+                    ))}
+                  </select>
+                </div>
 
-          <div className="filter-group">
-            <label>Rating:</label>
-            <select
-              className="filter-select"
-              value={filters.rating}
-              onChange={(e) => setFilters(prev => ({ ...prev, rating: e.target.value }))}
-            >
-              <option value="">All Ratings</option>
-              <option value="5">5 Stars</option>
-              <option value="4">4+ Stars</option>
-              <option value="3">3+ Stars</option>
-            </select>
-          </div>
+                <div className="filter-group">
+                  <label>Rating:</label>
+                  <select
+                    className="filter-select"
+                    value={filters.rating}
+                    onChange={(e) => setFilters(prev => ({ ...prev, rating: e.target.value }))}
+                  >
+                    <option value="">All Ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4+ Stars</option>
+                    <option value="3">3+ Stars</option>
+                  </select>
+                </div>
 
-          <div className="filter-group">
-            <label>Search:</label>
-            <input
-              type="text"
-              className="filter-search-input"
-              placeholder="Search by name..."
-              value={filters.searchQuery}
-              onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
-            />
-          </div>
-        </div>
+                <div className="filter-group">
+                  <label>Search:</label>
+                  <input
+                    type="text"
+                    className="filter-search-input"
+                    placeholder="Search by name..."
+                    value={filters.searchQuery}
+                    onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
+                  />
+                </div>
+              </div>
 
-        {/* --- MODIFIED: Buttons are now wired to the updated toggle logic --- */}
-        <div className="quick-filters">
-          <button
-            className={`quick-filter-btn ${filters.dateRange === 'today' ? 'active' : ''}`}
-            onClick={() => setQuickFilter('today')}
-          >
-            Today
-          </button>
-          <button
-            className={`quick-filter-btn ${filters.dateRange === 'week' ? 'active' : ''}`}
-            onClick={() => setQuickFilter('week')}
-          >
-            This Week
-          </button>
-          <button
-            className={`quick-filter-btn ${filters.followup_needed ? 'active' : ''}`}
-            onClick={() => setQuickFilter('followup')}
-          >
-            Needs Follow-up
-          </button>
-          <button
-            className={`quick-filter-btn ${filters.rating === '5' ? 'active' : ''}`}
-            onClick={() => setQuickFilter('hotleads')}
-          >
-            Hot Leads (5⭐)
-          </button>
-          <button
-            className="quick-filter-btn"
-            onClick={() => setQuickFilter('clear')}
-          >
-            Clear All
-          </button>
-        </div>
-      </div>
+              {/* --- MODIFIED: Buttons are now wired to the updated toggle logic --- */}
+              <div className="quick-filters">
+                <button
+                  className={`quick-filter-btn ${filters.dateRange === 'today' ? 'active' : ''}`}
+                  onClick={() => setQuickFilter('today')}
+                >
+                  Today
+                </button>
+                <button
+                  className={`quick-filter-btn ${filters.dateRange === 'week' ? 'active' : ''}`}
+                  onClick={() => setQuickFilter('week')}
+                >
+                  This Week
+                </button>
+                <button
+                  className={`quick-filter-btn ${filters.followup_needed ? 'active' : ''}`}
+                  onClick={() => setQuickFilter('followup')}
+                >
+                  Needs Follow-up
+                </button>
+                <button
+                  className={`quick-filter-btn ${filters.rating === '5' ? 'active' : ''}`}
+                  onClick={() => setQuickFilter('hotleads')}
+                >
+                  Hot Leads (5⭐)
+                </button>
+                <button
+                  className="quick-filter-btn"
+                  onClick={() => setQuickFilter('clear')}
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
             {/* Table */}
             <div className="outreach-table-container">
-        <div className="outreach-table-header">
-          <h3>📋 MY OUTREACH ACTIVITY</h3>
-          <span className="outreach-table-count">({sortedOutreach.length} contacts)</span>
-        </div>
+              <div className="outreach-table-header">
+                <h3>📋 MY OUTREACH ACTIVITY</h3>
+                <span className="outreach-table-count">({sortedOutreach.length} contacts)</span>
+              </div>
 
-        {paginatedOutreach.length === 0 ? (
-          <div className="empty-outreach-state">
-            <h3>No outreach activities found</h3>
-            <p>Use the bulk upload above to add contacts</p>
-          </div>
-        ) : (
-          <>
-            <table className="outreach-table">
-              <thead>
-                <tr>
-                  <th className="sortable" onClick={() => handleSort('name')}>
-                    Name
-                    {sortConfig.key === 'name' && (
-                      <span className="sort-indicator">
-                        {sortConfig.direction === 'asc' ? '▲' : '▼'}
-                      </span>
-                    )}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort('position')}>
-                    Position
-                    {sortConfig.key === 'position' && (
-                      <span className="sort-indicator">
-                        {sortConfig.direction === 'asc' ? '▲' : '▼'}
-                      </span>
-                    )}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort('status')}>
-                    Status
-                    {sortConfig.key === 'status' && (
-                      <span className="sort-indicator">
-                        {sortConfig.direction === 'asc' ? '▲' : '▼'}
-                      </span>
-                    )}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort('rating')}>
-                    Rating
-                    {sortConfig.key === 'rating' && (
-                      <span className="sort-indicator">
-                        {sortConfig.direction === 'asc' ? '▲' : '▼'}
-                      </span>
-                    )}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort('created_at')}>
-                    Last Activity
-                    {sortConfig.key === 'created_at' && (
-                      <span className="sort-indicator">
-                        {sortConfig.direction === 'asc' ? '▲' : '▼'}
-                      </span>
-                    )}
-                  </th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedOutreach.map((activity) => {
-                  const status = getStatusBadge(activity.activity_status);
-                  const isExpanded = expandedRowId === activity.id;
-
-                  return (
-                    <React.Fragment key={activity.id}>
-                      <tr
-                        className={isExpanded ? 'expanded' : ''}
-                        onClick={() => toggleRowExpansion(activity.id)}
-                      >
-                        <td className="candidate-name-cell">
-                          {activity.candidate_name || 'Unknown'}
-                        </td>
-                        <td className="position-cell">
-                          {activity.positions?.title || 'N/A'}
-                        </td>
-                        <td>
-                          <span className={`status-badge ${status.class}`}>
-                            {status.emoji} {status.label}
-                          </span>
-                        </td>
-                        <td>
-                          <StarRatingDisplay rating={activity.rating || 0} />
-                        </td>
-                        <td className="last-activity-cell">
-                          {getTimeAgo(activity.created_at)}
-                        </td>
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <div className="actions-cell">
-                            
-                            {/* --- MODIFIED: Quick Stage-Change Button/Dropdown --- */}
-                            {quickEditingStageId === activity.id ? (
-                              <select
-                                value={activity.activity_status}
-                                onClick={(e) => e.stopPropagation()} // Prevent row click
-                                onChange={(e) => {
-                                  e.stopPropagation(); // Prevent row click
-                                  // Pass activity.id instead of the full activity object
-                                  handleQuickStageChange(activity.id, e.target.value); 
-                                }}
-                                onBlur={(e) => { // Close when clicking away
-                                  e.stopPropagation();
-                                  setQuickEditingStageId(null);
-                                }}
-                                autoFocus
-                                style={{ // Inline styles to match theme
-                                  backgroundColor: 'var(--secondary-bg)',
-                                  color: 'var(--text-primary)',
-                                  border: '1px solid var(--border-color)',
-                                  borderRadius: '4px',
-                                  padding: '2px',
-                                  marginRight: '4px'
-                                }}
-                              >
-                                {outreachStages.map(stage => (
-                                  <option key={stage.value} value={stage.value}>
-                                    {stage.label}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <button
-                                className="btn-action"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent row click
-                                  setQuickEditingStageId(activity.id);
-                                }}
-                                title="Change Stage"
-                              >
-                                <ArrowRightLeft size={16} />
-                              </button>
-                            )}
-                            {/* -------------------------------------------------- */}
-                            
-                            <a
-                              href={ensureProtocol(activity.linkedin_url)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn-action"
-                              title="View LinkedIn"
-                            >
-                              <ExternalLink size={16} />
-                            </a>
-                            <button
-                              className="btn-action"
-                              onClick={() => handleEdit(activity)}
-                              title="Edit"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              className="btn-action delete"
-                              onClick={() => handleDelete(activity.id)}
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                      {/* --- NEW: Gone Cold Warning & Button --- */}
-                      {goingColdOutreach.some(coldActivity => coldActivity.id === activity.id) &&
-                        activity.activity_status !== 'gone_cold' &&
-                        activity.activity_status !== 'ready_for_submission' && (
-                          <div className="gone-cold-warning-row">
-                            <div className="gone-cold-warning-text">
-                              <AlertCircle size={16} />
-                              <span>Going Cold (7+ days no reply)</span>
-                            </div>
-                            <button className="btn-mark-cold" onClick={() => handleQuickStageChange(activity.id, 'gone_cold')}>
-                              Mark as Gone Cold
-                            </button>
-                          </div>
-                      )}
-                        </td>
-                      </tr>
+              {paginatedOutreach.length === 0 ? (
+                <div className="empty-outreach-state">
+                  <h3>No outreach activities found</h3>
+                  <p>Use the bulk upload above to add contacts</p>
+                </div>
+              ) : (
+                <>
+                  <table className="outreach-table">
+                    <thead>
                       <tr>
-                        <td colSpan="6" className="convert-to-pipeline-cell">
-                          {activity.activity_status === 'ready_for_submission' && (
-                            <button className="btn-primary" onClick={() => handleConvertToPipeline(activity)}>Convert to Pipeline</button>
+                        <th className="sortable" onClick={() => handleSort('name')}>
+                          Name
+                          {sortConfig.key === 'name' && (
+                            <span className="sort-indicator">
+                              {sortConfig.direction === 'asc' ? '▲' : '▼'}
+                            </span>
                           )}
-                        </td>
+                        </th>
+                        <th className="sortable" onClick={() => handleSort('position')}>
+                          Position
+                          {sortConfig.key === 'position' && (
+                            <span className="sort-indicator">
+                              {sortConfig.direction === 'asc' ? '▲' : '▼'}
+                            </span>
+                          )}
+                        </th>
+                        <th className="sortable" onClick={() => handleSort('status')}>
+                          Status
+                          {sortConfig.key === 'status' && (
+                            <span className="sort-indicator">
+                              {sortConfig.direction === 'asc' ? '▲' : '▼'}
+                            </span>
+                          )}
+                        </th>
+                        <th className="sortable" onClick={() => handleSort('rating')}>
+                          Rating
+                          {sortConfig.key === 'rating' && (
+                            <span className="sort-indicator">
+                              {sortConfig.direction === 'asc' ? '▲' : '▼'}
+                            </span>
+                          )}
+                        </th>
+                        <th className="sortable" onClick={() => handleSort('created_at')}>
+                          Last Activity
+                          {sortConfig.key === 'created_at' && (
+                            <span className="sort-indicator">
+                              {sortConfig.direction === 'asc' ? '▲' : '▼'}
+                            </span>
+                          )}
+                        </th>
+                        <th>Actions</th>
                       </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedOutreach.map((activity) => {
+                        const status = getStatusBadge(activity.activity_status);
+                        const isExpanded = expandedRowId === activity.id;
 
-                      {isExpanded && (
-                        <tr className="expanded-row-details">
-                          <td colSpan="6">
-                            <div className="expanded-row-content">
-                              <div className="detail-section">
-                                <h4>Contact Info</h4>
-                                <div className="detail-item">
-                                  <span className="detail-label">Name:</span>
-                                  <span className="detail-value">{activity.candidate_name || 'N/A'}</span>
-                                </div>
-                                <div className="detail-item">
-                                  <span className="detail-label">LinkedIn:</span>
+                        return (
+                          <React.Fragment key={activity.id}>
+                            <tr
+                              className={isExpanded ? 'expanded' : ''}
+                              onClick={() => toggleRowExpansion(activity.id)}
+                            >
+                              <td className="candidate-name-cell">
+                                {activity.candidate_name || 'Unknown'}
+                              </td>
+                              <td className="position-cell">
+                                {activity.positions?.title || 'N/A'}
+                              </td>
+                              <td>
+                                <span className={`status-badge ${status.class}`}>
+                                  {status.emoji} {status.label}
+                                </span>
+                              </td>
+                              <td>
+                                <StarRatingDisplay rating={activity.rating || 0} />
+                              </td>
+                              <td className="last-activity-cell">
+                                {getTimeAgo(activity.created_at)}
+                              </td>
+                              <td onClick={(e) => e.stopPropagation()}>
+                                <div className="actions-cell">
+
+                                  {/* --- MODIFIED: Quick Stage-Change Button/Dropdown --- */}
+                                  {quickEditingStageId === activity.id ? (
+                                    <select
+                                      value={activity.activity_status}
+                                      onClick={(e) => e.stopPropagation()} // Prevent row click
+                                      onChange={(e) => {
+                                        e.stopPropagation(); // Prevent row click
+                                        // Pass activity.id instead of the full activity object
+                                        handleQuickStageChange(activity.id, e.target.value);
+                                      }}
+                                      onBlur={(e) => { // Close when clicking away
+                                        e.stopPropagation();
+                                        setQuickEditingStageId(null);
+                                      }}
+                                      autoFocus
+                                      style={{ // Inline styles to match theme
+                                        backgroundColor: 'var(--secondary-bg)',
+                                        color: 'var(--text-primary)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '4px',
+                                        padding: '2px',
+                                        marginRight: '4px'
+                                      }}
+                                    >
+                                      {outreachStages.map(stage => (
+                                        <option key={stage.value} value={stage.value}>
+                                          {stage.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    <button
+                                      className="btn-action"
+                                      onClick={(e) => {
+                                        e.stopPropagation(); // Prevent row click
+                                        setQuickEditingStageId(activity.id);
+                                      }}
+                                      title="Change Stage"
+                                    >
+                                      <ArrowRightLeft size={16} />
+                                    </button>
+                                  )}
+                                  {/* -------------------------------------------------- */}
+
                                   <a
                                     href={ensureProtocol(activity.linkedin_url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="detail-value link"
+                                    className="btn-action"
+                                    title="View LinkedIn"
                                   >
-                                    View Profile <ExternalLink size={14} />
+                                    <ExternalLink size={16} />
                                   </a>
+                                  <button
+                                    className="btn-action"
+                                    onClick={() => handleEdit(activity)}
+                                    title="Edit"
+                                  >
+                                    <Edit size={16} />
+                                  </button>
+                                  <button
+                                    className="btn-action delete"
+                                    onClick={() => handleDelete(activity.id)}
+                                    title="Delete"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
                                 </div>
-                              </div>
+                                {/* --- NEW: Gone Cold Warning & Button --- */}
+                                {goingColdOutreach.some(coldActivity => coldActivity.id === activity.id) &&
+                                  activity.activity_status !== 'gone_cold' &&
+                                  activity.activity_status !== 'ready_for_submission' && (
+                                    <div className="gone-cold-warning-row">
+                                      <div className="gone-cold-warning-text">
+                                        <AlertCircle size={16} />
+                                        <span>Going Cold (7+ days no reply)</span>
+                                      </div>
+                                      <button className="btn-mark-cold" onClick={() => handleQuickStageChange(activity.id, 'gone_cold')}>
+                                        Mark as Gone Cold
+                                      </button>
+                                    </div>
+                                  )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colSpan="6" className="convert-to-pipeline-cell">
+                                {activity.activity_status === 'ready_for_submission' && (
+                                  <button className="btn-primary" onClick={() => handleConvertToPipeline(activity)}>Convert to Pipeline</button>
+                                )}
+                              </td>
+                            </tr>
 
-                              <div className="detail-section">
-                                <h4>Activity Details</h4>
-                                <div className="detail-item">
-                                  <span className="detail-label">Position:</span>
-                                  <span className="detail-value">{activity.positions?.title || 'N/A'}</span>
-                                </div>
-                                <div className="detail-item">
-                                  <span className="detail-label">Status:</span>
-                                  <span className="detail-value">{status.label}</span>
-                                </div>
-                                <div className="detail-item">
-                                  <span className="detail-label">Rating:</span>
-                                  <span className="detail-value">
-                                    <StarRatingDisplay rating={activity.rating || 0} />
-                                  </span>
-                                </div>
-                              </div>
+                            {isExpanded && (
+                              <tr className="expanded-row-details">
+                                <td colSpan="6">
+                                  <div className="expanded-row-content">
+                                    <div className="detail-section">
+                                      <h4>Contact Info</h4>
+                                      <div className="detail-item">
+                                        <span className="detail-label">Name:</span>
+                                        <span className="detail-value">{activity.candidate_name || 'N/A'}</span>
+                                      </div>
+                                      <div className="detail-item">
+                                        <span className="detail-label">LinkedIn:</span>
+                                        <a
+                                          href={ensureProtocol(activity.linkedin_url)}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="detail-value link"
+                                        >
+                                          View Profile <ExternalLink size={14} />
+                                        </a>
+                                      </div>
+                                    </div>
 
-                              <div className="detail-section">
-                                <h4>Timeline</h4>
-                                <div className="detail-item">
-                                  <span className="detail-label">Created:</span>
-                                  <span className="detail-value">
-                                    {new Date(activity.created_at).toLocaleString()}
-                                  </span>
-                                </div>
-                                <div className="detail-item">
-                                  <span className="detail-label">Last Updated:</span>
-                                  <span className="detail-value">
-                                    {activity.updated_at ? new Date(activity.updated_at).toLocaleString() : 'N/A'}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* --- MODIFIED: Conversation Notes Display --- */}
-                              <div className="notes-section">
-                                <h4>Conversation Log</h4>
-                                <div className="notes-content" style={{ maxHeight: '250px', overflowY: 'auto' }}>
-                                  {(!activity.notes || !Array.isArray(activity.notes) || activity.notes.length === 0) ? (
-                                    <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No notes added yet</p>
-                                  ) : (
-                                    activity.notes.map((note, index) => (
-                                      <div key={index} className="conversation-note-item" style={{ 
-                                        marginBottom: '12px',
-                                        paddingLeft: '10px',
-                                        borderLeft: `3px solid ${note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)'}`
-                                      }}>
-                                        <strong style={{ 
-                                          color: note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)',
-                                          textTransform: 'capitalize'
-                                        }}>
-                                          {note.speaker === 'recruiter' ? 'Me' : note.speaker}:
-                                        </strong>
-                                        <span style={{ 
-                                          display: 'block', 
-                                          fontSize: '0.8rem', 
-                                          color: 'var(--text-secondary)',
-                                          marginBottom: '4px'
-                                        }}>
-                                          {note.timestamp ? new Date(note.timestamp).toLocaleString() : ''}
+                                    <div className="detail-section">
+                                      <h4>Activity Details</h4>
+                                      <div className="detail-item">
+                                        <span className="detail-label">Position:</span>
+                                        <span className="detail-value">{activity.positions?.title || 'N/A'}</span>
+                                      </div>
+                                      <div className="detail-item">
+                                        <span className="detail-label">Status:</span>
+                                        <span className="detail-value">{status.label}</span>
+                                      </div>
+                                      <div className="detail-item">
+                                        <span className="detail-label">Rating:</span>
+                                        <span className="detail-value">
+                                          <StarRatingDisplay rating={activity.rating || 0} />
                                         </span>
-                                        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{note.message}</p>
                                       </div>
-                                    ))
-                                  )}
-                                  
-                                  {/* Handle legacy string notes */}
-                                  {typeof activity.notes === 'string' && activity.notes.trim() !== '' && (
-                                    <div className="conversation-note-item" style={{ 
-                                        marginBottom: '12px',
-                                        paddingLeft: '10px',
-                                        borderLeft: `3px solid var(--text-secondary)`
-                                      }}>
-                                        <strong style={{ 
-                                          color: 'var(--text-secondary)',
-                                          textTransform: 'capitalize'
-                                        }}>
-                                          Legacy Note:
-                                        </strong>
-                                        <p style={{ margin: 0, whiteSpace: 'pre-wrap', marginTop: '4px' }}>{activity.notes}</p>
-                                      </div>
-                                  )}
-                                </div>
-                              </div>
-                              {/* --- END: Conversation Notes Display --- */}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+                                    </div>
 
-            {/* Pagination */}
-            <div className="table-pagination">
-              <span className="pagination-info">
-                Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, sortedOutreach.length)} of {sortedOutreach.length}
-              </span>
-              <div className="pagination-controls">
-                <button
-                  className="btn-page"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  ◀ Previous
-                </button>
-                <span className="btn-page active">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  className="btn-page"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next ▶
-                </button>
-              </div>
+                                    <div className="detail-section">
+                                      <h4>Timeline</h4>
+                                      <div className="detail-item">
+                                        <span className="detail-label">Created:</span>
+                                        <span className="detail-value">
+                                          {new Date(activity.created_at).toLocaleString()}
+                                        </span>
+                                      </div>
+                                      <div className="detail-item">
+                                        <span className="detail-label">Last Updated:</span>
+                                        <span className="detail-value">
+                                          {activity.updated_at ? new Date(activity.updated_at).toLocaleString() : 'N/A'}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* --- MODIFIED: Conversation Notes Display --- */}
+                                    <div className="notes-section">
+                                      <h4>Conversation Log</h4>
+                                      <div className="notes-content" style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                                        {(!activity.notes || !Array.isArray(activity.notes) || activity.notes.length === 0) ? (
+                                          <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No notes added yet</p>
+                                        ) : (
+                                          activity.notes.map((note, index) => (
+                                            <div key={index} className="conversation-note-item" style={{
+                                              marginBottom: '12px',
+                                              paddingLeft: '10px',
+                                              borderLeft: `3px solid ${note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)'}`
+                                            }}>
+                                              <strong style={{
+                                                color: note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)',
+                                                textTransform: 'capitalize'
+                                              }}>
+                                                {note.speaker === 'recruiter' ? 'Me' : note.speaker}:
+                                              </strong>
+                                              <span style={{
+                                                display: 'block',
+                                                fontSize: '0.8rem',
+                                                color: 'var(--text-secondary)',
+                                                marginBottom: '4px'
+                                              }}>
+                                                {note.timestamp ? new Date(note.timestamp).toLocaleString() : ''}
+                                              </span>
+                                              <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{note.message}</p>
+                                            </div>
+                                          ))
+                                        )}
+
+                                        {/* Handle legacy string notes */}
+                                        {typeof activity.notes === 'string' && activity.notes.trim() !== '' && (
+                                          <div className="conversation-note-item" style={{
+                                            marginBottom: '12px',
+                                            paddingLeft: '10px',
+                                            borderLeft: `3px solid var(--text-secondary)`
+                                          }}>
+                                            <strong style={{
+                                              color: 'var(--text-secondary)',
+                                              textTransform: 'capitalize'
+                                            }}>
+                                              Legacy Note:
+                                            </strong>
+                                            <p style={{ margin: 0, whiteSpace: 'pre-wrap', marginTop: '4px' }}>{activity.notes}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {/* --- END: Conversation Notes Display --- */}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+
+                  {/* Pagination */}
+                  <div className="table-pagination">
+                    <span className="pagination-info">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, sortedOutreach.length)} of {sortedOutreach.length}
+                    </span>
+                    <div className="pagination-controls">
+                      <button
+                        className="btn-page"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        ◀ Previous
+                      </button>
+                      <span className="btn-page active">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <button
+                        className="btn-page"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next ▶
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-          </>
-        )}
-      </div>
           </div>
         </div>
       )}
@@ -2174,18 +2176,18 @@ function RecruiterOutreach() {
                   </div>
                 </>
               )}
-              
+
               {/* --- MODIFIED: Conversation Notes Section with Edit/Delete --- */}
               <div className="form-group">
                 <label>Conversation Log</label>
-                
+
                 {/* Display existing notes */}
-                <div className="conversation-log-display" style={{ 
-                  maxHeight: '200px', 
-                  overflowY: 'auto', 
-                  border: '1px solid var(--border-color)', 
-                  borderRadius: '4px', 
-                  padding: '10px', 
+                <div className="conversation-log-display" style={{
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '4px',
+                  padding: '10px',
                   marginBottom: '10px',
                   backgroundColor: 'var(--primary-bg)'
                 }}>
@@ -2211,7 +2213,7 @@ function RecruiterOutreach() {
                                 className="btn-primary"
                                 style={{ padding: '2px 6px', fontSize: '0.8rem' }}
                                 onClick={() => {
-                                  const updatedNotes = editingActivity.notes.map((n, i) => 
+                                  const updatedNotes = editingActivity.notes.map((n, i) =>
                                     i === index ? { ...n, message: editingNoteText } : n
                                   );
                                   setEditingActivity(prev => ({ ...prev, notes: updatedNotes }));
@@ -2239,16 +2241,16 @@ function RecruiterOutreach() {
                           <>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div>
-                                <strong style={{ 
+                                <strong style={{
                                   color: note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)',
                                   textTransform: 'capitalize'
                                 }}>
                                   {note.speaker === 'recruiter' ? 'Me' : note.speaker}:
                                 </strong>
-                                <span style={{ 
-                                  display: 'block', 
-                                  fontSize: '0.8rem', 
-                                  color: 'var(--text-secondary)' 
+                                <span style={{
+                                  display: 'block',
+                                  fontSize: '0.8rem',
+                                  color: 'var(--text-secondary)'
                                 }}>
                                   {note.timestamp ? new Date(note.timestamp).toLocaleString() : ''}
                                 </span>
@@ -2291,7 +2293,7 @@ function RecruiterOutreach() {
                     // --- END: Modified loop ---
                   )}
                 </div>
-                
+
                 {/* Add new note (but disable if inline-editing) */}
                 <textarea
                   className="form-textarea"

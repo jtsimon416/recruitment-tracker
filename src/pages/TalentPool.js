@@ -104,98 +104,105 @@ const AdvancedFilterPanel = ({
 
   return (
     <div className="advanced-filter-panel">
-      <div className="filter-panel-header" onClick={() => setExpanded(!expanded)}>
+      <div className="filter-panel-header">
         <div className="filter-header-left">
           <Filter size={20} />
-          <h3>Advanced Filters</h3>
+          <h3>Filters</h3>
           {activeFilterCount > 0 && <span className="filter-count-badge">{activeFilterCount}</span>}
         </div>
+
+        {/* Always visible search bar */}
+        <div className="filter-header-search">
+          <input
+            type="text"
+            placeholder="Search candidates..."
+            className="header-search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
         <div className="filter-header-right">
           {activeFilterCount > 0 && (
             <button className="btn-clear-filters" onClick={(e) => { e.stopPropagation(); clearAllFilters(); }}>
               Clear All
             </button>
           )}
-          <button className="btn-toggle-panel">
+          <button className="btn-toggle-panel" onClick={() => setExpanded(!expanded)}>
             {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </button>
         </div>
       </div>
+
       {expanded && (
-        <div className="filter-panel-content-compact">
-          <div className="filter-row-compact">
-            <div className="filter-section" style={{ gridColumn: '1 / span 2' }}>
-              <label className="filter-section-label">Search Across All Fields</label>
-              <input type="text" placeholder="Search name, email, phone, notes..." className="filter-input-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-            </div>
-            <div className="filter-section">
-              <label className="filter-section-label">Quick Filter</label>
-              <div className="quick-filter-chips">
-                {quickFilters.map(qf => (
-                  <button key={qf.id} className={`quick-filter-chip ${activeQuickFilter === qf.id ? 'active' : ''}`} onClick={() => handleQuickFilter(qf.id)}>
-                    {qf.label}
-                    {activeQuickFilter === qf.id && <X size={14} style={{ marginLeft: '6px' }} />}
-                  </button>
-                ))}
+        <div className="filter-panel-content-grid">
+          {/* Column 1: Skills */}
+          <div className="filter-column">
+            <label className="filter-section-label">Skills</label>
+            <div className="skills-multiselect compact">
+              <div className="skills-search-box">
+                <span className="search-icon">🔍</span>
+                <input type="text" className="skills-search-input" placeholder="Filter skills..." value={skillSearchTerm} onChange={(e) => setSkillSearchTerm(e.target.value)} />
+                {skillSearchTerm && <button className="skills-search-clear" onClick={() => setSkillSearchTerm('')}>×</button>}
               </div>
-            </div>
-          </div>
-          <div className="filter-row-compact" style={{ gridTemplateColumns: '1fr' }}>
-            <div className="filter-section">
-              <label className="filter-section-label">Skills</label>
-              <div className="skills-multiselect">
-                <div className="skills-search-box">
-                  <span className="search-icon">🔍</span>
-                  <input type="text" className="skills-search-input" placeholder="Type to filter skills..." value={skillSearchTerm} onChange={(e) => setSkillSearchTerm(e.target.value)} />
-                  {skillSearchTerm && <button className="skills-search-clear" onClick={() => setSkillSearchTerm('')}>×</button>}
+              <select className="filter-select" onChange={(e) => { if (e.target.value && !selectedSkills.includes(e.target.value)) setSelectedSkills([...selectedSkills, e.target.value]); e.target.value = ''; }} value="">
+                <option value="">Select skills...</option>
+                {filteredSkills.length > 0 ? filteredSkills.map(skill => <option key={skill} value={skill} disabled={selectedSkills.includes(skill)}>{skill}</option>) : <option value="" disabled>No skills match</option>}
+              </select>
+              {selectedSkills.length > 0 && (
+                <div className="selected-skills-tags">
+                  {selectedSkills.map(skill => (
+                    <span key={skill} className="selected-skill-tag">{skill}<button onClick={() => handleSkillToggle(skill)}>×</button></span>
+                  ))}
                 </div>
-                {skillSearchTerm && <div className="skills-count-indicator">Showing {filteredSkills.length} of {uniqueSkills.length} skills</div>}
-                <select className="filter-select" onChange={(e) => { if (e.target.value && !selectedSkills.includes(e.target.value)) setSelectedSkills([...selectedSkills, e.target.value]); e.target.value = ''; }} value="">
-                  <option value="">Select skills to filter...</option>
-                  {filteredSkills.length > 0 ? filteredSkills.map(skill => <option key={skill} value={skill} disabled={selectedSkills.includes(skill)}>{skill}</option>) : <option value="" disabled>No skills match '{skillSearchTerm}'</option>}
-                </select>
-                {selectedSkills.length > 0 && (
-                  <div className="selected-skills-tags">
-                    {selectedSkills.map(skill => (
-                      <span key={skill} className="selected-skill-tag">{skill}<button onClick={() => handleSkillToggle(skill)}>×</button></span>
-                    ))}
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
-          <div className="filter-row-compact">
-            <div className="filter-section">
+
+          {/* Column 2: Properties (Location, Date) */}
+          <div className="filter-column">
+            <div className="filter-group">
               <label className="filter-section-label">Location</label>
               <select className="filter-select" value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
                 <option value="">All Locations</option>
                 {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
               </select>
             </div>
-            <div className="filter-section">
+            <div className="filter-group" style={{ marginTop: '15px' }}>
               <label className="filter-section-label">Date Added</label>
               <div className="date-range-inputs">
                 <input type="date" className="filter-date-input" value={dateRangeStart} onChange={(e) => setDateRangeStart(e.target.value)} />
-                <span className="date-separator">to</span>
+                <span className="date-separator">-</span>
                 <input type="date" className="filter-date-input" value={dateRangeEnd} onChange={(e) => setDateRangeEnd(e.target.value)} />
               </div>
             </div>
-            <div className="filter-section">
-              <label className="filter-section-label">Additional Filters</label>
-              <div className="toggle-filters">
-                <label className="toggle-filter-item">
-                  <input type="checkbox" checked={hasResumeFilter} onChange={(e) => setHasResumeFilter(e.target.checked)} />
-                  <span className="toggle-label">Has Resume</span>
-                </label>
-                <label className="toggle-filter-item">
-                  <input type="checkbox" checked={hasLinkedInProfileFilter} onChange={(e) => setHasLinkedInProfileFilter(e.target.checked)} />
-                  <span className="toggle-label">Has LinkedIn Profile</span>
-                </label>
-                <label className="toggle-filter-item">
-                  <input type="checkbox" checked={inPipelineFilter} onChange={(e) => setInPipelineFilter(e.target.checked)} />
-                  <span className="toggle-label">Currently in Pipeline</span>
-                </label>
-              </div>
+          </div>
+
+          {/* Column 3: Toggles & Quick Filters */}
+          <div className="filter-column">
+            <label className="filter-section-label">Quick Filters</label>
+            <div className="quick-filter-chips">
+              {quickFilters.map(qf => (
+                <button key={qf.id} className={`quick-filter-chip ${activeQuickFilter === qf.id ? 'active' : ''}`} onClick={() => handleQuickFilter(qf.id)}>
+                  {qf.label}
+                  {activeQuickFilter === qf.id && <X size={14} style={{ marginLeft: '6px' }} />}
+                </button>
+              ))}
+            </div>
+
+            <div className="toggle-filters" style={{ marginTop: '15px' }}>
+              <label className="toggle-filter-item">
+                <input type="checkbox" checked={hasResumeFilter} onChange={(e) => setHasResumeFilter(e.target.checked)} />
+                <span className="toggle-label">Has Resume</span>
+              </label>
+              <label className="toggle-filter-item">
+                <input type="checkbox" checked={hasLinkedInProfileFilter} onChange={(e) => setHasLinkedInProfileFilter(e.target.checked)} />
+                <span className="toggle-label">Has LinkedIn Profile</span>
+              </label>
+              <label className="toggle-filter-item">
+                <input type="checkbox" checked={inPipelineFilter} onChange={(e) => setInPipelineFilter(e.target.checked)} />
+                <span className="toggle-label">In Pipeline</span>
+              </label>
             </div>
           </div>
         </div>
@@ -208,7 +215,7 @@ function TalentPool() {
   const location = useLocation();
   const navigate = useNavigate();
   const { showConfirmation } = useConfirmation();
-  const { user, loadingSession, fetchAllOutreachRecords, refreshData } = useData();
+  const { user, loadingSession, fetchAllOutreachRecords, refreshData, normalizeLinkedInUrl } = useData();
   const [candidates, setCandidates] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
@@ -249,6 +256,7 @@ function TalentPool() {
   const [selectedSourcingStatuses, setSelectedSourcingStatuses] = useState([]);
   const [selectedSourcingRatings, setSelectedSourcingRatings] = useState([]);
   const [selectedSourcingRecruiters, setSelectedSourcingRecruiters] = useState([]);
+  const [selectedSourcingProfileTypes, setSelectedSourcingProfileTypes] = useState([]);
 
   const [editingCandidate, setEditingCandidate] = useState(null);
   const [candidateFormData, setCandidateFormData] = useState({
@@ -430,10 +438,14 @@ function TalentPool() {
       // Build candidate ID to outreach map for efficient lookups
       const candidateIdToOutreachMap = {};
       outreachRecords.forEach(outreach => {
-        // Find candidate by matching linkedin_url
-        const matchingCandidate = filtered.find(
-          c => c.linkedin_url?.toLowerCase() === outreach.linkedin_url?.toLowerCase()
+        // Find candidate by matching normalized linkedin_url
+        const outreachUrl = normalizeLinkedInUrl(outreach.linkedin_url);
+        if (!outreachUrl) return;
+
+        const matchingCandidate = filtered.find(c =>
+          normalizeLinkedInUrl(c.linkedin_url) === outreachUrl
         );
+
         if (matchingCandidate) {
           if (!candidateIdToOutreachMap[matchingCandidate.id]) {
             candidateIdToOutreachMap[matchingCandidate.id] = [];
@@ -509,6 +521,16 @@ function TalentPool() {
         });
         filtered = filtered.filter(c => matchingCandidateIds.has(c.id));
       }
+
+      // Filter by Profile Type (Shell vs Full)
+      if (selectedSourcingProfileTypes.length > 0) {
+        filtered = filtered.filter(c => {
+          const isShell = c.profile_type === 'shell';
+          if (selectedSourcingProfileTypes.includes('shell') && isShell) return true;
+          if (selectedSourcingProfileTypes.includes('full') && !isShell) return true;
+          return false;
+        });
+      }
     }
 
     return filtered;
@@ -516,7 +538,7 @@ function TalentPool() {
     candidates, debouncedSearchTerm, selectedSkills, selectedLocation, dateRangeStart, dateRangeEnd,
     hasResumeFilter, hasLinkedInProfileFilter, inPipelineFilter, pipelineCandidateIds,
     showLinkedInProfilesOnly, outreachRecords, selectedSourcingPositions, selectedSourcingStatuses,
-    selectedSourcingRatings, selectedSourcingRecruiters
+    selectedSourcingRatings, selectedSourcingRecruiters, selectedSourcingProfileTypes
   ]);
 
   const activeFilterCount = useMemo(() => {
@@ -548,13 +570,19 @@ function TalentPool() {
     setSelectedSourcingStatuses([]);
     setSelectedSourcingRatings([]);
     setSelectedSourcingRecruiters([]);
+    setSelectedSourcingProfileTypes([]);
   }, []);
 
   const handleQuickFilter = useCallback((filterType) => {
-    const isDeactivating = activeQuickFilter === filterType;
-    clearAllFilters();
-    if (isDeactivating) return;
+    // If clicking the currently active filter, turn it off
+    if (activeQuickFilter === filterType) {
+      setActiveQuickFilter('');
+      setDateRangeStart('');
+      setDateRangeEnd('');
+      return;
+    }
 
+    // Otherwise, apply the new filter (without clearing others)
     if (filterType === 'addedThisWeek') {
       const today = new Date();
       const oneWeekAgo = new Date(today);
@@ -563,7 +591,7 @@ function TalentPool() {
       setDateRangeEnd(today.toISOString().split('T')[0]);
       setActiveQuickFilter('addedThisWeek');
     }
-  }, [clearAllFilters, activeQuickFilter]);
+  }, [activeQuickFilter]);
 
   const handlePasteFromClipboard = async (fieldName) => {
     try {
@@ -1154,72 +1182,132 @@ function TalentPool() {
           <div className="sourcing-filters-container">
             <div className="sourcing-filter-item">
               <label>Sourced For Position</label>
-              <select
-                multiple
-                value={selectedSourcingPositions}
-                onChange={(e) => {
-                  const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-                  setSelectedSourcingPositions(selected);
-                }}
-              >
+              <div className="checkbox-list-container">
                 {positions.map(pos => (
-                  <option key={pos.id} value={pos.id}>{pos.title}</option>
+                  <label key={pos.id} className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedSourcingPositions.includes(pos.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedSourcingPositions([...selectedSourcingPositions, pos.id]);
+                        } else {
+                          setSelectedSourcingPositions(selectedSourcingPositions.filter(id => id !== pos.id));
+                        }
+                      }}
+                    />
+                    <span>{pos.title}</span>
+                  </label>
                 ))}
-              </select>
+              </div>
             </div>
 
             <div className="sourcing-filter-item">
               <label>Last Outreach Status</label>
-              <select
-                multiple
-                value={selectedSourcingStatuses}
-                onChange={(e) => {
-                  const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-                  setSelectedSourcingStatuses(selected);
-                }}
-              >
-                <option value="outreach_sent">Outreach Sent</option>
-                <option value="reply_received">Reply Received</option>
-                <option value="accepted">Accepted</option>
-                <option value="call_scheduled">Call Scheduled</option>
-                <option value="declined">Declined</option>
-                <option value="ready_for_submission">Ready for Submission</option>
-                <option value="gone_cold">Gone Cold</option>
-              </select>
+              <div className="checkbox-list-container">
+                {[
+                  { value: 'outreach_sent', label: 'Outreach Sent' },
+                  { value: 'reply_received', label: 'Reply Received' },
+                  { value: 'accepted', label: 'Accepted' },
+                  { value: 'call_scheduled', label: 'Call Scheduled' },
+                  { value: 'declined', label: 'Declined' },
+                  { value: 'ready_for_submission', label: 'Ready for Submission' },
+                  { value: 'gone_cold', label: 'Gone Cold' }
+                ].map(status => (
+                  <label key={status.value} className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedSourcingStatuses.includes(status.value)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedSourcingStatuses([...selectedSourcingStatuses, status.value]);
+                        } else {
+                          setSelectedSourcingStatuses(selectedSourcingStatuses.filter(s => s !== status.value));
+                        }
+                      }}
+                    />
+                    <span>{status.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="sourcing-filter-item">
               <label>Star Rating</label>
-              <select
-                multiple
-                value={selectedSourcingRatings.map(r => String(r))}
-                onChange={(e) => {
-                  const selected = Array.from(e.target.selectedOptions).map(o => parseInt(o.value));
-                  setSelectedSourcingRatings(selected);
-                }}
-              >
-                <option value="5">5★</option>
-                <option value="4">4★</option>
-                <option value="3">3★</option>
-                <option value="2">2★</option>
-                <option value="1">1★</option>
-              </select>
+              <div className="checkbox-list-container">
+                {[5, 4, 3, 2, 1].map(rating => (
+                  <label key={rating} className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedSourcingRatings.includes(rating)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedSourcingRatings([...selectedSourcingRatings, rating]);
+                        } else {
+                          setSelectedSourcingRatings(selectedSourcingRatings.filter(r => r !== rating));
+                        }
+                      }}
+                    />
+                    <span>{rating}★</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="sourcing-filter-item">
               <label>Sourced By Recruiter</label>
-              <select
-                multiple
-                value={selectedSourcingRecruiters}
-                onChange={(e) => {
-                  const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-                  setSelectedSourcingRecruiters(selected);
-                }}
-              >
+              <div className="checkbox-list-container">
                 {recruiters.map(rec => (
-                  <option key={rec.id} value={rec.id}>{rec.name}</option>
+                  <label key={rec.id} className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedSourcingRecruiters.includes(rec.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedSourcingRecruiters([...selectedSourcingRecruiters, rec.id]);
+                        } else {
+                          setSelectedSourcingRecruiters(selectedSourcingRecruiters.filter(id => id !== rec.id));
+                        }
+                      }}
+                    />
+                    <span>{rec.name}</span>
+                  </label>
                 ))}
-              </select>
+              </div>
+            </div>
+
+            <div className="sourcing-filter-item">
+              <label>Profile Type</label>
+              <div className="checkbox-list-container">
+                <label className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={selectedSourcingProfileTypes.includes('shell')}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedSourcingProfileTypes([...selectedSourcingProfileTypes, 'shell']);
+                      } else {
+                        setSelectedSourcingProfileTypes(selectedSourcingProfileTypes.filter(t => t !== 'shell'));
+                      }
+                    }}
+                  />
+                  <span>Shell Profile (LinkedIn Only)</span>
+                </label>
+                <label className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={selectedSourcingProfileTypes.includes('full')}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedSourcingProfileTypes([...selectedSourcingProfileTypes, 'full']);
+                      } else {
+                        setSelectedSourcingProfileTypes(selectedSourcingProfileTypes.filter(t => t !== 'full'));
+                      }
+                    }}
+                  />
+                  <span>Full Candidate Profile</span>
+                </label>
+              </div>
             </div>
           </div>
 

@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import * as mammoth from 'mammoth'; // ADDED
 import * as pdfjsLib from 'pdfjs-dist'; // ADDED
-import { Search, ChevronDown, ChevronUp, Eye, FileText, Sparkles, AlertCircle, Video, VideoOff, MessageSquare, Calendar, Trash2 } from 'lucide-react';
+import { ChevronUp, Eye, FileText, Sparkles, AlertCircle, Video, VideoOff, MessageSquare, Calendar, Trash2 } from 'lucide-react';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import PageTransition from '../components/PageTransition';
 import WordDocViewerModal from '../components/Worddocviewermodal';
@@ -959,7 +959,7 @@ function ActiveTracker() {
                                       />
                                       {item.candidates?.resume_url && (
                                         <a
-                                          href="#"
+                                          href="#!"
                                           className="icon-view-resume"
                                           onClick={(e) => handleResumeClick(e, item.candidates.resume_url, item.candidates.name)}
                                           title="View Resume"
