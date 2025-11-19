@@ -1,0 +1,1387 @@
+/* ===================================
+   DIRECTOR REVIEW STYLES
+   (Rose-Gold Dark Theme - Professional)
+   =================================== */
+
+/* CSS Variables for consistency */
+:root {
+  --main-bg: #1a1a2e;
+  --card-bg: #2e2e54;
+  --card-bg-solid: #2e2e54;
+  --secondary-bg: #2a2a4e;
+  --hover-bg: #3a3a6e;
+  --text-primary: #f0f0f0;
+  --text-secondary: #a0a0c0;
+  --text-muted: #7a7a9a;
+  --border-color: #4a4a70;
+  --rose-gold: #ebbcba;
+  --rose-gold-main: #ebbcba;
+  --rose-gold-shine: #f7d4d4;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --accent-red: #f7768e;
+  --accent-orange: #ff9e64;
+  --accent-blue: #7aa2f7;
+  --accent-green: #9ece6a;
+}
+
+.director-review-container {
+    padding: 2rem;
+    max-width: 1800px;
+    margin: 0 auto;
+    color: var(--text-primary);
+    background: var(--main-bg);
+}
+
+/* Page Header */
+.director-review-container .page-header {
+  margin-bottom: 1.5rem;
+}
+
+.director-review-container .page-header .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.director-review-container .page-header h1 {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin: 0;
+  font-weight: 700;
+}
+
+.header-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ===================================
+   Collapsible Workflow Header
+   =================================== */
+.review-header-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 2.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    box-shadow: var(--shadow);
+}
+
+.review-header-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    background: var(--secondary-bg);
+    transition: background-color 0.2s;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.review-header-title:hover {
+    background-color: var(--hover-bg);
+}
+
+.review-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.review-header-title h3 {
+    color: var(--rose-gold);
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.lightbulb-icon {
+    color: var(--accent-orange);
+    font-size: 1.5rem;
+}
+
+.btn-toggle-panel {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.btn-toggle-panel:hover {
+  color: var(--rose-gold);
+}
+
+/* Collapsible Content */
+.review-header-content {
+    padding: 1.5rem 2rem;
+    color: var(--text-secondary);
+    background: var(--card-bg);
+}
+
+.review-header-content p {
+    font-size: 1rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.review-header-content ul {
+    list-style-type: disc;
+    margin-left: 20px;
+    padding-left: 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.review-header-content ul li {
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+}
+
+.review-header-content strong {
+    font-weight: 700;
+    color: var(--rose-gold);
+}
+
+/* ===================================
+   AGING WARNING BOX (RecruiterOutreach Style)
+   =================================== */
+
+.aging-warning-box {
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  animation: slideInDown 0.4s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aging-warning-box .banner-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+}
+
+.aging-warning-box .banner-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.aging-warning-box .banner-message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.aging-warning-box .banner-message strong {
+  font-size: 1rem;
+  font-weight: 700;
+  display: block;
+}
+
+.aging-warning-box .banner-names {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.aging-warning-box .banner-note {
+  font-size: 0.875rem;
+  font-style: italic;
+  margin: 0.5rem 0 0 0;
+  opacity: 0.9;
+}
+
+/* Yellow Variant (3-5 Days - Warning) */
+.aging-warning-box.yellow {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(245, 158, 11, 0.1));
+  border: 2px solid rgba(234, 179, 8, 0.5);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
+}
+
+.aging-warning-box.yellow .banner-message strong {
+  color: #eab308;
+}
+
+.aging-warning-box.yellow .banner-names {
+  color: var(--text-primary);
+}
+
+.aging-warning-box.yellow .banner-note {
+  color: var(--text-secondary);
+}
+
+/* Red Variant (5+ Days - Urgent) */
+.aging-warning-box.red {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+  border: 2px solid rgba(239, 68, 68, 0.5);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.aging-warning-box.red .banner-message strong {
+  color: #ef4444;
+}
+
+.aging-warning-box.red .banner-names {
+  color: var(--text-primary);
+}
+
+.aging-warning-box.red .banner-note {
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .aging-warning-box {
+    flex-direction: column;
+  }
+}
+
+/* ===================================
+   Review Sections
+   =================================== */
+.review-section {
+    margin-bottom: 3rem;
+}
+
+.review-section h2 {
+    font-size: 1.75rem;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.review-section h2 svg {
+  color: var(--rose-gold);
+}
+
+.no-candidates-message {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 3rem;
+    font-size: 1rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px dashed var(--border-color);
+}
+
+/* ===================================
+   Candidate Card (Row Style)
+   =================================== */
+.candidate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* Small gap between rows */
+}
+
+.candidate-card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem; /* Row padding */
+    display: grid;
+    /* 7-column layout */
+    grid-template-columns: 2.5fr 2fr 1.5fr 1.5fr 1fr 1fr 2fr;
+    gap: 1.5rem;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.2s, border-color 0.2s;
+    min-height: 60px; /* Row height */
+}
+
+.candidate-card:hover {
+    background-color: var(--hover-bg);
+    border-color: var(--rose-gold);
+}
+
+.card-aging {
+    border-left: 4px solid var(--accent-red);
+}
+
+/* Info items within the row */
+.card-info-item {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent text overflow */
+    gap: 0.1rem;
+}
+
+.info-label {
+    font-size: 0.7rem; /* Small label */
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.info-value {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Candidate Name section */
+.candidate-name-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.candidate-name-group .info-value {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.name-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ========= THIS IS THE FIX ========= */
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.75rem;
+    /* This tells the grid item to align its children in a row */
+    flex-direction: row; 
+    flex-wrap: nowrap; /* Ensure they don't wrap to the next line */
+}
+/* =================================== */
+
+
+/* Icon Buttons (Resume, LinkedIn) */
+.icon-btn {
+    background-color: var(--secondary-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+    padding: 0;
+}
+
+.icon-btn:hover {
+    background-color: var(--hover-bg);
+    color: var(--rose-gold);
+    border-color: var(--rose-gold);
+}
+
+/* Warning icon in actions area */
+.aging-warning-icon {
+    font-size: 1.2rem;
+    color: var(--accent-red);
+}
+
+/* ===================================
+   Standard Button Styles
+   =================================== */
+
+.btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  border: none;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  /* Make buttons in actions smaller */
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Primary (Rose Gold) */
+.btn-primary {
+  background: linear-gradient(135deg, var(--rose-gold), #F39C9C);
+  color: var(--main-bg);
+  box-shadow: 0 4px 12px rgba(232, 180, 184, 0.3);
+}
+.btn-primary:hover {
+  box-shadow: 0 6px 16px rgba(232, 180, 184, 0.5);
+}
+
+/* Secondary (Dark Outline) */
+.btn-secondary {
+  background: var(--secondary-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+.btn-secondary:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+/* ===================================
+   MODAL FOOTER BUTTON STYLES
+   =================================== */
+
+/* Primary Button - Submit to Client (Rose Gold) */
+.modal-footer .btn-primary {
+  background: linear-gradient(135deg, var(--rose-gold), var(--rose-gold-shine));
+  color: #1a1a2e;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(235, 188, 186, 0.4);
+}
+
+.modal-footer .btn-primary:hover {
+  background: linear-gradient(135deg, var(--rose-gold-shine), var(--rose-gold));
+  box-shadow: 0 6px 20px rgba(235, 188, 186, 0.6);
+}
+
+/* Danger Button - Reject (Red) */
+.modal-footer .btn-danger {
+  background: linear-gradient(135deg, #4a2c2c, #3a2020);
+  color: #ff9eb3;
+  border: 1px solid #5a3030;
+  box-shadow: 0 4px 12px rgba(247, 118, 142, 0.25);
+}
+
+.modal-footer .btn-danger:hover {
+  background: linear-gradient(135deg, #5a3333, #4a2828);
+  color: #ffb3c6;
+  border-color: #703a3a;
+  box-shadow: 0 6px 16px rgba(247, 118, 142, 0.35);
+}
+
+/* Warning Button - Hold (Bronze/Yellow) */
+.modal-footer .btn-warning {
+  background: linear-gradient(135deg, #4a3f2e, #3a3428);
+  color: #f0c878;
+  border: 1px solid #5a4a3a;
+  box-shadow: 0 4px 12px rgba(224, 175, 104, 0.25);
+}
+
+.modal-footer .btn-warning:hover {
+  background: linear-gradient(135deg, #5a4f3e, #4a4228);
+  color: #ffd88e;
+  border-color: #6a5a4a;
+  box-shadow: 0 6px 16px rgba(224, 175, 104, 0.35);
+}
+
+/* ===================================
+   PROFESSIONAL MODAL DESIGN
+   =================================== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: overlayFadeIn 0.3s ease;
+  padding: 1rem;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(10px);
+  }
+}
+
+.modal-content {
+  background: var(--main-bg);
+  color: var(--text-primary);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 900px;
+  border: 1px solid var(--border-color);
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(235, 188, 186, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===================================
+   MODAL HEADER - Clean & Professional
+   =================================== */
+
+.modal-header {
+  padding: 2rem 2.5rem;
+  background: linear-gradient(180deg, var(--secondary-bg) 0%, var(--main-bg) 100%);
+  border-bottom: 1px solid rgba(235, 188, 186, 0.15);
+  position: relative;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-header h2::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(180deg, var(--rose-gold), var(--rose-gold-shine));
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(235, 188, 186, 0.5);
+}
+
+/* ===================================
+   MODAL BODY - Organized Sections
+   =================================== */
+
+.modal-body {
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--main-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom Scrollbar */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--rose-gold);
+}
+
+/* ===================================
+   COMMENT HISTORY SECTION
+   =================================== */
+
+.modal-comments-history {
+  padding: 2.5rem;
+  background: var(--secondary-bg);
+  border-bottom: 1px solid var(--border-color);
+  max-height: 400px;
+  overflow-y: auto;
+  min-height: 200px;
+}
+
+.modal-comments-history::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-comments-history::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.modal-comments-history::-webkit-scrollbar-thumb:hover {
+  background: var(--rose-gold);
+}
+
+/* Section Title */
+.modal-comments-history::before {
+  content: 'Comment History';
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(235, 188, 186, 0.1);
+}
+
+/* Individual Comment Card */
+.comment {
+  background: var(--card-bg-solid);
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.comment:last-child {
+  margin-bottom: 0;
+}
+
+.comment:hover {
+  border-color: rgba(235, 188, 186, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
+}
+
+.comment-author {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--rose-gold);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.comment-author::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--rose-gold);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(235, 188, 186, 0.6);
+}
+
+.comment-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.comment-text-body {
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-size: 0.925rem;
+  padding-right: 3rem;
+}
+
+/* Edit/Delete Action Buttons - Always visible with opacity */
+.comment-actions {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0.3;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 10;
+}
+
+.comment:hover .comment-actions {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.btn-icon {
+  background: var(--card-bg-solid);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.btn-icon:hover {
+  background: var(--secondary-bg);
+  color: var(--rose-gold);
+  border-color: var(--rose-gold);
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(235, 188, 186, 0.4);
+}
+
+.btn-icon:active {
+  transform: scale(0.95);
+}
+
+/* Edit Comment Form */
+.edit-comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.edit-comment-textarea {
+  width: 100%;
+  background: var(--main-bg);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1rem;
+  font-family: inherit;
+  font-size: 0.925rem;
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+}
+
+.edit-comment-textarea:focus {
+  border-color: var(--rose-gold);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(235, 188, 186, 0.15);
+  background: var(--card-bg-solid);
+}
+
+.edit-comment-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+/* No Comments Message */
+.no-comments-message {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 3rem 2rem;
+  font-style: italic;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* ===================================
+   NEW COMMENT INPUT SECTION
+   =================================== */
+
+.form-group {
+  margin: 0;
+  padding: 2.5rem;
+  background: var(--main-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 0.925rem;
+  resize: vertical;
+  background: var(--card-bg-solid);
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: all 0.3s ease;
+  line-height: 1.7;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--rose-gold);
+  box-shadow: 0 0 0 4px rgba(235, 188, 186, 0.15);
+  background: var(--secondary-bg);
+}
+
+.form-textarea::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* ===================================
+   MODAL FOOTER - Action Buttons
+   =================================== */
+
+.modal-footer {
+  padding: 1.5rem 2.5rem;
+  background: var(--secondary-bg);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* All modal buttons */
+.modal-footer .btn {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+
+.modal-footer .btn:hover {
+  transform: translateY(-2px);
+}
+
+.modal-footer .btn:active {
+  transform: translateY(0);
+}
+
+/* Action Button Group */
+.modal-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Close Button */
+.btn-close-footer {
+  background: transparent;
+  color: var(--text-muted);
+  border: 2px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.btn-close-footer:hover {
+  background: var(--main-bg);
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+  box-shadow: none;
+}
+
+/* Save Comment Only Button */
+.modal-footer .btn-secondary {
+  background: var(--card-bg-solid);
+  color: var(--text-secondary);
+  border: 2px solid var(--border-color);
+}
+
+.modal-footer .btn-secondary:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ===================================
+   Responsive
+   =================================== */
+
+@media (max-width: 1400px) {
+  .candidate-card {
+    /* Hide 'Submitted' column */
+    grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1.5fr;
+    gap: 1rem;
+  }
+  .candidate-card .card-info-item:nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+    .candidate-card {
+        grid-template-columns: 1fr; /* Stack into a single column */
+        gap: 1rem;
+        padding: 1rem;
+    }
+    .candidate-name-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .name-icons {
+        justify-content: flex-start;
+    }
+    .card-actions {
+        justify-content: flex-start;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-color);
+        margin-top: 1rem;
+    }
+    .info-label {
+        display: block; /* Show labels when stacked */
+    }
+    .info-value {
+        font-size: 0.9rem;
+    }
+    /* Show 'Submitted' column again when stacked */
+    .candidate-card .card-info-item:nth-child(5) {
+      display: flex;
+    }
+}
+
+
+/* Modal Responsive Design */
+@media (max-width: 768px) {
+    .director-review-container {
+        padding: 1rem;
+    }
+
+    .modal-overlay {
+        padding: 0.5rem;
+    }
+
+    .modal-content {
+        max-width: 100%;
+        border-radius: 16px;
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+    }
+
+    .modal-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .modal-comments-history {
+        padding: 1.5rem;
+        max-height: 300px;
+    }
+
+    .form-group {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        padding: 1.25rem 1.5rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .modal-action-group {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-close-footer {
+        order: -1;
+    }
+}
+
+/* ===================================
+   TABS NAVIGATION
+   =================================== */
+.tabs-container {
+  margin-bottom: 2rem;
+}
+
+.tabs-nav {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--border-color);
+  overflow-x: visible;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tab-button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 1rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  color: var(--text-primary);
+  background: rgba(235, 188, 186, 0.05);
+}
+
+.tab-button.active {
+  color: var(--rose-gold);
+  border-bottom-color: var(--rose-gold);
+  background: rgba(235, 188, 186, 0.08);
+}
+
+.tab-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--rose-gold);
+  color: var(--main-bg);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.tab-button.active .tab-badge {
+  background: linear-gradient(135deg, var(--rose-gold), var(--rose-gold-shine));
+  box-shadow: 0 2px 8px rgba(235, 188, 186, 0.4);
+}
+
+/* --- Tab Content Styling --- */
+.tab-content {
+  padding-top: 1.5rem;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===================================
+   SECTION HEADERS
+   =================================== */
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+  margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* ===================================
+   STATS DASHBOARD
+   =================================== */
+.stats-dashboard {
+  padding: 1rem 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow);
+}
+
+.stat-card:hover {
+  border-color: var(--rose-gold);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-detail {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.bottleneck-alert {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+  border: 2px solid rgba(239, 68, 68, 0.4);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #ef4444;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.bottleneck-alert strong {
+  font-weight: 700;
+}
+
+/* ===================================
+   DECISIONS LIST
+   =================================== */
+.decisions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.decision-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s ease;
+}
+
+.decision-card:hover {
+  background: var(--hover-bg);
+  border-color: var(--rose-gold);
+}
+
+.decision-card.approved {
+  border-left: 4px solid var(--accent-green);
+}
+
+.decision-card.rejected {
+  border-left: 4px solid var(--accent-red);
+}
+
+.decision-info {
+  flex: 1;
+}
+
+.decision-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.decision-position {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.decision-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge.approved {
+  background: linear-gradient(135deg, rgba(158, 206, 106, 0.15), rgba(138, 190, 90, 0.1));
+  color: var(--accent-green);
+  border: 1px solid rgba(158, 206, 106, 0.3);
+}
+
+.status-badge.rejected {
+  background: linear-gradient(135deg, rgba(247, 118, 142, 0.15), rgba(227, 98, 122, 0.1));
+  color: var(--accent-red);
+  border: 1px solid rgba(247, 118, 142, 0.3);
+}
+
+.decision-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ===================================
+   QUICK COMMENT TEMPLATES
+   =================================== */
+.quick-templates {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--secondary-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.templates-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.template-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.template-btn {
+  background: var(--card-bg-solid);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.template-btn:hover {
+  background: var(--hover-bg);
+  color: var(--rose-gold);
+  border-color: var(--rose-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(235, 188, 186, 0.3);
+}

@@ -1,0 +1,15 @@
+
+> recruitment-tracker-v3@0.1.0 build
+> react-scripts build
+
+Creating an optimized production build...
+Failed to compile.
+
+[eslint] 
+src\pages\ActiveTracker.js
+  Line 833:30:  'Binoculars' is not defined  react/jsx-no-undef
+  Line 938:40:  'Binoculars' is not defined  react/jsx-no-undef
+
+Search for the keywords to learn more about each error.
+
+

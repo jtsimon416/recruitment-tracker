@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "lib": ["esnext", "deno.ns", "deno.window"],
+    "types": ["https://deno.land/x/supabase_functions_alt@v1.3.0/src/edge-runtime.d.ts"]
+  },
+  "tasks": {
+    "start": "deno run --allow-net --allow-read=. --allow-env --allow-sys --allow-run --watch main.ts"
+  },
+  "deploy": {
+    "entrypoint": "index.ts",
+    "exclude": [
+      "job_descriptions"
+    ],
+    "include": [
+      "job_descriptions"
+    ],
+    "allow_read": [
+      "job_descriptions"
+    ]
+  }
+}

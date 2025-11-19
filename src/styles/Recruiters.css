@@ -1,0 +1,232 @@
+.recruiters-page.page-container {
+  padding: 30px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Align items to the start vertically */
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px; /* Space between h1 and p */
+}
+
+.page-header h1 {
+  font-size: 2.5rem; /* Matched Dashboard h1 font-size */
+  background: var(--rose-gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0; /* Remove default margin */
+  font-weight: 700;
+}
+
+.page-header p {
+  color: var(--text-secondary); /* Matched Dashboard p color */
+  font-size: 1.05rem; /* Matched Dashboard p font-size */
+  margin: 0; /* Remove default margin */
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.recruiters-page h2 {
+  font-size: 22px;
+  color: var(--text-primary);
+  margin: 40px 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+/* Form Styles - Consistent with Clients.css */
+.form-card {
+  background: var(--card-bg);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  margin-bottom: 30px;
+  border: 1px solid var(--border-color);
+}
+
+.form-card h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: none;
+  color: var(--accent-cyan);
+  font-size: 24px;
+}
+
+/* Grid for Recruiter Cards */
+.recruiters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+/* Polished Recruiter Card */
+.recruiter-card {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease-in-out;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent-purple);
+  display: flex;
+  flex-direction: column;
+}
+
+.recruiter-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(187, 154, 247, 0.3);
+  border-color: var(--accent-purple);
+}
+
+.recruiter-card h3 {
+  margin: 0 0 15px 0;
+  color: var(--accent-cyan);
+  font-size: 20px;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.recruiter-info {
+  flex-grow: 1;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recruiter-info p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  word-break: break-all;
+}
+
+.recruiter-info p svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Actions Footer */
+.recruiter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto; /* Pushes to the bottom */
+  padding-top: 15px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Button styles matching Clients.css */
+.btn-edit {
+  flex: 1;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(187, 154, 247, 0.3);
+}
+
+.btn-edit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(187, 154, 247, 0.4);
+}
+
+.btn-delete {
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-orange));
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(247, 162, 198, 0.3);
+}
+
+.btn-delete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(247, 162, 198, 0.4);
+}
+
+/* Tabs Container */
+.tabs-container {
+  margin-bottom: 30px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tabs-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.tab-button {
+  background: transparent;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.3s, border-bottom 0.3s;
+  border-bottom: 3px solid transparent;
+  position: relative;
+  top: 1px; /* To align with the border-bottom of tabs-container */
+}
+
+.tab-button:hover {
+  color: var(--text-primary);
+}
+
+.tab-button.active {
+  color: var(--rose-gold-main);
+  border-bottom: 3px solid var(--rose-gold-main);
+  font-weight: 600;
+}
+
+.tab-content {
+  padding-top: 20px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px dashed var(--border-color);
+  color: var(--text-secondary);
+  margin-top: 20px;
+}
+
+.empty-state h3 {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  font-size: 1rem;
+  margin-bottom: 0;
+}

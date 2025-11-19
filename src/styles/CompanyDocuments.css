@@ -1,0 +1,243 @@
+/* src/styles/CompanyDocuments.css */
+
+.company-documents-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.company-documents-container .page-header {
+  margin-bottom: 2rem;
+}
+
+.company-documents-container .page-header h1 {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+}
+
+.company-documents-container .subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+/* Reusable card style */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow);
+}
+
+.card h3 {
+  color: var(--rose-gold);
+  margin: 0 0 1.5rem 0;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Upload Section */
+.upload-section input[type="file"] {
+  display: none; /* Hide the default input */
+}
+
+/* Style the label to look like the primary button */
+.upload-section label.btn {
+  display: inline-flex;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--rose-gold), #F39C9C);
+  color: var(--main-bg);
+  box-shadow: 0 4px 12px rgba(232, 180, 184, 0.3);
+  padding: 0.75rem 1.5rem; /* Match button padding */
+  border-radius: 8px; /* Match button radius */
+  font-weight: 600; /* Match button font weight */
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  align-items: center; /* Vertically align icon and text */
+  gap: 0.5rem; /* Space between icon and text */
+}
+
+.upload-section label.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(232, 180, 184, 0.5);
+}
+
+
+.upload-section label.btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none; /* Prevent clicks when disabled */
+  transform: none; /* Disable hover effect */
+  box-shadow: 0 4px 12px rgba(232, 180, 184, 0.3); /* Keep base shadow */
+}
+
+.upload-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.error-message {
+  color: var(--accent-red);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  background-color: rgba(247, 118, 142, 0.1);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--accent-red);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Document List Section */
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.table-responsive-wrapper {
+  overflow-x: auto; /* Make table scroll horizontally on small screens */
+}
+
+
+.documents-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  min-width: 600px; /* Prevent table from getting too squished */
+}
+
+.documents-table thead {
+  background: var(--secondary-bg);
+}
+
+.documents-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border-color);
+  white-space: nowrap; /* Prevent headers from wrapping */
+}
+
+.documents-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s;
+}
+
+.documents-table tbody tr:hover {
+  background-color: var(--hover-bg);
+}
+
+.documents-table td {
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  vertical-align: middle;
+  white-space: nowrap; /* Prevent cell content from wrapping */
+}
+
+.file-name-cell {
+  color: var(--text-primary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 300px; /* Limit width and allow ellipsis */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Actions Cell - Reuse styles from other tables */
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end; /* Align buttons to the right */
+}
+
+/* Action buttons inside the table */
+.btn-action {
+  background: var(--secondary-bg); /* Use secondary for base */
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.5rem; /* Small padding for icon buttons */
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; /* Make it flex for alignment */
+  align-items: center;
+  justify-content: center;
+  text-decoration: none; /* For the download link */
+  line-height: 1; /* Ensure icon is centered */
+}
+
+.btn-action:hover {
+  transform: translateY(-1px); /* Subtle hover lift */
+}
+
+.btn-action.view:hover {
+  border-color: var(--rose-gold);
+  color: var(--rose-gold);
+  background: rgba(232, 180, 184, 0.1);
+}
+
+.btn-action.download:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: rgba(122, 162, 247, 0.1);
+}
+
+.btn-action.delete:hover {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+  background: rgba(247, 118, 142, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .company-documents-container {
+    padding: 1rem;
+  }
+  .card {
+    padding: 1rem 1.25rem;
+  }
+  /* Ensure table wrapper handles overflow */
+  .table-responsive-wrapper {
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .documents-table th, .documents-table td {
+    padding: 0.6rem 0.75rem;
+  }
+}

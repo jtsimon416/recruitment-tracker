@@ -1,0 +1,137 @@
+
+> recruitment-tracker-v3@0.1.0 build
+> react-scripts build
+
+Creating an optimized production build...
+Compiled with warnings.
+
+[eslint] 
+src\App.js
+  Line 1:27:  'useEffect' is defined but never used  no-unused-vars
+
+src\components\DocumentUploadModal.js
+  Line 187:7:  'modalStyles' is assigned a value but never used  no-unused-vars
+
+src\components\PipelineFunnel.js
+  Line 5:10:  'Zap' is defined but never used           no-unused-vars
+  Line 5:15:  'ChevronDown' is defined but never used   no-unused-vars
+  Line 5:28:  'BarChart3' is defined but never used     no-unused-vars
+  Line 5:39:  'TrendingUp' is defined but never used    no-unused-vars
+  Line 5:51:  'TrendingDown' is defined but never used  no-unused-vars
+
+src\contexts\DataContext.js
+  Line 39:6:  React Hook useEffect has a missing dependency: 'loadingSession'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\ActiveTracker.js
+  Line 8:10:    'Search' is defined but never used                                                                                                                                                                                                                                                                                                                                 no-unused-vars
+  Line 8:18:    'ChevronDown' is defined but never used                                                                                                                                                                                                                                                                                                                            no-unused-vars
+  Line 8:31:    'ChevronUp' is defined but never used                                                                                                                                                                                                                                                                                                                              no-unused-vars
+  Line 249:6:   React Hook useEffect has missing dependencies: 'setPipeline' and 'updateCandidateStage'. Either include them or remove the dependency array                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+  Line 356:60:  'recruiterName' is assigned a value but never used                                                                                                                                                                                                                                                                                                                 no-unused-vars
+  Line 840:31:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+  Line 951:41:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+
+src\pages\Clients.js
+  Line 13:10:  'loading' is assigned a value but never used                                                                           no-unused-vars
+  Line 26:6:   React Hook useEffect has a missing dependency: 'fetchAllClientData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\Commissions.js
+  Line 14:10:  'candidates' is assigned a value but never used  no-unused-vars
+
+src\pages\CompanyDocuments.js
+  Line 65:9:    'BUCKET_NAME' is assigned a value but never used                                              no-unused-vars
+  Line 123:29:  Unexpected mix of '&&' and '||'. Use parentheses to clarify the intended order of operations  no-mixed-operators
+  Line 123:69:  Unexpected mix of '&&' and '||'. Use parentheses to clarify the intended order of operations  no-mixed-operators
+
+src\pages\Dashboard.js
+  Line 7:3:    'LineChart' is defined but never used                                                                                                                  no-unused-vars
+  Line 7:14:   'Line' is defined but never used                                                                                                                       no-unused-vars
+  Line 9:32:   'RadarChart' is defined but never used                                                                                                                 no-unused-vars
+  Line 9:44:   'PolarGrid' is defined but never used                                                                                                                  no-unused-vars
+  Line 10:3:   'PolarAngleAxis' is defined but never used                                                                                                             no-unused-vars
+  Line 10:19:  'PolarRadiusAxis' is defined but never used                                                                                                            no-unused-vars
+  Line 10:36:  'Radar' is defined but never used                                                                                                                      no-unused-vars
+  Line 14:42:  'Zap' is defined but never used                                                                                                                        no-unused-vars
+  Line 14:47:  'AlertCircle' is defined but never used                                                                                                                no-unused-vars
+  Line 15:38:  'Star' is defined but never used                                                                                                                       no-unused-vars
+  Line 15:44:  'X' is defined but never used                                                                                                                          no-unused-vars
+  Line 16:3:   'UserCheck' is defined but never used                                                                                                                  no-unused-vars
+  Line 797:6:  React Hook useCallback has missing dependencies: 'fetchPipelineMetrics' and 'fetchRecruiterStats'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\DirectorOutreachDashboard.js
+  Line 6:60:    'Download' is defined but never used                                                                                                                                                                                               no-unused-vars
+  Line 6:78:    'X' is defined but never used                                                                                                                                                                                                      no-unused-vars
+  Line 6:107:   'FileText' is defined but never used                                                                                                                                                                                               no-unused-vars
+  Line 269:9:   The 'outreachStages' array makes the dependencies of useMemo Hook (at line 479) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'outreachStages' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  Line 271:36:  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array                                                                                                                        react-hooks/exhaustive-deps
+  Line 322:6:   React Hook useEffect has a missing dependency: 'currentPage'. Either include it or remove the dependency array                                                                                                                     react-hooks/exhaustive-deps
+  Line 523:6:   React Hook useMemo has a missing dependency: 'getWeekRange'. Either include it or remove the dependency array                                                                                                                      react-hooks/exhaustive-deps
+  Line 535:6:   React Hook useMemo has a missing dependency: 'getWeekRange'. Either include it or remove the dependency array                                                                                                                      react-hooks/exhaustive-deps
+  Line 544:6:   React Hook useMemo has a missing dependency: 'getWeekRange'. Either include it or remove the dependency array                                                                                                                      react-hooks/exhaustive-deps
+  Line 553:6:   React Hook useMemo has a missing dependency: 'getWeekRange'. Either include it or remove the dependency array                                                                                                                      react-hooks/exhaustive-deps
+  Line 569:6:   React Hook useMemo has a missing dependency: 'getWeekRange'. Either include it or remove the dependency array                                                                                                                      react-hooks/exhaustive-deps
+  Line 595:6:   React Hook useMemo has a missing dependency: 'getWeekRange'. Either include it or remove the dependency array                                                                                                                      react-hooks/exhaustive-deps
+
+src\pages\DirectorReview.js
+  Line 5:42:    'FaLightbulb' is defined but never used                                                                           no-unused-vars
+  Line 7:69:    'ChevronDown' is defined but never used                                                                           no-unused-vars
+  Line 7:82:    'ChevronUp' is defined but never used                                                                             no-unused-vars
+  Line 206:19:  'setError' is assigned a value but never used                                                                     no-unused-vars
+  Line 495:29:  'session' is assigned a value but never used                                                                      no-unused-vars
+  Line 547:8:   React Hook useEffect has a missing dependency: 'thirtyDaysAgo'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\InterviewHub.js
+  Line 12:3:   'ChevronUp' is defined but never used                                                                         no-unused-vars
+  Line 796:6:  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\Login.js
+  Line 27:13:  'data' is assigned a value but never used  no-unused-vars
+
+src\pages\Positions.js
+  Line 73:6:  React Hook useEffect has a missing dependency: 'calculatePositionStats'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\RecruiterOutreach.js
+  Line 7:8:      'mammoth' is defined but never used                                                                                    no-unused-vars
+  Line 9:36:     'ChevronUp' is defined but never used                                                                                  no-unused-vars
+  Line 9:47:     'ChevronDown' is defined but never used                                                                                no-unused-vars
+  Line 10:11:    'Search' is defined but never used                                                                                     no-unused-vars
+  Line 27:52:    Unnecessary escape character: \/                                                                                       no-useless-escape
+  Line 27:54:    Unnecessary escape character: \?                                                                                       no-useless-escape
+  Line 171:6:    React Hook useEffect has a missing dependency: 'fetchMyActiveRoles'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 675:51:   'addOutreachActivity' is assigned a value but never used                                                               no-unused-vars
+  Line 763:6:    React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array            react-hooks/exhaustive-deps
+  Line 1024:13:  'newCount' is assigned a value but never used                                                                          no-unused-vars
+  Line 1442:29:  'error' is assigned a value but never used                                                                             no-unused-vars
+
+src\pages\StrategyManager.js
+  Line 8:46:   'CheckCircle' is defined but never used                                                                                       no-unused-vars
+  Line 36:39:  Unnecessary escape character: \-                                                                                              no-useless-escape
+  Line 406:6:  React Hook useEffect has a missing dependency: 'fetchAllPositionsForAudit'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\TalentPool.js
+  Line 273:10:  'positionToAutoAdd' is assigned a value but never used                                                                                                    no-unused-vars
+  Line 315:6:   React Hook useEffect has missing dependencies: 'location.pathname', 'location.state', and 'navigate'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 318:9:   'EDGE_FUNCTION_URL' is assigned a value but never used                                                                                                    no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  885.16 kB (+664 B)  build\static\js\main.637d44b6.js
+  38.72 kB            build\static\css\main.fda5bdd9.css
+  1.77 kB             build\static\js\453.8e7425fc.chunk.js
+
+The bundle size is significantly larger than recommended.
+Consider reducing it with code splitting: https://goo.gl/9VhYWB
+You can also analyze the project dependencies: https://goo.gl/LeUzfb
+
+The project was built assuming it is hosted at /recruitment-tracker/.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+

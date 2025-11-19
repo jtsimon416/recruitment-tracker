@@ -1,0 +1,59 @@
+
+> recruitment-tracker-v3@0.1.0 test
+> react-scripts test --watchAll=false
+
+FAIL src/App.test.js
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    C:\Users\getja\Desktop\Logic Hire\recruitment-tracker-master\node_modules\@tiptap\pm\transform\index.ts:1
+    ({"Object.<anonymous>":function(module,exports,require,__dirname,__filename,jest){export * from 'prosemirror-transform'
+                                                                                      ^^^^^^
+
+    SyntaxError: Unexpected token 'export'
+
+    [0m [90m 3 |[39m [36mimport[39m { motion } [36mfrom[39m [32m'framer-motion'[39m[33m;[39m
+     [90m 4 |[39m [36mimport[39m { [33mChevronDown[39m[33m,[39m [33mChevronUp[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useEditor[33m,[39m [33mEditorContent[39m } [36mfrom[39m [32m'@tiptap/react'[39m[33m;[39m
+     [90m   |[39m [31m[1m^[22m[39m
+     [90m 6 |[39m [36mimport[39m [33mStarterKit[39m [36mfrom[39m [32m'@tiptap/starter-kit'[39m[33m;[39m
+     [90m 7 |[39m [36mimport[39m { useData } [36mfrom[39m [32m'../contexts/DataContext'[39m[33m;[39m
+     [90m 8 |[39m [36mimport[39m { useConfirmation } [36mfrom[39m [32m'../contexts/ConfirmationContext'[39m[33m;[39m[0m
+
+      at Runtime.createScriptFromCode (node_modules/jest-runtime/build/index.js:1728:14)
+      at Object.<anonymous> (node_modules/@tiptap/core/src/commands/clearNodes.ts:1:28)
+      at Object.<anonymous> (node_modules/@tiptap/react/src/useEditor.ts:1:44)
+      at Object.<anonymous> (src/pages/Positions.js:5:1)
+      at Object.<anonymous> (src/App.js:9:1)
+      at Object.<anonymous> (src/App.test.js:2:1)
+      at TestScheduler.scheduleTests (node_modules/@jest/core/build/TestScheduler.js:333:13)
+      at runJest (node_modules/@jest/core/build/runJest.js:404:19)
+      at _run10000 (node_modules/@jest/core/build/cli/index.js:320:7)
+      at runCLI (node_modules/@jest/core/build/cli/index.js:173:3)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        1.453 s
+Ran all test suites.

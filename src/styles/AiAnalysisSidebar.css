@@ -1,0 +1,136 @@
+/* Use theme variables from App.css */
+.ai-analysis-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: flex-end;
+    z-index: 1000;
+}
+
+.ai-analysis-sidebar {
+    width: 450px;
+    max-width: 90%;
+    height: 100vh;
+    background-color: var(--primary-bg); /* CORRECTED to darker shade */
+    color: var(--text-primary); /* CORRECTED */
+    padding: 2.5rem 1.5rem;
+    box-shadow: var(--shadow-polished); /* CORRECTED */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    border-left: 1px solid var(--border-color); /* CORRECTED */
+    box-sizing: border-box;
+}
+
+.ai-analysis-sidebar .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ai-analysis-sidebar .sidebar-header h2 {
+    font-size: 1.8rem;
+    color: var(--rose-gold-main); /* CORRECTED */
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.ai-analysis-sidebar .btn-close-sidebar {
+    background: none;
+    border: none;
+    color: var(--text-secondary); /* CORRECTED */
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: color 0.2s ease;
+}
+
+.ai-analysis-sidebar .btn-close-sidebar:hover {
+    color: var(--rose-gold-main); /* CORRECTED */
+}
+
+.ai-analysis-sidebar .sidebar-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.ai-loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.ai-loading-state svg {
+    margin-bottom: 1rem;
+    color: var(--rose-gold-main); /* CORRECTED */
+    animation: spin 1.5s linear infinite;
+}
+
+.ai-error-state {
+    color: #ff8a8a; /* A generic error red */
+    text-align: center;
+    padding: 1rem;
+    border: 1px solid #ff8a8a;
+    border-radius: var(--border-radius-polished);
+    background-color: rgba(255, 138, 138, 0.1);
+}
+
+.ai-grade-section h3 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ai-grade-section .ai-grade {
+    font-weight: bold;
+    padding: 0.3rem 0.8rem;
+    border-radius: 50px; /* pill shape */
+    font-size: 1.2rem;
+    color: var(--primary-bg); /* CORRECTED */
+    min-width: 40px;
+    display: inline-block;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.ai-grade.grade-a { background: var(--rose-gold-gradient); }
+.ai-grade.grade-b { background-color: #7AA2F7; } /* A contrasting blue */
+.ai-grade.grade-c { background-color: #F4C2A8; } /* A contrasting orange */
+.ai-grade.grade-d, .ai-grade.grade-f { background-color: #E8B4B8; } /* A contrasting red */
+.ai-grade.grade-n\/a { background-color: var(--text-secondary); }
+
+.ai-summary-section h3 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.ai-summary-section p {
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--card-bg);
+    padding: 1rem;
+    border-radius: var(--border-radius-polished);
+    border: 1px solid var(--border-color);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
