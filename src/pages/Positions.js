@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { motion } from 'framer-motion';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useData } from '../contexts/DataContext';
@@ -40,10 +40,10 @@ function Positions() {
   const [clients, setClients] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingPosition, setEditingPosition] = useState(null);
-  
+
   // FIX: Changed initial state from 'all' to 'Open'
   const [statusFilter, setStatusFilter] = useState('Open');
-  
+
   const [expandedRow, setExpandedRow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: 'title', direction: 'ascending' });
@@ -121,7 +121,7 @@ function Positions() {
           message: `Error updating position: ${error.message}`,
           confirmText: 'OK',
           cancelText: null,
-          onConfirm: () => {}
+          onConfirm: () => { }
         });
       } else {
         showConfirmation({
@@ -130,7 +130,7 @@ function Positions() {
           message: 'Position updated successfully!',
           confirmText: 'OK',
           cancelText: null,
-          onConfirm: () => {}
+          onConfirm: () => { }
         });
         resetForm();
         await fetchPositions();
@@ -145,7 +145,7 @@ function Positions() {
           message: `Error adding position: ${error.message}`,
           confirmText: 'OK',
           cancelText: null,
-          onConfirm: () => {}
+          onConfirm: () => { }
         });
       } else {
         showConfirmation({
@@ -154,7 +154,7 @@ function Positions() {
           message: 'Position added successfully!',
           confirmText: 'OK',
           cancelText: null,
-          onConfirm: () => {}
+          onConfirm: () => { }
         });
         resetForm();
         await fetchPositions();
@@ -187,7 +187,7 @@ function Positions() {
             message: `Error deleting position: ${error.message}`,
             confirmText: 'OK',
             cancelText: null,
-            onConfirm: () => {}
+            onConfirm: () => { }
           });
         } else {
           showConfirmation({
@@ -196,7 +196,7 @@ function Positions() {
             message: 'Position deleted successfully!',
             confirmText: 'OK',
             cancelText: null,
-            onConfirm: () => {}
+            onConfirm: () => { }
           });
           await fetchPositions();
           await refreshData();
@@ -251,6 +251,22 @@ function Positions() {
           <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
         </div>
         <div className="header-actions">
+          <a
+            href="/#/careers"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary"
+            style={{
+              marginRight: '10px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              textDecoration: 'none',
+              height: '40px' // Match height of primary button
+            }}
+          >
+            <ExternalLink size={16} /> View Public Page
+          </a>
           <button className="btn-primary" onClick={() => setShowForm(!showForm)}>{showForm ? 'Cancel' : '+ Add Position'}</button>
         </div>
       </motion.div>
@@ -259,14 +275,14 @@ function Positions() {
           <h2>{editingPosition ? 'Edit Position' : 'Add New Position'}</h2>
           <form onSubmit={handleSubmit}>
             <div className="form-row">
-              <div className="form-group"><label>Client *</label><select required value={formData.client_id} onChange={(e) => setFormData({...formData, client_id: e.target.value})}><option value="">Select client...</option>{clients.map(client => (<option key={client.id} value={client.id}>{client.company_name}</option>))}</select></div>
-              <div className="form-group"><label>Position Title *</label><input type="text" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} /></div>
+              <div className="form-group"><label>Client *</label><select required value={formData.client_id} onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}><option value="">Select client...</option>{clients.map(client => (<option key={client.id} value={client.id}>{client.company_name}</option>))}</select></div>
+              <div className="form-group"><label>Position Title *</label><input type="text" required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label>Status</label><select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}><option>Open</option><option>Closed</option></select></div>
-              <div className="form-group"><label>Salary Range</label><input type="text" placeholder="e.g., $80,000 - $100,000" value={formData.salary_range} onChange={(e) => setFormData({...formData, salary_range: e.target.value})} /></div>
+              <div className="form-group"><label>Status</label><select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}><option>Open</option><option>Closed</option></select></div>
+              <div className="form-group"><label>Salary Range</label><input type="text" placeholder="e.g., $80,000 - $100,000" value={formData.salary_range} onChange={(e) => setFormData({ ...formData, salary_range: e.target.value })} /></div>
             </div>
-            <div className="form-group"><label>Job Description</label><RichTextEditor value={formData.description} onChange={(value) => setFormData({...formData, description: value})} /></div>
+            <div className="form-group"><label>Job Description</label><RichTextEditor value={formData.description} onChange={(value) => setFormData({ ...formData, description: value })} /></div>
             <button type="submit" className="btn-primary">{editingPosition ? 'Update Position' : 'Add Position'}</button>
           </form>
         </motion.div>

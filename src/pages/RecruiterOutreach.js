@@ -4,7 +4,7 @@ import { useConfirmation } from '../contexts/ConfirmationContext';
 import { supabase } from '../services/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion'; // Keep AnimatePresence
 import { useNavigate } from 'react-router-dom';
-import mammoth from 'mammoth';
+
 import {
   ExternalLink, Eye, Edit, Trash2, ChevronUp, ChevronDown,
   Upload, Search, Filter, X, Star, Calendar, FileText, Bell, AlertCircle,
@@ -15,9 +15,8 @@ import DocumentViewerModal from '../components/DocumentViewerModal';
 // --- ADDED: Imports for the new Date/Time Picker ---
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import MyOutreachTab from '../components/MyOutreachTab'; // ADDED: Import the new tab component
-// ---------------------------------------------------
-
+import SearchResultBox from '../components/SearchResultBox';
+import MyOutreachTab from '../components/MyOutreachTab';
 import '../styles/RecruiterOutreach.css';
 
 // ===================================
@@ -674,6 +673,49 @@ function RecruiterOutreach() {
   const navigate = useNavigate();
   const { showConfirmation } = useConfirmation();
   const { userProfile, fetchMyOutreachActivities, addOutreachActivity, updateOutreachActivity, deleteOutreachActivity, positions, fetchPositions } = useData();
+
+  // --- ADDED: State for Call Sheet & AI ---
+  const [selectedCandidateForAi, setSelectedCandidateForAi] = useState('');
+  const [aiGeneratedQuestions, setAiGeneratedQuestions] = useState(null);
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  // ----------------------------------------
+
+  // --- ADDED: AI Question Generator Logic ---
+  const handleGenerateQuestions = async () => {
+    if (!selectedCandidateForAi) return;
+
+    const candidate = outreachActivities.find(c => c.id === selectedCandidateForAi);
+    if (!candidate) return;
+
+    const position = positions.find(p => p.id === candidate.position_id);
+    const jobDescription = position ? position.description : "Standard interview for this role.";
+
+    setIsGeneratingQuestions(true);
+    setAiGeneratedQuestions(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-interview-questions', {
+        body: {
+          candidateProfile: `Name: ${candidate.candidate_name}\nLinkedIn: ${candidate.linkedin_url}\nNotes: ${JSON.stringify(candidate.notes)}`,
+          jobDescription: jobDescription
+        }
+      });
+
+      if (error) throw error;
+
+      setAiGeneratedQuestions(data.questions);
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      showConfirmation({
+        type: 'error',
+        title: 'AI Error',
+        message: 'Failed to generate interview questions. Please try again.'
+      });
+    } finally {
+      setIsGeneratingQuestions(false);
+    }
+  };
+  // ----------------------------------------
 
   // --- ADDED: Reusable list of stages for dropdowns ---
   const outreachStages = [
@@ -1515,7 +1557,13 @@ function RecruiterOutreach() {
           className={activeTab === 'roles' ? 'active' : ''}
           onClick={() => setActiveTab('roles')}
         >
-          Active Roles & Calls
+          Active Roles
+        </button>
+        <button
+          className={activeTab === 'call-sheet' ? 'active' : ''}
+          onClick={() => setActiveTab('call-sheet')}
+        >
+          Call Sheet
         </button>
         <button
           className={activeTab === 'sourcing' ? 'active' : ''}
@@ -1566,8 +1614,62 @@ function RecruiterOutreach() {
           )}
           {/* -------------------------------------------- */}
 
-          {/* Calls Dashboard */}
-          <MyCallsDashboard outreachActivities={outreachActivities} />
+
+        </div>
+      )}
+
+      {activeTab === 'call-sheet' && (
+        <div className="tab-content call-sheet-tab">
+          <div className="call-sheet-grid">
+            {/* Left Column: Calls Dashboard */}
+            <div className="call-sheet-left">
+              <MyCallsDashboard outreachActivities={outreachActivities} />
+            </div>
+
+            {/* Right Column: AI Interview Prep */}
+            <div className="call-sheet-right">
+              <div className="ai-interview-prep-card">
+                <h3><span style={{ fontSize: '1.2em' }}>🤖</span> AI Interview Prep</h3>
+                <p className="ai-prep-subtitle">Select a scheduled candidate to generate tailored interview questions.</p>
+
+                <div className="ai-prep-controls">
+                  <select
+                    className="ai-prep-select"
+                    value={selectedCandidateForAi}
+                    onChange={(e) => setSelectedCandidateForAi(e.target.value)}
+                  >
+                    <option value="">-- Select Candidate with Call Scheduled --</option>
+                    {outreachActivities
+                      .filter(a => a.activity_status === 'call_scheduled')
+                      .map(activity => (
+                        <option key={activity.id} value={activity.id}>
+                          {activity.candidate_name} - {activity.positions?.title} ({new Date(activity.scheduled_call_date).toLocaleDateString()})
+                        </option>
+                      ))}
+                  </select>
+
+                  <button
+                    className="btn-generate-questions"
+                    onClick={handleGenerateQuestions}
+                    disabled={!selectedCandidateForAi || isGeneratingQuestions}
+                  >
+                    {isGeneratingQuestions ? 'Generating...' : 'Generate Questions ✨'}
+                  </button>
+                </div>
+
+                {aiGeneratedQuestions && (
+                  <div className="ai-questions-result">
+                    <SearchResultBox
+                      title="Tailored Interview Questions"
+                      data={{ search: aiGeneratedQuestions, explanation: "These questions are generated based on the candidate's profile and the job description." }}
+                      colorClass="ai-result-blue"
+                      iconType="list"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

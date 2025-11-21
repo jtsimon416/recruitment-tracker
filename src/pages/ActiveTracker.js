@@ -3,8 +3,8 @@ import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import * as mammoth from 'mammoth'; // ADDED
-import * as pdfjsLib from 'pdfjs-dist'; // ADDED
+// Imports removed for lazy loading
+import { STAGES, STATUSES, PIPELINE_STAGES_ORDER, PIPELINE_STATUSES_LIST } from '../constants/pipeline';
 import { ChevronUp, Eye, FileText, Sparkles, AlertCircle, Video, VideoOff, MessageSquare, Calendar, Trash2 } from 'lucide-react';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import PageTransition from '../components/PageTransition';
@@ -13,12 +13,19 @@ import AiAnalysisSidebar from '../components/AiAnalysisSidebar'; // ADDED
 import '../styles/ActiveTracker.css';
 
 // --- COMPONENT: Info Sidebar for Candidate Details ---
-const InfoSidebar = ({ candidate, onClose }) => {
+const InfoSidebar = ({ candidate, pipelineEntry, onClose }) => {
   const [convertedNotesHtml, setConvertedNotesHtml] = useState(null);
 
   useEffect(() => {
     const convertDocxToHtml = async () => {
       if (candidate?.notes) {
+        let mammoth;
+        try {
+          mammoth = await import('mammoth');
+        } catch (error) {
+          console.error("Failed to load mammoth", error);
+          return;
+        }
         try {
           // If candidate.notes is a URL to a .docx file:
           if (candidate.notes.endsWith('.docx')) {
@@ -61,6 +68,9 @@ const InfoSidebar = ({ candidate, onClose }) => {
           <p><strong>LinkedIn:</strong> {candidate.linkedin_url ?
             <a href={candidate.linkedin_url} target="_blank" rel="noopener noreferrer" className="btn-link">View Profile</a> : 'N/A'}
           </p>
+          {pipelineEntry?.created_at && (
+            <p><strong>Submitted for Screening:</strong> {new Date(pipelineEntry.created_at).toLocaleDateString()}</p>
+          )}
         </div>
 
         <div className="sidebar-section">
@@ -147,7 +157,8 @@ function ActiveTracker() {
     newCommentCandidateIds,
     clearCommentNotifications,
     user,
-    createNotification
+    createNotification,
+    isDirectorOrManager
   } = useData();
   const location = useLocation();
 
@@ -180,25 +191,24 @@ function ActiveTracker() {
   const [notificationModal, setNotificationModal] = useState({ isOpen: false, type: null, data: null });
   const [selectedPosition, setSelectedPosition] = useState('all');
   const [selectedRecruiter, setSelectedRecruiter] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('Active');
+  const [selectedStatus, setSelectedStatus] = useState(STATUSES.ACTIVE);
   const [selectedStage, setSelectedStage] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'candidates.name', direction: 'ascending' });
 
   const [pendingMove, setPendingMove] = useState(null);
 
-  const DIRECTOR_EMAIL = 'brian.griffiths@brydongama.com';
+  // DIRECTOR_EMAIL constant removed
+  // stages and statuses arrays moved to constants/pipeline.js
 
-  const stages = ['Screening', 'Submit to Client', 'Interview 1', 'Interview 2', 'Interview 3', 'Offer', 'Hired'];
   const stageOrder = {
-    'Screening': 1,
-    'Submit to Client': 2,
-    'Interview 1': 3,
-    'Interview 2': 4,
-    'Interview 3': 5,
-    'Offer': 6,
-    'Hired': 7
+    [STAGES.SCREENING]: 1,
+    [STAGES.SUBMIT_TO_CLIENT]: 2,
+    [STAGES.INTERVIEW_1]: 3,
+    [STAGES.INTERVIEW_2]: 4,
+    [STAGES.INTERVIEW_3]: 5,
+    [STAGES.OFFER]: 6,
+    [STAGES.HIRED]: 7
   };
-  const statuses = ['Active', 'Hold', 'Reject'];
 
   useEffect(() => {
     if (location.state?.candidateId && location.state?.positionId) {
@@ -214,7 +224,7 @@ function ActiveTracker() {
   useEffect(() => {
     if (pendingMove) {
       const { pipelineId, newStage, oldStage, pipelineItem } = pendingMove;
-      const isDirector = user?.email === DIRECTOR_EMAIL;
+      const isDirector = isDirectorOrManager;
 
       if (isDirector) {
         setNotificationModal({
@@ -246,7 +256,7 @@ function ActiveTracker() {
       }
       setPendingMove(null);
     }
-  }, [pendingMove, user, pipeline, DIRECTOR_EMAIL]);
+  }, [pendingMove, user, pipeline, isDirectorOrManager]);
 
   // THIS IS THE NEW, SAFER LOGIC
   async function updateCandidateStage(id, newStage, currentHighestStage) {
@@ -255,21 +265,17 @@ function ActiveTracker() {
     };
 
     // Determine new status based on newStage
-    let newStatus = 'Active'; // Default to Active for most stages
-    if (newStage === 'Reject') {
-      newStatus = 'Reject';
-    } else if (newStage === 'Hold') {
-      newStatus = 'Hold';
+    let newStatus = STATUSES.ACTIVE; // Default to Active for most stages
+    if (newStage === STATUSES.REJECT) {
+      newStatus = STATUSES.REJECT;
+    } else if (newStage === STATUSES.HOLD) {
+      newStatus = STATUSES.HOLD;
     }
     // If newStage is 'Archived', the initial filter will handle it, no need to set status here.
 
     dataToUpdate.status = newStatus; // Explicitly set status
 
-    const newStageValue = stageOrder[newStage] || 0;
-
-    if (newStageValue > 0) { // Advancement stage
-      dataToUpdate.highest_stage_reached = newStage;
-    }
+    // Manual highest_stage_reached calculation removed - handled by DB trigger
     // RULE 2: If the new stage is 'Reject', 'Hold', etc. (newStageValue is 0)...
     // We do NOT update highest_stage_reached. It is "frozen" at its last known value,
     // which perfectly preserves the stage for the commission report.
@@ -319,7 +325,7 @@ function ActiveTracker() {
   async function removeCandidateFromPipeline(id) {
     const { error } = await supabase
       .from('pipeline')
-      .update({ stage: 'Archived' })
+      .update({ stage: STAGES.ARCHIVED })
       .eq('id', id);
 
     if (error) {
@@ -434,12 +440,22 @@ function ActiveTracker() {
     });
   };
 
-  const handleOpenInfoSidebar = (candidate) => {
+  const [sidebarPipelineEntry, setSidebarPipelineEntry] = useState(null);
+
+  const handleOpenInfoSidebar = (candidate, pipelineItem) => {
     setSidebarCandidate(candidate);
+    setSidebarPipelineEntry(pipelineItem);
     setShowInfoSidebar(true);
   };
 
   const handleAnalyzeFit = async (pipelineItem) => {
+    // Dynamic imports
+    const pdfjsLib = await import('pdfjs-dist');
+    const mammoth = await import('mammoth');
+
+    // Set worker source
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
     setAiAnalysisLoading(true);
     setAiAnalysisData(null);
     setShowAiAnalysisSidebar(true); // Open sidebar immediately with loading state
@@ -722,7 +738,7 @@ function ActiveTracker() {
 
 
   const filteredAndSortedPipeline = useMemo(() => {
-    let filtered = pipeline.filter(item => item.positions?.status === 'Open' && item.stage !== 'Archived');
+    let filtered = pipeline.filter(item => item.positions?.status === 'Open' && item.stage !== STAGES.ARCHIVED);
 
     if (selectedPosition !== 'all') {
       filtered = filtered.filter(item => item.position_id === selectedPosition);
@@ -735,9 +751,9 @@ function ActiveTracker() {
     if (selectedStatus !== 'all') {
       filtered = filtered.filter(item => {
         // Always exclude archived candidates
-        if (item.stage === 'Archived') return false;
+        if (item.stage === STAGES.ARCHIVED) return false;
 
-        const itemStatus = (item.status || 'Active')
+        const itemStatus = (item.status || STATUSES.ACTIVE)
           .replace(/^'(.*)'$/, '$1') // Remove leading/trailing single quotes
           .toLowerCase();
         const filterStatus = selectedStatus.toLowerCase();
@@ -835,7 +851,7 @@ function ActiveTracker() {
                             <Eye
                               size={18}
                               className="icon-view-details"
-                              onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates); }}
+                              onClick={(e) => { e.stopPropagation(); handleOpenInfoSidebar(item.candidates, item); }}
                               title="View Full Details"
                             />
                             {item.candidates?.resume_url && (
@@ -864,12 +880,12 @@ function ActiveTracker() {
                       <div>{item.candidates?.phone || 'N/A'}</div>
                       <div>
                         <select className="status-select" value={item.status || 'Active'} onChange={(e) => { e.stopPropagation(); handleStatusChange(item.id, e.target.value); }} onClick={(e) => e.stopPropagation()}>
-                          {statuses.map(status => <option key={status} value={status}>{status}</option>)}
+                          {PIPELINE_STATUSES_LIST.map(status => <option key={status} value={status}>{status}</option>)}
                         </select>
                       </div>
                       <div>
                         <select className="stage-select" value={item.stage} onChange={(e) => { e.stopPropagation(); handleStageChange(item.id, e.target.value); }} onClick={(e) => e.stopPropagation()}>
-                          {stages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+                          {PIPELINE_STAGES_ORDER.map(stage => <option key={stage} value={stage}>{stage}</option>)}
                         </select>
                       </div>
                       <div className="actions-cell">
@@ -925,7 +941,7 @@ function ActiveTracker() {
         ) : (
           <DragDropContext onDragEnd={handleDragEnd}>
             <div className="pipeline-columns">
-              {stages.map(stage => {
+              {PIPELINE_STAGES_ORDER.map(stage => {
                 const stageItems = selectedStage === 'all'
                   ? filteredAndSortedPipeline.filter(item => item.stage === stage)
                   : (selectedStage === stage ? filteredAndSortedPipeline : []);
@@ -954,7 +970,7 @@ function ActiveTracker() {
                                       <Eye
                                         size={16}
                                         className="icon-view-details"
-                                        onClick={() => handleOpenInfoSidebar(item.candidates)}
+                                        onClick={() => handleOpenInfoSidebar(item.candidates, item)}
                                         title="View Full Details"
                                       />
                                       {item.candidates?.resume_url && (
@@ -990,8 +1006,12 @@ function ActiveTracker() {
                                       <span className="card-label">Phone:</span>
                                       <span className="card-value">{item.candidates?.phone || 'N/A'}</span>
                                     </div>
+                                    <div className="card-info-row">
+                                      <span className="card-label">Submitted:</span>
+                                      <span className="card-value">{new Date(item.created_at).toLocaleDateString()}</span>
+                                    </div>
                                     <select className="status-select" value={item.status || 'Active'} onChange={(e) => handleStatusChange(item.id, e.target.value)}>
-                                      {statuses.map(status => <option key={status} value={status}>{status}</option>)}
+                                      {PIPELINE_STATUSES_LIST.map(status => <option key={status} value={status}>{status}</option>)}
                                     </select>
                                   </div>
                                   <div className="card-actions">
@@ -1065,15 +1085,15 @@ function ActiveTracker() {
 
         <div className="filter-section">
           <div className="header-controls">
-            <select className="position-filter" value={selectedStage} onChange={(e) => setSelectedStage(e.target.value)}><option value="all">All Stages</option>{stages.map(stage => <option key={stage} value={stage}>{stage}</option>)}</select>          <select className="position-filter" value={selectedPosition} onChange={(e) => setSelectedPosition(e.target.value)}><option value="all">All Positions</option>{openPositions.map(pos => <option key={pos.id} value={pos.id}>{pos.title}</option>)}</select>
+            <select className="position-filter" value={selectedStage} onChange={(e) => setSelectedStage(e.target.value)}><option value="all">All Stages</option>{PIPELINE_STAGES_ORDER.map(stage => <option key={stage} value={stage}>{stage}</option>)}</select>          <select className="position-filter" value={selectedPosition} onChange={(e) => setSelectedPosition(e.target.value)}><option value="all">All Positions</option>{openPositions.map(pos => <option key={pos.id} value={pos.id}>{pos.title}</option>)}</select>
             <select className="position-filter" value={selectedRecruiter} onChange={(e) => setSelectedRecruiter(e.target.value)}><option value="all">All Recruiters</option>{recruiters.map(rec => <option key={rec.id} value={rec.id}>{rec.name}</option>)}</select>
-            <select className="position-filter" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}><option value="all">All Statuses</option>{statuses.map(status => <option key={status} value={status}>{status}</option>)}</select>
+            <select className="position-filter" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}><option value="all">All Statuses</option>{PIPELINE_STATUSES_LIST.map(status => <option key={status} value={status}>{status}</option>)}</select>
           </div>
         </div>
 
         {view === 'list' ? renderListView() : renderPipelineView()}
 
-        {showInfoSidebar && <InfoSidebar candidate={sidebarCandidate} onClose={() => setShowInfoSidebar(false)} />}
+        {showInfoSidebar && <InfoSidebar candidate={sidebarCandidate} pipelineEntry={sidebarPipelineEntry} onClose={() => setShowInfoSidebar(false)} />}
 
         <AiAnalysisSidebar
           isOpen={showAiAnalysisSidebar}

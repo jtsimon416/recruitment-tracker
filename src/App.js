@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 // --- REMOVED: 'motion' and 'AnimatePresence' imports are no longer needed ---
 import { DataProvider, useData } from './contexts/DataContext';
 import { ConfirmationProvider } from './contexts/ConfirmationContext';
@@ -22,6 +22,7 @@ import DirectorOutreachDashboard from './pages/DirectorOutreachDashboard';
 import StrategyManager from './pages/StrategyManager';
 // --- ADDED: Import the new CompanyDocuments page ---
 import CompanyDocuments from './pages/CompanyDocuments';
+import PublicCareerPage from './pages/PublicCareerPage';
 // --------------------------------------------------
 import { usePageTransition } from './hooks/usePageTransition';
 import 'nprogress/nprogress.css';
@@ -55,16 +56,19 @@ const AppContent = ({ children }) => {
 
 function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
-  
+
   return (
     <SplashScreen>
       <DataProvider>
-        <Router basename={process.env.NODE_ENV === 'production' ? process.env.PUBLIC_URL : ''}> {/* Only use basename in production */}
+        <Router>
           <AppContent>
             <div className={`app ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}> {/* Main app container */}
               <Routes>
                 {/* Public route for Login */}
                 <Route path="/login" element={<Login />} />
+                {/* --- ADD THIS NEW PUBLIC ROUTE HERE --- */}
+                <Route path="/careers" element={<PublicCareerPage />} />
+                {/* -------------------------------------- */}
 
                 {/* Protected Routes Wrapper: All other paths require login */}
                 {/* Using path="*" ensures this wrapper handles all non-login routes */}
