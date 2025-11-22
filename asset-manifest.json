@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/recruitment-tracker/static/css/main.da17ddc6.css",
-    "main.js": "/recruitment-tracker/static/js/main.324223e4.js",
+    "main.js": "/recruitment-tracker/static/js/main.54e7bf4b.js",
     "static/js/453.8e7425fc.chunk.js": "/recruitment-tracker/static/js/453.8e7425fc.chunk.js",
     "index.html": "/recruitment-tracker/index.html",
     "main.da17ddc6.css.map": "/recruitment-tracker/static/css/main.da17ddc6.css.map",
-    "main.324223e4.js.map": "/recruitment-tracker/static/js/main.324223e4.js.map",
+    "main.54e7bf4b.js.map": "/recruitment-tracker/static/js/main.54e7bf4b.js.map",
     "453.8e7425fc.chunk.js.map": "/recruitment-tracker/static/js/453.8e7425fc.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.da17ddc6.css",
-    "static/js/main.324223e4.js"
+    "static/js/main.54e7bf4b.js"
   ]
 }
