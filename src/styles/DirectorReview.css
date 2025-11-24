@@ -1,22 +1,22 @@
 /* ===================================
    DIRECTOR REVIEW STYLES
-   (Rose-Gold Dark Theme - Professional)
+   (sunset-orange Dark Theme - Professional)
    =================================== */
 
 /* CSS Variables for consistency */
 :root {
-  --main-bg: #1a1a2e;
+  --main-bg: #000000;
   --card-bg: #2e2e54;
   --card-bg-solid: #2e2e54;
   --secondary-bg: #2a2a4e;
-  --hover-bg: #3a3a6e;
+  --hover-bg: rgba(107, 114, 128, 0.15);
   --text-primary: #f0f0f0;
   --text-secondary: #a0a0c0;
   --text-muted: #7a7a9a;
   --border-color: #4a4a70;
-  --rose-gold: #ebbcba;
-  --rose-gold-main: #ebbcba;
-  --rose-gold-shine: #f7d4d4;
+  --sunset-orange: #ebbcba;
+  --sunset-orange: #ebbcba;
+  --sunset-yellow: #f7d4d4;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   --accent-red: #f7768e;
   --accent-orange: #ff9e64;
@@ -25,11 +25,11 @@
 }
 
 .director-review-container {
-    padding: 2rem;
-    max-width: 1800px;
-    margin: 0 auto;
-    color: var(--text-primary);
-    background: var(--main-bg);
+  padding: 2rem;
+  max-width: 1800px;
+  margin: 0 auto;
+  color: var(--text-primary);
+  background: var(--main-bg);
 }
 
 /* Page Header */
@@ -69,28 +69,28 @@
    Collapsible Workflow Header
    =================================== */
 .review-header-container {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    margin-bottom: 2.5rem;
-    overflow: hidden;
-    transition: all 0.3s ease-in-out;
-    box-shadow: var(--shadow);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  margin-bottom: 2.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+  box-shadow: var(--shadow);
 }
 
 .review-header-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    cursor: pointer;
-    background: var(--secondary-bg);
-    transition: background-color 0.2s;
-    border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  background: var(--secondary-bg);
+  transition: background-color 0.2s;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .review-header-title:hover {
-    background-color: var(--hover-bg);
+  background-color: var(--hover-bg);
 }
 
 .review-header-left {
@@ -100,15 +100,15 @@
 }
 
 .review-header-title h3 {
-    color: var(--rose-gold);
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
+  color: var(--sunset-orange);
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .lightbulb-icon {
-    color: var(--accent-orange);
-    font-size: 1.5rem;
+  color: var(--accent-orange);
+  font-size: 1.5rem;
 }
 
 .btn-toggle-panel {
@@ -123,40 +123,40 @@
 }
 
 .btn-toggle-panel:hover {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
 }
 
 /* Collapsible Content */
 .review-header-content {
-    padding: 1.5rem 2rem;
-    color: var(--text-secondary);
-    background: var(--card-bg);
+  padding: 1.5rem 2rem;
+  color: var(--text-secondary);
+  background: var(--card-bg);
 }
 
 .review-header-content p {
-    font-size: 1rem;
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-    color: var(--text-primary);
+  font-size: 1rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  color: var(--text-primary);
 }
 
 .review-header-content ul {
-    list-style-type: disc;
-    margin-left: 20px;
-    padding-left: 0;
-    font-size: 0.95rem;
-    color: var(--text-secondary);
+  list-style-type: disc;
+  margin-left: 20px;
+  padding-left: 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
 }
 
 .review-header-content ul li {
-    margin-bottom: 0.75rem;
-    line-height: 1.5;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
 }
 
 .review-header-content strong {
-    font-weight: 700;
-    color: var(--rose-gold);
+  font-weight: 700;
+  color: var(--sunset-orange);
 }
 
 /* ===================================
@@ -179,6 +179,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -274,148 +275,155 @@
    Review Sections
    =================================== */
 .review-section {
-    margin-bottom: 3rem;
+  margin-bottom: 3rem;
 }
 
 .review-section h2 {
-    font-size: 1.75rem;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+  font-size: 1.75rem;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .review-section h2 svg {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
 }
 
 .no-candidates-message {
-    color: var(--text-muted);
-    text-align: center;
-    padding: 3rem;
-    font-size: 1rem;
-    background: var(--card-bg);
-    border-radius: 8px;
-    border: 1px dashed var(--border-color);
+  color: var(--text-muted);
+  text-align: center;
+  padding: 3rem;
+  font-size: 1rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
 }
 
 /* ===================================
    Candidate Card (Row Style)
    =================================== */
 .candidate-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem; /* Small gap between rows */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  /* Small gap between rows */
 }
 
 .candidate-card {
-    background-color: var(--card-bg);
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem; /* Row padding */
-    display: grid;
-    /* 7-column layout */
-    grid-template-columns: 2.5fr 2fr 1.5fr 1.5fr 1fr 1fr 2fr;
-    gap: 1.5rem;
-    align-items: center;
-    border: 1px solid var(--border-color);
-    transition: background-color 0.2s, border-color 0.2s;
-    min-height: 60px; /* Row height */
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  /* Row padding */
+  display: grid;
+  /* 7-column layout */
+  grid-template-columns: 2.5fr 2fr 1.5fr 1.5fr 1fr 1fr 2fr;
+  gap: 1.5rem;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  transition: background-color 0.2s, border-color 0.2s;
+  min-height: 60px;
+  /* Row height */
 }
 
 .candidate-card:hover {
-    background-color: var(--hover-bg);
-    border-color: var(--rose-gold);
+  background-color: var(--hover-bg);
+  border-color: var(--sunset-orange);
 }
 
 .card-aging {
-    border-left: 4px solid var(--accent-red);
+  border-left: 4px solid var(--accent-red);
 }
 
 /* Info items within the row */
 .card-info-item {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Prevent text overflow */
-    gap: 0.1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Prevent text overflow */
+  gap: 0.1rem;
 }
 
 .info-label {
-    font-size: 0.7rem; /* Small label */
-    color: var(--text-muted);
-    text-transform: uppercase;
-    font-weight: 600;
+  font-size: 0.7rem;
+  /* Small label */
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .info-value {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Candidate Name section */
 .candidate-name-group {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .candidate-name-group .info-value {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary);
 }
 
 .name-icons {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* ========= THIS IS THE FIX ========= */
 .card-actions {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 0.75rem;
-    /* This tells the grid item to align its children in a row */
-    flex-direction: row; 
-    flex-wrap: nowrap; /* Ensure they don't wrap to the next line */
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  /* This tells the grid item to align its children in a row */
+  flex-direction: row;
+  flex-wrap: nowrap;
+  /* Ensure they don't wrap to the next line */
 }
+
 /* =================================== */
 
 
 /* Icon Buttons (Resume, LinkedIn) */
 .icon-btn {
-    background-color: var(--secondary-bg);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.8rem;
-    padding: 0;
+  background-color: var(--secondary-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.8rem;
+  padding: 0;
 }
 
 .icon-btn:hover {
-    background-color: var(--hover-bg);
-    color: var(--rose-gold);
-    border-color: var(--rose-gold);
+  background-color: var(--hover-bg);
+  color: var(--sunset-orange);
+  border-color: var(--sunset-orange);
 }
 
 /* Warning icon in actions area */
 .aging-warning-icon {
-    font-size: 1.2rem;
-    color: var(--accent-red);
+  font-size: 1.2rem;
+  color: var(--accent-red);
 }
 
 /* ===================================
@@ -448,10 +456,11 @@
 
 /* Primary (Rose Gold) */
 .btn-primary {
-  background: linear-gradient(135deg, var(--rose-gold), #F39C9C);
+  background: linear-gradient(135deg, var(--sunset-orange), #F39C9C);
   color: var(--main-bg);
   box-shadow: 0 4px 12px rgba(232, 180, 184, 0.3);
 }
+
 .btn-primary:hover {
   box-shadow: 0 6px 16px rgba(232, 180, 184, 0.5);
 }
@@ -462,6 +471,7 @@
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
 }
+
 .btn-secondary:hover {
   background: var(--hover-bg);
   color: var(--text-primary);
@@ -474,14 +484,14 @@
 
 /* Primary Button - Submit to Client (Rose Gold) */
 .modal-footer .btn-primary {
-  background: linear-gradient(135deg, var(--rose-gold), var(--rose-gold-shine));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--sunset-yellow));
   color: #1a1a2e;
   font-weight: 700;
   box-shadow: 0 4px 12px rgba(235, 188, 186, 0.4);
 }
 
 .modal-footer .btn-primary:hover {
-  background: linear-gradient(135deg, var(--rose-gold-shine), var(--rose-gold));
+  background: linear-gradient(135deg, var(--sunset-yellow), var(--sunset-orange));
   box-shadow: 0 6px 20px rgba(235, 188, 186, 0.6);
 }
 
@@ -540,6 +550,7 @@
     opacity: 0;
     backdrop-filter: blur(0);
   }
+
   to {
     opacity: 1;
     backdrop-filter: blur(10px);
@@ -570,6 +581,7 @@
     opacity: 0;
     transform: translateY(30px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -601,7 +613,7 @@
   content: '';
   width: 4px;
   height: 24px;
-  background: linear-gradient(180deg, var(--rose-gold), var(--rose-gold-shine));
+  background: linear-gradient(180deg, var(--sunset-orange), var(--sunset-yellow));
   border-radius: 2px;
   box-shadow: 0 0 10px rgba(235, 188, 186, 0.5);
 }
@@ -636,7 +648,7 @@
 }
 
 .modal-body::-webkit-scrollbar-thumb:hover {
-  background: var(--rose-gold);
+  background: var(--sunset-orange);
 }
 
 /* ===================================
@@ -662,7 +674,7 @@
 }
 
 .modal-comments-history::-webkit-scrollbar-thumb:hover {
-  background: var(--rose-gold);
+  background: var(--sunset-orange);
 }
 
 /* Section Title */
@@ -712,7 +724,7 @@
   margin: 0;
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -722,7 +734,7 @@
   content: '';
   width: 6px;
   height: 6px;
-  background: var(--rose-gold);
+  background: var(--sunset-orange);
   border-radius: 50%;
   box-shadow: 0 0 8px rgba(235, 188, 186, 0.6);
 }
@@ -777,8 +789,8 @@
 
 .btn-icon:hover {
   background: var(--secondary-bg);
-  color: var(--rose-gold);
-  border-color: var(--rose-gold);
+  color: var(--sunset-orange);
+  border-color: var(--sunset-orange);
   transform: scale(1.15);
   box-shadow: 0 4px 12px rgba(235, 188, 186, 0.4);
 }
@@ -811,7 +823,7 @@
 }
 
 .edit-comment-textarea:focus {
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   outline: none;
   box-shadow: 0 0 0 3px rgba(235, 188, 186, 0.15);
   background: var(--card-bg-solid);
@@ -879,7 +891,7 @@
 
 .form-textarea:focus {
   outline: none;
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   box-shadow: 0 0 0 4px rgba(235, 188, 186, 0.15);
   background: var(--secondary-bg);
 }
@@ -975,95 +987,104 @@
     grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1.5fr;
     gap: 1rem;
   }
+
   .candidate-card .card-info-item:nth-child(5) {
     display: none;
   }
 }
 
 @media (max-width: 1100px) {
-    .candidate-card {
-        grid-template-columns: 1fr; /* Stack into a single column */
-        gap: 1rem;
-        padding: 1rem;
-    }
-    .candidate-name-group {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    .name-icons {
-        justify-content: flex-start;
-    }
-    .card-actions {
-        justify-content: flex-start;
-        padding-top: 0.5rem;
-        border-top: 1px solid var(--border-color);
-        margin-top: 1rem;
-    }
-    .info-label {
-        display: block; /* Show labels when stacked */
-    }
-    .info-value {
-        font-size: 0.9rem;
-    }
-    /* Show 'Submitted' column again when stacked */
-    .candidate-card .card-info-item:nth-child(5) {
-      display: flex;
-    }
+  .candidate-card {
+    grid-template-columns: 1fr;
+    /* Stack into a single column */
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .candidate-name-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .name-icons {
+    justify-content: flex-start;
+  }
+
+  .card-actions {
+    justify-content: flex-start;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 1rem;
+  }
+
+  .info-label {
+    display: block;
+    /* Show labels when stacked */
+  }
+
+  .info-value {
+    font-size: 0.9rem;
+  }
+
+  /* Show 'Submitted' column again when stacked */
+  .candidate-card .card-info-item:nth-child(5) {
+    display: flex;
+  }
 }
 
 
 /* Modal Responsive Design */
 @media (max-width: 768px) {
-    .director-review-container {
-        padding: 1rem;
-    }
+  .director-review-container {
+    padding: 1rem;
+  }
 
-    .modal-overlay {
-        padding: 0.5rem;
-    }
+  .modal-overlay {
+    padding: 0.5rem;
+  }
 
-    .modal-content {
-        max-width: 100%;
-        border-radius: 16px;
-    }
+  .modal-content {
+    max-width: 100%;
+    border-radius: 16px;
+  }
 
-    .modal-header {
-        padding: 1.5rem;
-    }
+  .modal-header {
+    padding: 1.5rem;
+  }
 
-    .modal-header h2 {
-        font-size: 1.25rem;
-    }
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
 
-    .modal-comments-history {
-        padding: 1.5rem;
-        max-height: 300px;
-    }
+  .modal-comments-history {
+    padding: 1.5rem;
+    max-height: 300px;
+  }
 
-    .form-group {
-        padding: 1.5rem;
-    }
+  .form-group {
+    padding: 1.5rem;
+  }
 
-    .modal-footer {
-        padding: 1.25rem 1.5rem;
-        flex-direction: column;
-        gap: 1rem;
-    }
+  .modal-footer {
+    padding: 1.25rem 1.5rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
 
-    .modal-action-group {
-        width: 100%;
-        flex-direction: column;
-    }
+  .modal-action-group {
+    width: 100%;
+    flex-direction: column;
+  }
 
-    .modal-footer .btn {
-        width: 100%;
-        justify-content: center;
-    }
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
 
-    .btn-close-footer {
-        order: -1;
-    }
+  .btn-close-footer {
+    order: -1;
+  }
 }
 
 /* ===================================
@@ -1105,8 +1126,8 @@
 }
 
 .tab-button.active {
-  color: var(--rose-gold);
-  border-bottom-color: var(--rose-gold);
+  color: var(--sunset-orange);
+  border-bottom-color: var(--sunset-orange);
   background: rgba(235, 188, 186, 0.08);
 }
 
@@ -1114,7 +1135,7 @@
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  background: var(--rose-gold);
+  background: var(--sunset-orange);
   color: var(--main-bg);
   width: 22px;
   height: 22px;
@@ -1128,7 +1149,7 @@
 }
 
 .tab-button.active .tab-badge {
-  background: linear-gradient(135deg, var(--rose-gold), var(--rose-gold-shine));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--sunset-yellow));
   box-shadow: 0 2px 8px rgba(235, 188, 186, 0.4);
 }
 
@@ -1143,6 +1164,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1194,7 +1216,7 @@
 }
 
 .stat-card:hover {
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   transform: translateY(-2px);
 }
@@ -1278,7 +1300,7 @@
 
 .decision-card:hover {
   background: var(--hover-bg);
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
 }
 
 .decision-card.approved {
@@ -1380,8 +1402,8 @@
 
 .template-btn:hover {
   background: var(--hover-bg);
-  color: var(--rose-gold);
-  border-color: var(--rose-gold);
+  color: var(--sunset-orange);
+  border-color: var(--sunset-orange);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(235, 188, 186, 0.3);
 }

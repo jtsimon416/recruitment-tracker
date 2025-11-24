@@ -15,7 +15,7 @@
 
 .page-header h1 {
   font-size: 2.5rem;
-  background: var(--rose-gold-gradient);
+  background: var(--sunset-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0;
@@ -43,7 +43,7 @@
 }
 
 .btn-primary {
-  background: var(--rose-gold-gradient);
+  background: var(--sunset-gradient);
   color: var(--primary-bg);
   border: none;
   padding: 12px 24px;
@@ -58,7 +58,7 @@
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-polished-hover);
-  background: var(--rose-gold-gradient-hover);
+  background: var(--sunset-gradient-hover);
 }
 
 .form-card {
@@ -73,7 +73,7 @@
 .form-card h2 {
   margin-top: 0;
   margin-bottom: 20px;
-  color: var(--rose-gold-main);
+  color: var(--sunset-orange);
   font-size: 24px;
 }
 
@@ -114,7 +114,7 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--rose-gold-main);
+  border-color: var(--sunset-orange);
 }
 
 .form-group textarea {
@@ -140,12 +140,12 @@
 .client-card:hover {
   box-shadow: var(--shadow-polished-hover);
   transform: translateY(-4px);
-  border-color: var(--rose-gold-main);
+  border-color: var(--sunset-orange);
 }
 
 .client-card h3 {
   margin: 0 0 15px 0;
-  color: var(--rose-gold-main);
+  color: var(--sunset-orange);
   font-size: 20px;
   font-weight: 700;
 }
@@ -249,11 +249,11 @@
 
 .client-card:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  border-color: var(--rose-gold); /* Rose gold border on hover */
+  border-color: var(--sunset-orange); /* Rose gold border on hover */
 }
 
 .client-card h3 {
-  border-bottom: 2px solid var(--rose-gold); /* Rose gold accent */
+  border-bottom: 2px solid var(--sunset-orange); /* Rose gold accent */
   padding-bottom: 10px;
   margin-top: 0;
   margin-bottom: 15px;
@@ -294,7 +294,7 @@
 }
 
 .stat-item svg {
-  color: var(--rose-gold); /* Rose gold accent */
+  color: var(--sunset-orange); /* Rose gold accent */
   margin-bottom: 5px;
 }
 

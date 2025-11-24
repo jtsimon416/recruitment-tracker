@@ -156,13 +156,13 @@ const TabNavigation = ({ activeTab, setActiveTab, upcomingCount }) => {
   ];
 
   return (
-    <div className="interview-hub-tabs">
+    <div className="tabs-container">
       {tabs.map(tab => {
         const Icon = tab.icon;
         return (
           <motion.button
             key={tab.id}
-            className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+            className={`tab-button ${activeTab === tab.id ? 'active' : ''} glow-on-hover`}
             onClick={() => setActiveTab(tab.id)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -1140,7 +1140,7 @@ function InterviewHub() {
       >
         <div className="header-content">
           <h1>Interview Hub</h1>
-          <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
+
         </div>
         <div className="header-actions">
           <p>Manage and track all candidate interviews</p>

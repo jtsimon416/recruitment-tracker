@@ -3,9 +3,9 @@ import { supabase } from '../services/supabaseClient';
 import { useData } from '../contexts/DataContext';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import { AnimatePresence } from 'framer-motion';
-import { Upload, FileText, Trash2, Eye, Download, Loader, Filter, XCircle, Edit } from 'lucide-react'; 
+import { Upload, FileText, Trash2, Eye, Download, Loader, Filter, XCircle, Edit } from 'lucide-react';
 import DocumentViewerModal from '../components/DocumentViewerModal';
-import DocumentUploadModal from '../components/DocumentUploadModal'; 
+import DocumentUploadModal from '../components/DocumentUploadModal';
 import DocumentEditModal from '../components/DocumentEditModal'; // NEW IMPORT
 import '../styles/CompanyDocuments.css';
 
@@ -51,16 +51,16 @@ function CompanyDocuments() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewingDocument, setViewingDocument] = useState(null);
-  
-  const [showUploadModal, setShowUploadModal] = useState(false); 
-  
+
+  const [showUploadModal, setShowUploadModal] = useState(false);
+
   const [editingDocument, setEditingDocument] = useState(null); // NEW STATE for editing modal
-  
+
   // States for Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [subCategoryFilter, setSubCategoryFilter] = useState('all');
-  
+
   // Define bucket name as a constant
   const BUCKET_NAME = 'company-documents';
 
@@ -142,11 +142,11 @@ function CompanyDocuments() {
             .from('company_documents')
             .delete()
             .eq('id', doc.id);
-          
+
           if (deleteDbError) throw deleteDbError;
-          
+
           showConfirmation({ type: 'success', title: 'Deleted', message: `"${doc.file_name}" was deleted.` });
-          fetchDocuments(); 
+          fetchDocuments();
         } catch (err) {
           console.error('Error deleting document:', err);
           showConfirmation({ type: 'error', title: 'Deletion Failed', message: err.message });
@@ -164,53 +164,55 @@ function CompanyDocuments() {
       window.open(doc.file_url, '_blank', 'noopener,noreferrer');
     }
   };
-  
+
   const handleEditDocument = (doc) => { // NEW function to open edit modal
     setEditingDocument(doc);
   };
-  
+
   const handleCategoryChange = (e) => {
     setCategoryFilter(e.target.value);
-    setSubCategoryFilter('all'); 
+    setSubCategoryFilter('all');
   };
 
   const isFilterActive = searchTerm || categoryFilter !== 'all' || subCategoryFilter !== 'all';
-  
+
   return (
     <div className="page-container company-documents-container">
       <div className="page-header">
-        <div>
+        <div className="header-content">
           <h1>Company Documents</h1>
-          <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
+
         </div>
-        <button className="btn-primary" onClick={() => setShowUploadModal(true)}>
-          <Upload size={16} style={{marginRight: '8px'}} />
-          Upload Document
-        </button>
+        <div className="header-actions">
+          <button className="btn-primary" onClick={() => setShowUploadModal(true)}>
+            <Upload size={16} style={{ marginRight: '8px' }} />
+            Upload Document
+          </button>
+        </div>
       </div>
 
       {/* --- FILTER BAR --- */}
-      <div className="card" style={{padding: '1.5rem', marginBottom: '2rem'}}>
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
-            <h3><Filter size={20} /> Filter Documents</h3>
-            <button 
-                className="btn-secondary" 
-                onClick={handleClearFilters}
-                disabled={!isFilterActive}
-                style={{
-                    padding: '8px 16px', 
-                    fontSize: '14px',
-                    opacity: isFilterActive ? 1 : 0.5,
-                }}
-            >
-                <XCircle size={16} style={{marginRight: '6px'}} /> Reset Filters
-            </button>
+      <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3><Filter size={20} /> Filter Documents</h3>
+          <button
+            className="btn-secondary"
+            onClick={handleClearFilters}
+            disabled={!isFilterActive}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              opacity: isFilterActive ? 1 : 0.5,
+            }}
+          >
+            <XCircle size={16} style={{ marginRight: '6px' }} /> Reset Filters
+          </button>
         </div>
 
-        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '20px'}}>
-          
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '20px' }}>
+
           {/* Main Category Filter */}
-          <div className="form-group" style={{marginBottom: '0'}}>
+          <div className="form-group" style={{ marginBottom: '0' }}>
             <label>Category</label>
             <select className="filter-select" value={categoryFilter} onChange={handleCategoryChange}>
               <option value="all">All Categories</option>
@@ -219,14 +221,14 @@ function CompanyDocuments() {
               ))}
             </select>
           </div>
-          
+
           {/* Sub Category Filter */}
-          <div className="form-group" style={{marginBottom: '0'}}>
+          <div className="form-group" style={{ marginBottom: '0' }}>
             <label>Sub-Category</label>
-            <select className="filter-select" 
-                    value={subCategoryFilter} 
-                    onChange={(e) => setSubCategoryFilter(e.target.value)}
-                    disabled={categoryFilter === 'all'}
+            <select className="filter-select"
+              value={subCategoryFilter}
+              onChange={(e) => setSubCategoryFilter(e.target.value)}
+              disabled={categoryFilter === 'all'}
             >
               <option value="all">All Sub-Categories</option>
               {categoryFilter !== 'all' && CATEGORIES[categoryFilter] && CATEGORIES[categoryFilter].map(subCat => (
@@ -234,11 +236,11 @@ function CompanyDocuments() {
               ))}
             </select>
           </div>
-          
+
           {/* Search Bar */}
-          <div className="form-group" style={{marginBottom: '0'}}>
+          <div className="form-group" style={{ marginBottom: '0' }}>
             <label>Search by Name/Category/Uploader</label>
-             <input
+            <input
               type="text"
               className="filter-search-input"
               placeholder="Type to search all fields..."
@@ -249,7 +251,7 @@ function CompanyDocuments() {
         </div>
       </div>
       {/* --- END: FILTER BAR --- */}
-      
+
       <div className="document-list-section card">
         <h3><FileText size={20} /> Uploaded Documents ({filteredDocuments.length})</h3>
         {loading ? (
@@ -263,11 +265,11 @@ function CompanyDocuments() {
             <table className="documents-table">
               <thead>
                 <tr>
-                  <th style={{width: '30%'}}>File Name</th>
-                  <th style={{width: '20%'}}>Category</th>
-                  <th style={{width: '20%'}}>Sub-Category</th>
-                  <th style={{width: '15%'}}>Uploaded At</th>
-                  <th style={{width: '15%'}}>Actions</th>
+                  <th style={{ width: '30%' }}>File Name</th>
+                  <th style={{ width: '20%' }}>Category</th>
+                  <th style={{ width: '20%' }}>Sub-Category</th>
+                  <th style={{ width: '15%' }}>Uploaded At</th>
+                  <th style={{ width: '15%' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -278,25 +280,25 @@ function CompanyDocuments() {
                     </td>
                     <td>{doc.category || 'N/A'}</td>
                     <td>{doc.sub_category || 'N/A'}</td>
-                    
+
                     <td>{formatDateTime(doc.uploaded_at)}</td>
                     <td className="actions-cell">
-                        {/* NEW: Edit/Move Button */}
-                        <button className="btn-action edit" onClick={() => handleEditDocument(doc)} title="Change Folder/Category">
-                            <Edit size={16} />
+                      {/* NEW: Edit/Move Button */}
+                      <button className="btn-action edit" onClick={() => handleEditDocument(doc)} title="Change Folder/Category">
+                        <Edit size={16} />
+                      </button>
+
+                      <button className="btn-action view" onClick={() => handleViewDocument(doc)} title="View Document">
+                        <Eye size={16} />
+                      </button>
+                      <a href={doc.file_url} download={doc.file_name} className="btn-action download" title="Download Document" target="_blank" rel="noopener noreferrer">
+                        <Download size={16} />
+                      </a>
+                      {userProfile?.id === doc.uploaded_by_id && (
+                        <button className="btn-action delete" onClick={() => handleDeleteDocument(doc)} title="Delete Document">
+                          <Trash2 size={16} />
                         </button>
-                        
-                        <button className="btn-action view" onClick={() => handleViewDocument(doc)} title="View Document">
-                            <Eye size={16} />
-                        </button>
-                        <a href={doc.file_url} download={doc.file_name} className="btn-action download" title="Download Document" target="_blank" rel="noopener noreferrer">
-                            <Download size={16} />
-                        </a>
-                        {userProfile?.id === doc.uploaded_by_id && (
-                            <button className="btn-action delete" onClick={() => handleDeleteDocument(doc)} title="Delete Document">
-                                <Trash2 size={16} />
-                            </button>
-                        )}
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -313,11 +315,11 @@ function CompanyDocuments() {
             isOpen={showUploadModal}
             onClose={() => setShowUploadModal(false)}
             userProfile={userProfile}
-            onUploadSuccess={fetchDocuments} 
+            onUploadSuccess={fetchDocuments}
           />
         )}
       </AnimatePresence>
-      
+
       {/* NEW: Document Edit/Move Modal */}
       <AnimatePresence>
         {editingDocument && (

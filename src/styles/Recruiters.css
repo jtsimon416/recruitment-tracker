@@ -21,7 +21,7 @@
 
 .page-header h1 {
   font-size: 2.5rem; /* Matched Dashboard h1 font-size */
-  background: var(--rose-gold-gradient);
+  background: var(--sunset-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0; /* Remove default margin */
@@ -83,7 +83,7 @@
   box-shadow: var(--shadow);
   transition: all 0.2s ease-in-out;
   border: 1px solid var(--border-color);
-  border-left: 4px solid var(--accent-purple);
+  border-left: 4px solid var(--sunset-orange);
   display: flex;
   flex-direction: column;
 }
@@ -91,7 +91,7 @@
 .recruiter-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(187, 154, 247, 0.3);
-  border-color: var(--accent-purple);
+  border-color: var(--sunset-orange);
 }
 
 .recruiter-card h3 {
@@ -137,7 +137,7 @@
 /* Button styles matching Clients.css */
 .btn-edit {
   flex: 1;
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--accent-pink));
   color: white;
   border: none;
   padding: 10px 16px;
@@ -201,8 +201,8 @@
 }
 
 .tab-button.active {
-  color: var(--rose-gold-main);
-  border-bottom: 3px solid var(--rose-gold-main);
+  color: var(--sunset-orange);
+  border-bottom: 3px solid var(--sunset-orange);
   font-weight: 600;
 }
 

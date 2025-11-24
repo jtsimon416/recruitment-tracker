@@ -3,27 +3,27 @@
 /* Define variables for local use (or rely on global) */
 /* Assuming these map to your main index.css variables */
 :root {
-    --soft-lavender: #C5B9D6;
-    --dusty-pink: #F7A9BA;
-    --peachy-rose: #F4C2A8;
-    --rose-gold: #E8B4B8;
-    --mint-cream: #B8D4D0;
-    --accent-green: #9ECE6A;
-    --accent-blue: #7AA2F7;
-    --border-color: #414868;
-    --card-bg: #24283B;
-    --secondary-bg: #1F2335; 
-    --hover-bg: #3b4261;
-    --text-primary: #C0CAF5;
-    --text-secondary: #A9B1D6;
-    --main-bg: #1A1B26;
+  --soft-lavender: #C5B9D6;
+  --dusty-pink: #F7A9BA;
+  --peachy-rose: #F4C2A8;
+  --sunset-orange: #E8B4B8;
+  --mint-cream: #B8D4D0;
+  --accent-green: #9ECE6A;
+  --accent-blue: #7AA2F7;
+  --border-color: #414868;
+  --card-bg: #24283B;
+  --secondary-bg: #1F2335;
+  --hover-bg: rgba(107, 114, 128, 0.15);
+  --text-primary: #C0CAF5;
+  --text-secondary: #A9B1D6;
+  --main-bg: #000000;
 }
 
 /* Pipeline Funnel Container */
 .pipeline-funnel-wrapper {
   width: 100%;
   max-width: 1300px;
-  margin: 0 auto 10px auto; 
+  margin: 0 auto 10px auto;
   padding: 15px;
   background: var(--card-bg);
   border-radius: 8px;
@@ -34,7 +34,8 @@
 .pipeline-funnel-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--rose-gold); /* Themed color */
+  color: var(--sunset-orange);
+  /* Themed color */
   margin: 0 0 12px 0;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -51,7 +52,8 @@
   width: 100%;
   border-collapse: collapse;
   background: var(--card-bg);
-  min-width: 800px; /* Ensure table doesn't collapse too much */
+  min-width: 800px;
+  /* Ensure table doesn't collapse too much */
 }
 
 /* Table Header */
@@ -61,7 +63,8 @@
 }
 
 .pos-header {
-  width: 250px; /* Wider for position title */
+  width: 250px;
+  /* Wider for position title */
   text-align: left;
   padding: 12px 15px;
   font-size: 11px;
@@ -108,7 +111,8 @@
 }
 
 .pos-info:hover .pos-title {
-  color: var(--rose-gold); /* Themed color on hover */
+  color: var(--sunset-orange);
+  /* Themed color on hover */
 }
 
 .pos-title {
@@ -159,7 +163,8 @@
 }
 
 .stage-num:hover {
-  background: rgba(232, 180, 184, 0.12); /* Rose Gold tint on hover */
+  background: rgba(232, 180, 184, 0.12);
+  /* Rose Gold tint on hover */
 }
 
 .stage-num:active {
@@ -195,23 +200,24 @@
 
 /* Overall Conversion Summary */
 .overall-conversion-summary {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    padding: 15px;
-    background: var(--secondary-bg);
-    border-top: 1px solid var(--border-color);
-    border-radius: 0 0 8px 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    gap: 10px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 15px;
+  background: var(--secondary-bg);
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 0 8px 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  gap: 10px;
 }
 
 .summary-label {
-    color: var(--text-secondary);
+  color: var(--text-secondary);
 }
 
 .summary-value {
-    font-weight: 700;
-    color: var(--accent-green); /* Success color */
+  font-weight: 700;
+  color: var(--accent-green);
+  /* Success color */
 }

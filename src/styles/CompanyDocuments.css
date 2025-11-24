@@ -1,21 +1,5 @@
 /* src/styles/CompanyDocuments.css */
 
-.company-documents-container {
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.company-documents-container .page-header {
-  margin-bottom: 2rem;
-}
-
-.company-documents-container .page-header h1 {
-  font-size: 2rem;
-  color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
-  font-weight: 700;
-}
 
 .company-documents-container .subtitle {
   font-size: 1rem;
@@ -34,7 +18,7 @@
 }
 
 .card h3 {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   margin: 0 0 1.5rem 0;
   font-size: 1.25rem;
   display: flex;
@@ -46,23 +30,29 @@
 
 /* Upload Section */
 .upload-section input[type="file"] {
-  display: none; /* Hide the default input */
+  display: none;
+  /* Hide the default input */
 }
 
 /* Style the label to look like the primary button */
 .upload-section label.btn {
   display: inline-flex;
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, var(--rose-gold), #F39C9C);
+  background: linear-gradient(135deg, var(--sunset-orange), #F39C9C);
   color: var(--main-bg);
   box-shadow: 0 4px 12px rgba(232, 180, 184, 0.3);
-  padding: 0.75rem 1.5rem; /* Match button padding */
-  border-radius: 8px; /* Match button radius */
-  font-weight: 600; /* Match button font weight */
+  padding: 0.75rem 1.5rem;
+  /* Match button padding */
+  border-radius: 8px;
+  /* Match button radius */
+  font-weight: 600;
+  /* Match button font weight */
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  align-items: center; /* Vertically align icon and text */
-  gap: 0.5rem; /* Space between icon and text */
+  align-items: center;
+  /* Vertically align icon and text */
+  gap: 0.5rem;
+  /* Space between icon and text */
 }
 
 .upload-section label.btn:hover {
@@ -74,9 +64,12 @@
 .upload-section label.btn.disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  pointer-events: none; /* Prevent clicks when disabled */
-  transform: none; /* Disable hover effect */
-  box-shadow: 0 4px 12px rgba(232, 180, 184, 0.3); /* Keep base shadow */
+  pointer-events: none;
+  /* Prevent clicks when disabled */
+  transform: none;
+  /* Disable hover effect */
+  box-shadow: 0 4px 12px rgba(232, 180, 184, 0.3);
+  /* Keep base shadow */
 }
 
 .upload-hint {
@@ -101,18 +94,26 @@
 .spin {
   animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Document List Section */
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
   text-align: center;
   padding: 3rem;
   color: var(--text-secondary);
   font-size: 1rem;
 }
+
 .loading-state {
   display: flex;
   align-items: center;
@@ -121,7 +122,8 @@
 }
 
 .table-responsive-wrapper {
-  overflow-x: auto; /* Make table scroll horizontally on small screens */
+  overflow-x: auto;
+  /* Make table scroll horizontally on small screens */
 }
 
 
@@ -129,7 +131,8 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
-  min-width: 600px; /* Prevent table from getting too squished */
+  min-width: 600px;
+  /* Prevent table from getting too squished */
 }
 
 .documents-table thead {
@@ -145,7 +148,8 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 2px solid var(--border-color);
-  white-space: nowrap; /* Prevent headers from wrapping */
+  white-space: nowrap;
+  /* Prevent headers from wrapping */
 }
 
 .documents-table tbody tr {
@@ -162,7 +166,8 @@
   color: var(--text-secondary);
   font-size: 0.9rem;
   vertical-align: middle;
-  white-space: nowrap; /* Prevent cell content from wrapping */
+  white-space: nowrap;
+  /* Prevent cell content from wrapping */
 }
 
 .file-name-cell {
@@ -171,7 +176,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  max-width: 300px; /* Limit width and allow ellipsis */
+  max-width: 300px;
+  /* Limit width and allow ellipsis */
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -180,32 +186,39 @@
 .actions-cell {
   display: flex;
   gap: 0.5rem;
-  justify-content: flex-end; /* Align buttons to the right */
+  justify-content: flex-end;
+  /* Align buttons to the right */
 }
 
 /* Action buttons inside the table */
 .btn-action {
-  background: var(--secondary-bg); /* Use secondary for base */
+  background: var(--secondary-bg);
+  /* Use secondary for base */
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  padding: 0.5rem; /* Small padding for icon buttons */
+  padding: 0.5rem;
+  /* Small padding for icon buttons */
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  display: flex; /* Make it flex for alignment */
+  display: flex;
+  /* Make it flex for alignment */
   align-items: center;
   justify-content: center;
-  text-decoration: none; /* For the download link */
-  line-height: 1; /* Ensure icon is centered */
+  text-decoration: none;
+  /* For the download link */
+  line-height: 1;
+  /* Ensure icon is centered */
 }
 
 .btn-action:hover {
-  transform: translateY(-1px); /* Subtle hover lift */
+  transform: translateY(-1px);
+  /* Subtle hover lift */
 }
 
 .btn-action.view:hover {
-  border-color: var(--rose-gold);
-  color: var(--rose-gold);
+  border-color: var(--sunset-orange);
+  color: var(--sunset-orange);
   background: rgba(232, 180, 184, 0.1);
 }
 
@@ -226,9 +239,11 @@
   .company-documents-container {
     padding: 1rem;
   }
+
   .card {
     padding: 1rem 1.25rem;
   }
+
   /* Ensure table wrapper handles overflow */
   .table-responsive-wrapper {
     margin-left: -1.25rem;
@@ -237,7 +252,8 @@
     padding-right: 1.25rem;
   }
 
-  .documents-table th, .documents-table td {
+  .documents-table th,
+  .documents-table td {
     padding: 0.6rem 0.75rem;
   }
 }

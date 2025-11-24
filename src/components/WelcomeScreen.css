@@ -1,0 +1,113 @@
+/* Welcome Screen Styles */
+.welcome-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 70vh;
+    /* Occupy most of the dashboard area */
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.welcome-content {
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.welcome-logo {
+    width: 200px;
+    height: auto;
+    margin-bottom: 2rem;
+    filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.3));
+    animation: floatLogo 6s ease-in-out infinite;
+    mix-blend-mode: screen;
+}
+
+@keyframes floatLogo {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+        filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.3));
+    }
+
+    50% {
+        transform: translateY(-20px) scale(1.05);
+        filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.5));
+    }
+}
+
+.welcome-title {
+    font-family: 'Michroma', sans-serif;
+    font-size: 3rem;
+    margin: 0;
+    background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 4px;
+    margin-bottom: 1rem;
+}
+
+.welcome-subtitle {
+    font-size: 1.2rem;
+    color: #888;
+    max-width: 600px;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+}
+
+.welcome-instruction {
+    font-size: 0.9rem;
+    color: var(--sunset-orange);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    animation: pulseText 2s infinite;
+}
+
+@keyframes pulseText {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Holographic Grid Floor */
+.holo-grid {
+    position: absolute;
+    bottom: -50%;
+    left: -50%;
+    width: 200%;
+    height: 100%;
+    background:
+        linear-gradient(transparent 0%, rgba(255, 107, 53, 0.1) 2%, transparent 3%),
+        linear-gradient(90deg, transparent 0%, rgba(255, 107, 53, 0.1) 2%, transparent 3%);
+    background-size: 50px 50px;
+    transform: perspective(500px) rotateX(60deg);
+    animation: gridMove 20s linear infinite;
+    z-index: 1;
+    pointer-events: none;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, transparent 60%);
+}
+
+@keyframes gridMove {
+    0% {
+        transform: perspective(500px) rotateX(60deg) translateY(0);
+    }
+
+    100% {
+        transform: perspective(500px) rotateX(60deg) translateY(50px);
+    }
+}

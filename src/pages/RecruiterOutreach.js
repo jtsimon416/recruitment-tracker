@@ -8,8 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   ExternalLink, Eye, Edit, Trash2, ChevronUp, ChevronDown,
   Upload, Search, Filter, X, Star, Calendar, FileText, Bell, AlertCircle,
-  ArrowRightLeft
+  ArrowRightLeft, Menu, Briefcase, Phone, UserPlus, Sparkles
 } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import DocumentViewerModal from '../components/DocumentViewerModal';
 
 // --- ADDED: Imports for the new Date/Time Picker ---
@@ -105,7 +106,7 @@ const getStatusBadge = (status) => {
     'accepted': { label: 'Accepted', emoji: '✅', class: 'accepted', color: '#73daca' },
     'call_scheduled': { label: 'Call Scheduled', emoji: '🔵', class: 'call-scheduled', color: '#7aa2f7' },
     'declined': { label: 'Declined', emoji: '❌', class: 'declined', color: '#f7768e' },
-    'ready_for_submission': { label: 'Ready for Submission', emoji: '🚀', class: 'ready-submission', color: '#bb9af7' },
+    'ready_for_submission': { label: 'Ready for Submission', emoji: '🚀', class: 'ready-submission', color: '#6b7280' },
     'gone_cold': { label: 'Gone Cold', emoji: '❄️', class: 'gone-cold', color: '#7aa2f7' },
     'archived': { label: 'Archived', emoji: '📦', class: 'archived', color: '#a9b1d6' }
   };
@@ -351,7 +352,7 @@ const MyActiveRoles = ({ userProfile }) => {
             return (
               <motion.div
                 key={position.id}
-                className="active-role-card"
+                className="active-role-card glow-on-hover"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -407,7 +408,7 @@ const MyActiveRoles = ({ userProfile }) => {
                             )}
 
                             <button
-                              className="btn-view-instructions"
+                              className="btn-view-instructions premium-hover"
                               onClick={() => handleViewInstructions(doc, position)}
                             >
                               <Eye size={16} />
@@ -797,6 +798,7 @@ function RecruiterOutreach() {
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   // ----------------------------------------------------
   const [activeTab, setActiveTab] = useState('roles'); // 'roles' will be the default tab
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   // Load Data
   useEffect(() => {
@@ -1343,6 +1345,25 @@ function RecruiterOutreach() {
   };
   // ----------------------------------------------------
 
+  // --- ADDED: Drag and drop handler for conversation log ---
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const { source, destination } = result;
+
+    // Reorder the notes array
+    const items = Array.from(editingActivity.notes);
+    const [reorderedItem] = items.splice(source.index, 1);
+    items.splice(destination.index, 0, reorderedItem);
+
+    // Update state with the reordered array
+    setEditingActivity(prev => ({
+      ...prev,
+      notes: items
+    }));
+  };
+  // ---------------------------------------------------------
+
   const saveEdit = async () => {
     if (!editingActivity) return;
 
@@ -1548,37 +1569,46 @@ function RecruiterOutreach() {
       <div className="page-header">
         <div className="header-content">
           <h1>My Outreach</h1>
-          <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
         </div>
       </div>
 
-      <div className="strategy-tabs">
-        <button
-          className={activeTab === 'roles' ? 'active' : ''}
+      <div className="tabs-container">
+        <motion.button
+          className={`tab-button ${activeTab === 'roles' ? 'active' : ''} glow-on-hover`}
           onClick={() => setActiveTab('roles')}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
+          <Briefcase size={18} />
           Active Roles
-        </button>
-        <button
-          className={activeTab === 'call-sheet' ? 'active' : ''}
+        </motion.button>
+        <motion.button
+          className={`tab-button ${activeTab === 'call-sheet' ? 'active' : ''} glow-on-hover`}
           onClick={() => setActiveTab('call-sheet')}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
+          <Phone size={18} />
           Call Sheet
-        </button>
-        <button
-          className={activeTab === 'sourcing' ? 'active' : ''}
+        </motion.button>
+        <motion.button
+          className={`tab-button ${activeTab === 'sourcing' ? 'active' : ''} glow-on-hover`}
           onClick={() => setActiveTab('sourcing')}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
+          <UserPlus size={18} />
           Sourcing & Outreach
-        </button>
-        <button
-          className={activeTab === 'ai-search' ? 'active' : ''}
+        </motion.button>
+        <motion.button
+          className={`tab-button ${activeTab === 'ai-search' ? 'active' : ''} glow-on-hover`}
           onClick={() => setActiveTab('ai-search')}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            AI Search Generator <span style={{ fontSize: '0.8em' }}>✨</span>
-          </span>
-        </button>
+          <Sparkles size={18} />
+          AI Search Generator
+        </motion.button>
       </div>
 
       {activeTab === 'roles' && (
@@ -1755,65 +1785,76 @@ function RecruiterOutreach() {
             </div>
             {/* Filters Card */}
             <div className="filters-card">
-              <h3><Filter size={20} /> FILTERS & SEARCH</h3>
-
-              <div className="filters-grid">
-                <div className="filter-group">
-                  <label>Position:</label>
-                  <select
-                    className="filter-select"
-                    value={filters.positionId}
-                    onChange={(e) => setFilters(prev => ({ ...prev, positionId: e.target.value }))}
-                  >
-                    <option value="">All Positions</option>
-                    {openPositions.map(pos => (
-                      <option key={pos.id} value={pos.id}>
-                        {pos.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label>Status:</label>
-                  <select
-                    className="filter-select"
-                    value={filters.status}
-                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                  >
-                    <option value="">All Statuses</option>
-                    {/* --- MODIFIED: Using the stages array for consistency --- */}
-                    {outreachStages.map(stage => (
-                      <option key={stage.value} value={stage.value}>{stage.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label>Rating:</label>
-                  <select
-                    className="filter-select"
-                    value={filters.rating}
-                    onChange={(e) => setFilters(prev => ({ ...prev, rating: e.target.value }))}
-                  >
-                    <option value="">All Ratings</option>
-                    <option value="5">5 Stars</option>
-                    <option value="4">4+ Stars</option>
-                    <option value="3">3+ Stars</option>
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label>Search:</label>
-                  <input
-                    type="text"
-                    className="filter-search-input"
-                    placeholder="Search by name..."
-                    value={filters.searchQuery}
-                    onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
-                  />
-                </div>
+              <div className="filters-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isFiltersOpen ? '15px' : '0' }}>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}><Filter size={20} /> FILTERS & SEARCH</h3>
+                <button
+                  onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+                  className="btn-icon-only"
+                  style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                >
+                  {isFiltersOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
               </div>
+
+              {isFiltersOpen && (
+                <div className="filters-grid">
+                  <div className="filter-group">
+                    <label>Position:</label>
+                    <select
+                      className="filter-select"
+                      value={filters.positionId}
+                      onChange={(e) => setFilters(prev => ({ ...prev, positionId: e.target.value }))}
+                    >
+                      <option value="">All Positions</option>
+                      {openPositions.map(pos => (
+                        <option key={pos.id} value={pos.id}>
+                          {pos.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label>Status:</label>
+                    <select
+                      className="filter-select"
+                      value={filters.status}
+                      onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                    >
+                      <option value="">All Statuses</option>
+                      {/* --- MODIFIED: Using the stages array for consistency --- */}
+                      {outreachStages.map(stage => (
+                        <option key={stage.value} value={stage.value}>{stage.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label>Rating:</label>
+                    <select
+                      className="filter-select"
+                      value={filters.rating}
+                      onChange={(e) => setFilters(prev => ({ ...prev, rating: e.target.value }))}
+                    >
+                      <option value="">All Ratings</option>
+                      <option value="5">5 Stars</option>
+                      <option value="4">4+ Stars</option>
+                      <option value="3">3+ Stars</option>
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label>Search:</label>
+                    <input
+                      type="text"
+                      className="filter-search-input"
+                      placeholder="Search by name..."
+                      value={filters.searchQuery}
+                      onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* --- MODIFIED: Buttons are now wired to the updated toggle logic --- */}
               <div className="quick-filters">
@@ -2096,29 +2137,19 @@ function RecruiterOutreach() {
                                         {(!activity.notes || !Array.isArray(activity.notes) || activity.notes.length === 0) ? (
                                           <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No notes added yet</p>
                                         ) : (
-                                          activity.notes.map((note, index) => (
-                                            <div key={index} className="conversation-note-item" style={{
-                                              marginBottom: '12px',
-                                              paddingLeft: '10px',
-                                              borderLeft: `3px solid ${note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)'}`
-                                            }}>
-                                              <strong style={{
-                                                color: note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)',
-                                                textTransform: 'capitalize'
-                                              }}>
-                                                {note.speaker === 'recruiter' ? 'Me' : note.speaker}:
-                                              </strong>
-                                              <span style={{
-                                                display: 'block',
-                                                fontSize: '0.8rem',
-                                                color: 'var(--text-secondary)',
-                                                marginBottom: '4px'
-                                              }}>
-                                                {note.timestamp ? new Date(note.timestamp).toLocaleString() : ''}
-                                              </span>
-                                              <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{note.message}</p>
-                                            </div>
-                                          ))
+                                          <div className="chat-bubble-container">
+                                            {activity.notes.map((note, index) => (
+                                              <div
+                                                key={index}
+                                                className={`chat-bubble-${note.speaker === 'recruiter' ? 'recruiter' : 'candidate'}`}
+                                              >
+                                                {note.message}
+                                                <span className="chat-bubble-timestamp">
+                                                  {note.timestamp ? new Date(note.timestamp).toLocaleString() : ''}
+                                                </span>
+                                              </div>
+                                            ))}
+                                          </div>
                                         )}
 
                                         {/* Handle legacy string notes */}
@@ -2284,123 +2315,155 @@ function RecruiterOutreach() {
                 <label>Conversation Log</label>
 
                 {/* Display existing notes */}
-                <div className="conversation-log-display" style={{
-                  maxHeight: '200px',
-                  overflowY: 'auto',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '4px',
-                  padding: '10px',
-                  marginBottom: '10px',
-                  backgroundColor: 'var(--primary-bg)'
-                }}>
-                  {(!editingActivity.notes || editingActivity.notes.length === 0) ? (
-                    <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No notes yet.</p>
-                  ) : (
-                    // --- MODIFIED: Loop to handle inline editing ---
-                    editingActivity.notes.map((note, index) => (
-                      <div key={index} className="conversation-note-item" style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid var(--border-color-light)' }}>
-                        {editingNoteIndex === index ? (
-                          // --- INLINE EDITING VIEW ---
-                          <>
-                            <textarea
-                              className="form-textarea"
-                              rows="3"
-                              value={editingNoteText}
-                              onChange={(e) => setEditingNoteText(e.target.value)}
-                              style={{ marginBottom: '5px' }}
-                            />
-                            <div className="inline-edit-actions" style={{ display: 'flex', gap: '5px' }}>
-                              <button
-                                type="button"
-                                className="btn-primary"
-                                style={{ padding: '2px 6px', fontSize: '0.8rem' }}
-                                onClick={() => {
-                                  const updatedNotes = editingActivity.notes.map((n, i) =>
-                                    i === index ? { ...n, message: editingNoteText } : n
-                                  );
-                                  setEditingActivity(prev => ({ ...prev, notes: updatedNotes }));
-                                  setEditingNoteIndex(null);
-                                  setEditingNoteText('');
-                                }}
-                              >
-                                Save
-                              </button>
-                              <button
-                                type="button"
-                                className="btn-secondary"
-                                style={{ padding: '2px 6px', fontSize: '0.8rem' }}
-                                onClick={() => {
-                                  setEditingNoteIndex(null);
-                                  setEditingNoteText('');
-                                }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </>
+                <DragDropContext onDragEnd={onDragEnd}>
+                  <Droppable droppableId="conversation-log">
+                    {(provided) => (
+                      <div
+                        className="conversation-log-display"
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        style={{
+                          maxHeight: '200px',
+                          overflowY: 'auto',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '4px',
+                          padding: '10px',
+                          marginBottom: '10px',
+                          backgroundColor: 'var(--primary-bg)'
+                        }}
+                      >
+                        {(!editingActivity.notes || editingActivity.notes.length === 0) ? (
+                          <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No notes yet.</p>
                         ) : (
-                          // --- DEFAULT DISPLAY VIEW ---
-                          <>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div>
-                                <strong style={{
-                                  color: note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)',
-                                  textTransform: 'capitalize'
-                                }}>
-                                  {note.speaker === 'recruiter' ? 'Me' : note.speaker}:
-                                </strong>
-                                <span style={{
-                                  display: 'block',
-                                  fontSize: '0.8rem',
-                                  color: 'var(--text-secondary)'
-                                }}>
-                                  {note.timestamp ? new Date(note.timestamp).toLocaleString() : ''}
-                                </span>
-                              </div>
-                              <div className="note-actions" style={{ display: 'flex', gap: '5px' }}>
-                                <button
-                                  type="button"
-                                  className="btn-action"
-                                  title="Edit note"
-                                  style={{ padding: '2px' }}
-                                  onClick={() => {
-                                    setEditingNoteIndex(index);
-                                    setEditingNoteText(note.message);
-                                    setNewNoteText(''); // Stop adding new note
+                          editingActivity.notes.map((note, index) => (
+                            <Draggable key={note.timestamp + index} draggableId={note.timestamp + index} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  className={`conversation-note-item ${snapshot.isDragging ? 'is-dragging' : ''}`}
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                    marginBottom: '10px',
+                                    paddingBottom: '10px',
+                                    borderBottom: '1px solid var(--border-color-light)',
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    backgroundColor: snapshot.isDragging ? 'var(--secondary-bg-hover)' : 'transparent'
                                   }}
                                 >
-                                  <Edit size={14} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-action delete"
-                                  title="Delete note"
-                                  style={{ padding: '2px' }}
-                                  onClick={() => {
-                                    if (window.confirm('Are you sure you want to delete this note?')) {
-                                      const updatedNotes = editingActivity.notes.filter((_, i) => i !== index);
-                                      setEditingActivity(prev => ({ ...prev, notes: updatedNotes }));
-                                    }
-                                  }}
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </div>
-                            <p style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>{note.message}</p>
-                          </>
+                                  {/* Drag handle */}
+                                  <div className="drag-handle" {...provided.dragHandleProps}>
+                                    <Menu size={16} />
+                                  </div>
+
+                                  <div style={{ flexGrow: 1 }}>
+                                    {editingNoteIndex === index ? (
+                                      // --- INLINE EDITING VIEW ---
+                                      <>
+                                        <textarea
+                                          className="form-textarea"
+                                          rows="3"
+                                          value={editingNoteText}
+                                          onChange={(e) => setEditingNoteText(e.target.value)}
+                                          style={{ marginBottom: '5px' }}
+                                        />
+                                        <div className="inline-edit-actions" style={{ display: 'flex', gap: '5px' }}>
+                                          <button
+                                            type="button"
+                                            className="btn-primary"
+                                            style={{ padding: '2px 6px', fontSize: '0.8rem' }}
+                                            onClick={() => {
+                                              const updatedNotes = editingActivity.notes.map((n, i) =>
+                                                i === index ? { ...n, message: editingNoteText } : n
+                                              );
+                                              setEditingActivity(prev => ({ ...prev, notes: updatedNotes }));
+                                              setEditingNoteIndex(null);
+                                              setEditingNoteText('');
+                                            }}
+                                          >
+                                            Save
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="btn-secondary"
+                                            style={{ padding: '2px 6px', fontSize: '0.8rem' }}
+                                            onClick={() => {
+                                              setEditingNoteIndex(null);
+                                              setEditingNoteText('');
+                                            }}
+                                          >
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      // --- DEFAULT DISPLAY VIEW ---
+                                      <>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                          <div>
+                                            <strong style={{
+                                              color: note.speaker === 'candidate' ? 'var(--accent-color)' : 'var(--accent-color-blue)',
+                                              textTransform: 'capitalize'
+                                            }}>
+                                              {note.speaker === 'recruiter' ? 'Me' : note.speaker}:
+                                            </strong>
+                                            <span style={{
+                                              display: 'block',
+                                              fontSize: '0.8rem',
+                                              color: 'var(--text-secondary)'
+                                            }}>
+                                              {note.timestamp ? new Date(note.timestamp).toLocaleString() : ''}
+                                            </span>
+                                          </div>
+                                          <div className="note-actions" style={{ display: 'flex', gap: '5px' }}>
+                                            <button
+                                              type="button"
+                                              className="btn-action"
+                                              title="Edit note"
+                                              style={{ padding: '2px' }}
+                                              onClick={() => {
+                                                setEditingNoteIndex(index);
+                                                setEditingNoteText(note.message);
+                                                setNewNoteText(''); // Stop adding new note
+                                              }}
+                                            >
+                                              <Edit size={14} />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="btn-action delete"
+                                              title="Delete note"
+                                              style={{ padding: '2px' }}
+                                              onClick={() => {
+                                                if (window.confirm('Are you sure you want to delete this note?')) {
+                                                  const updatedNotes = editingActivity.notes.filter((_, i) => i !== index);
+                                                  setEditingActivity(prev => ({ ...prev, notes: updatedNotes }));
+                                                }
+                                              }}
+                                            >
+                                              <Trash2 size={14} />
+                                            </button>
+                                          </div>
+                                        </div>
+                                        <p style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>{note.message}</p>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))
                         )}
+                        {provided.placeholder}
                       </div>
-                    ))
-                    // --- END: Modified loop ---
-                  )}
-                </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
 
                 {/* Add new note (but disable if inline-editing) */}
                 <textarea
                   className="form-textarea"
-                  rows="3"
-                  placeholder={editingNoteIndex !== null ? "Editing an existing note..." : "Type a new note..."}
                   value={newNoteText}
                   onChange={(e) => setNewNoteText(e.target.value)}
                   disabled={editingNoteIndex !== null}

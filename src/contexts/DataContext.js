@@ -256,6 +256,38 @@ export function DataProvider({ children }) {
     return { success: true };
   }
 
+  // -------------------------------------------------------------------
+  // OPTIMISTIC UPDATE HELPER
+  // -------------------------------------------------------------------
+  // Generic function to handle optimistic UI updates with automatic rollback
+  async function optimisticUpdate(updateStateFn, rollbackStateFn, serverActionFn) {
+    try {
+      // Step 1: Update local state immediately (optimistic)
+      updateStateFn();
+
+      // Step 2: Perform server action in background
+      const result = await serverActionFn();
+
+      // Step 3: Check if server action succeeded
+      if (!result || result.error || !result.success) {
+        // Rollback on failure
+        rollbackStateFn();
+        return {
+          success: false,
+          error: result?.error || new Error('Server update failed')
+        };
+      }
+
+      // Step 4: Success - UI is already updated
+      return { success: true, data: result.data };
+    } catch (error) {
+      // Rollback on exception
+      console.error('Optimistic update failed:', error);
+      rollbackStateFn();
+      return { success: false, error };
+    }
+  }
+
   async function fetchPositions() {
     const { data, error } = await supabase.from('positions').select('*, clients(company_name)').order('title');
     if (error) console.error('Error fetching positions:', error);
@@ -505,6 +537,8 @@ export function DataProvider({ children }) {
     archiveOutreachForPosition,
     // Commission management
     updateCommissionStatus,
+    // Optimistic updates
+    optimisticUpdate,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

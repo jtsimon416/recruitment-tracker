@@ -11,7 +11,8 @@
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
-  box-sizing: border-box; /* ADDED */
+  box-sizing: border-box;
+  /* ADDED */
   transition: width 0.3s ease;
 }
 
@@ -30,7 +31,7 @@
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover {
-  background-color: var(--rose-gold-main);
+  background-color: var(--sunset-orange);
 }
 
 .sidebar-header {
@@ -42,7 +43,7 @@
 .sidebar-header h2 {
   font-size: 20px;
   font-weight: 700;
-  color: var(--rose-gold-shine);
+  color: var(--sunset-yellow);
   margin: 0;
   text-align: center;
 }
@@ -60,7 +61,7 @@
 }
 
 .user-info strong {
-    word-break: break-all;
+  word-break: break-all;
 }
 
 .user-info .user-role {
@@ -74,9 +75,12 @@
 .sidebar-nav {
   padding: 20px 0;
   flex-grow: 1;
-  overflow-y: auto; /* ADDED */
-  overflow-x: hidden; /* ADDED */
-  box-sizing: border-box; /* ADDED */
+  overflow-y: auto;
+  /* ADDED */
+  overflow-x: hidden;
+  /* ADDED */
+  box-sizing: border-box;
+  /* ADDED */
 }
 
 .nav-section {
@@ -88,7 +92,8 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: #FFFFFF; /* Changed to pure white for distinction */
+  color: #FFFFFF;
+  /* Changed to pure white for distinction */
   margin-bottom: 10px;
   font-weight: 600;
 }
@@ -117,37 +122,43 @@
 }
 
 .nav-link:hover {
-  background: var(--secondary-bg);
+  background: linear-gradient(90deg, rgba(255, 107, 53, 0.15), transparent);
   color: white;
-  border-left-color: var(--rose-gold-main);
+  border-left-color: var(--sunset-orange);
+  box-shadow: 0 0 15px rgba(255, 107, 53, 0.1);
 }
 
 .nav-link.active {
-  background: var(--secondary-bg);
-  color: var(--rose-gold-shine);
+  background: linear-gradient(90deg, rgba(255, 107, 53, 0.25), transparent);
+  color: var(--sunset-yellow);
   font-weight: 600;
-  border-left-color: var(--rose-gold-shine);
+  border-left-color: var(--sunset-yellow);
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
 }
 
 /* --- Collapsed Active Link Highlight --- */
 .sidebar.collapsed .nav-link.active {
-  background: var(--secondary-bg); /* Subtle background glow */
-  border-left: 4px solid var(--rose-gold-main); /* Prominent left border */
+  background: var(--secondary-bg);
+  /* Subtle background glow */
+  border-left: 4px solid var(--sunset-orange);
+  /* Prominent left border */
 }
 
 .sidebar.collapsed .nav-link.active svg {
-  color: var(--rose-gold-shine); /* Bright icon color */
+  color: var(--sunset-yellow);
+  /* Bright icon color */
 }
 
 /* Ensure the wrapper itself doesn't get odd spacing */
 .sidebar.collapsed .nav-link-wrapper {
-    height: auto;
-    margin: 5px 0;
+  height: auto;
+  margin: 5px 0;
 }
 
 /* Apply same highlight to the link within the wrapper */
 .sidebar.collapsed .nav-link-wrapper .nav-link.active {
-    margin: 0; /* Reset margin as wrapper handles it */
+  margin: 0;
+  /* Reset margin as wrapper handles it */
 }
 
 
@@ -213,27 +224,29 @@
 
 /* Style and reveal the collapsed logo */
 .sidebar-logo-collapsed {
-    display: none; /* Hidden by default */
+  display: none;
+  /* Hidden by default */
 }
 
 .sidebar.collapsed .sidebar-logo-collapsed {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: var(--primary-bg);
-    font-size: 24px;
-    font-weight: 700;
-    color: yellow;
-    margin: 0 auto; /* Center the block */
-    box-shadow: 0 0 0 2px var(--primary-bg), 0 0 0 4px var(--rose-gold-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--primary-bg);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--sunset-yellow);
+  margin: 0 auto;
+  /* Center the block */
+  box-shadow: 0 0 0 2px var(--primary-bg), 0 0 0 4px var(--sunset-orange);
 }
 
 /* Adjust header padding to prevent overflow */
 .sidebar.collapsed .sidebar-header {
-    padding: 20px 0;
+  padding: 20px 0;
 }
 
 /* Universal centering for all links and buttons */

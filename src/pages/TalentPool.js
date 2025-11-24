@@ -3,11 +3,12 @@ import { supabase, SUPABASE_URL_BASE } from '../services/supabaseClient';
 import * as mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Pen, Trash, ChevronDown, ChevronUp, X, Filter, Clipboard } from 'lucide-react';
+import { Pen, Trash, ChevronDown, ChevronUp, X, Filter, Clipboard, UserPlus, MessageSquare } from 'lucide-react';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import { useData } from '../contexts/DataContext';
 import WordDocViewerModal from '../components/Worddocviewermodal';
 import '../styles/TalentPool.css';
+import PageTransition from '../components/PageTransition';
 import '../styles/ArchiveManagement.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.mjs`;
@@ -228,6 +229,7 @@ function TalentPool() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [wordDocHtml, setWordDocHtml] = useState('');
+  const [pdfSignedUrl, setPdfSignedUrl] = useState('');
 
   // *** THIS IS THE FIX: Changed from 'true' to 'false' ***
   const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
@@ -340,7 +342,7 @@ function TalentPool() {
 
   useEffect(() => {
     const generatePreview = async () => {
-      if (candidateFormData.resume_url && candidateFormData.resume_url.endsWith('.docx')) {
+      if (candidateFormData.resume_url) {
         try {
           const { data: signedUrlData, error: signedUrlError } = await supabase.storage
             .from(BUCKET_NAME)
@@ -348,13 +350,24 @@ function TalentPool() {
 
           if (signedUrlError) throw signedUrlError;
 
-          await convertWordToHtml(signedUrlData.signedUrl);
+          if (candidateFormData.resume_url.endsWith('.docx')) {
+            await convertWordToHtml(signedUrlData.signedUrl);
+            setPdfSignedUrl('');
+          } else if (candidateFormData.resume_url.endsWith('.pdf')) {
+            setPdfSignedUrl(signedUrlData.signedUrl);
+            setWordDocHtml('');
+          } else {
+            setWordDocHtml('');
+            setPdfSignedUrl('');
+          }
         } catch (error) {
           console.error('Error generating signed URL for preview:', error);
           setWordDocHtml('<p>Unable to generate preview.</p>');
+          setPdfSignedUrl('');
         }
       } else {
         setWordDocHtml('');
+        setPdfSignedUrl('');
       }
     };
 
@@ -1036,7 +1049,7 @@ function TalentPool() {
         <div className="resume-panel-header"><h3>Document Preview</h3></div>
         <div className="resume-viewer-content">
           {candidateFormData.resume_url ? (
-            candidateFormData.resume_url.endsWith('.pdf') ? <embed src={candidateFormData.resume_url} type="application/pdf" className="resume-pdf-viewer" /> :
+            candidateFormData.resume_url.endsWith('.pdf') ? (pdfSignedUrl ? <embed src={pdfSignedUrl} type="application/pdf" className="resume-pdf-viewer" /> : <p>Loading PDF...</p>) :
               candidateFormData.resume_url.endsWith('.docx') ? (wordDocHtml ? <div dangerouslySetInnerHTML={{ __html: wordDocHtml }} /> : <p>Converting...</p>) :
                 <p>Unsupported file</p>
           ) : <div className="resume-placeholder"><p>Upload a file to preview</p></div>}
@@ -1120,330 +1133,357 @@ function TalentPool() {
     </div>
   );
 
+  // --- ADDED: Handle navigation from Global Search ---
+  useEffect(() => {
+    if (location.state?.openCandidateId) {
+      const candidateToOpen = candidates.find(c => c.id === location.state.openCandidateId);
+      if (candidateToOpen) {
+        handleEdit(candidateToOpen);
+        // Optional: Clear state to prevent reopening on refresh
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, candidates]);
+  // --------------------------------------------------
+
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-content">
-          <h1>Talent Pool</h1>
-          <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
-        </div>
-        <div className="header-actions">
-          <button className="btn-ai-parse" onClick={() => setShowAiModal(true)} disabled={!!editingCandidate}>AI Parse Resume</button>
-          <button className="btn-primary" onClick={handleOpenForm} disabled={!!editingCandidate}>+ Add Candidate</button>
-        </div>
-      </div>
-      {showForm && (<><div className="form-close-bar"><button className="btn-secondary" onClick={resetForm}>Cancel / Close</button></div>{renderSplitScreenForm()}</>)}
-      <AdvancedFilterPanel
-        expanded={filterPanelExpanded}
-        setExpanded={setFilterPanelExpanded}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedSkills={selectedSkills}
-        setSelectedSkills={setSelectedSkills}
-        uniqueSkills={uniqueSkills}
-        filteredSkills={filteredSkills}
-        skillSearchTerm={skillSearchTerm}
-        setSkillSearchTerm={setSkillSearchTerm}
-        selectedLocation={selectedLocation}
-        setSelectedLocation={setSelectedLocation}
-        uniqueLocations={uniqueLocations}
-        dateRangeStart={dateRangeStart}
-        setDateRangeStart={setDateRangeStart}
-        dateRangeEnd={dateRangeEnd}
-        setDateRangeEnd={setDateRangeEnd}
-        hasResumeFilter={hasResumeFilter}
-        setHasResumeFilter={setHasResumeFilter}
-        hasLinkedInProfileFilter={hasLinkedInProfileFilter}
-        setHasLinkedInProfileFilter={setHasLinkedInProfileFilter}
-        inPipelineFilter={inPipelineFilter}
-        setInPipelineFilter={setInPipelineFilter}
-        activeQuickFilter={activeQuickFilter}
-        handleQuickFilter={handleQuickFilter}
-        clearAllFilters={clearAllFilters}
-        activeFilterCount={activeFilterCount}
-      />
+    <PageTransition isLoading={loading}>
+      <div className="page-container">
+        <div className="page-header">
+          <div className="header-content">
+            <h1>Talent Pool</h1>
 
-      {/* NEW: LinkedIn Profiles Only Toggle */}
-      <div className="linkedin-profiles-toggle" onClick={() => setShowLinkedInProfilesOnly(!showLinkedInProfilesOnly)}>
-        <input
-          type="checkbox"
-          checked={showLinkedInProfilesOnly}
-          onChange={(e) => setShowLinkedInProfilesOnly(e.target.checked)}
-          onClick={(e) => e.stopPropagation()}
+          </div>
+          <div className="header-actions">
+            <button className="btn-ai-parse" onClick={() => setShowAiModal(true)} disabled={!!editingCandidate}>AI Parse Resume</button>
+            <button className="btn-primary" onClick={handleOpenForm} disabled={!!editingCandidate}>+ Add Candidate</button>
+          </div>
+        </div>
+        {showForm && (<><div className="form-close-bar"><button className="btn-secondary" onClick={resetForm}>Cancel / Close</button></div>{renderSplitScreenForm()}</>)}
+        <AdvancedFilterPanel
+          expanded={filterPanelExpanded}
+          setExpanded={setFilterPanelExpanded}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedSkills={selectedSkills}
+          setSelectedSkills={setSelectedSkills}
+          uniqueSkills={uniqueSkills}
+          filteredSkills={filteredSkills}
+          skillSearchTerm={skillSearchTerm}
+          setSkillSearchTerm={setSkillSearchTerm}
+          selectedLocation={selectedLocation}
+          setSelectedLocation={setSelectedLocation}
+          uniqueLocations={uniqueLocations}
+          dateRangeStart={dateRangeStart}
+          setDateRangeStart={setDateRangeStart}
+          dateRangeEnd={dateRangeEnd}
+          setDateRangeEnd={setDateRangeEnd}
+          hasResumeFilter={hasResumeFilter}
+          setHasResumeFilter={setHasResumeFilter}
+          hasLinkedInProfileFilter={hasLinkedInProfileFilter}
+          setHasLinkedInProfileFilter={setHasLinkedInProfileFilter}
+          inPipelineFilter={inPipelineFilter}
+          setInPipelineFilter={setInPipelineFilter}
+          activeQuickFilter={activeQuickFilter}
+          handleQuickFilter={handleQuickFilter}
+          clearAllFilters={clearAllFilters}
+          activeFilterCount={activeFilterCount}
         />
-        <label onClick={(e) => e.stopPropagation()}>📋 Show LinkedIn Profiles Only</label>
-      </div>
 
-      {/* NEW: Sourcing Smart Filters (only visible when toggle is ON) */}
-      {showLinkedInProfilesOnly && (
-        <div className="sourcing-filters-section">
-          <h3 className="sourcing-filters-title">🔍 Sourcing Smart Filters</h3>
+        {/* NEW: LinkedIn Profiles Only Toggle */}
+        <div className="linkedin-profiles-toggle" onClick={() => setShowLinkedInProfilesOnly(!showLinkedInProfilesOnly)}>
+          <input
+            type="checkbox"
+            checked={showLinkedInProfilesOnly}
+            onChange={(e) => setShowLinkedInProfilesOnly(e.target.checked)}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <label onClick={(e) => e.stopPropagation()}>📋 Show LinkedIn Profiles Only</label>
+        </div>
 
-          <div className="sourcing-filters-container">
-            <div className="sourcing-filter-item">
-              <label>Sourced For Position</label>
-              <div className="checkbox-list-container">
-                {positions.map(pos => (
-                  <label key={pos.id} className="checkbox-item">
+        {/* NEW: Sourcing Smart Filters (only visible when toggle is ON) */}
+        {showLinkedInProfilesOnly && (
+          <div className="sourcing-filters-section">
+            <h3 className="sourcing-filters-title">🔍 Sourcing Smart Filters</h3>
+
+            <div className="sourcing-filters-container">
+              <div className="sourcing-filter-item">
+                <label>Sourced For Position</label>
+                <div className="checkbox-list-container">
+                  {positions.map(pos => (
+                    <label key={pos.id} className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedSourcingPositions.includes(pos.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSourcingPositions([...selectedSourcingPositions, pos.id]);
+                          } else {
+                            setSelectedSourcingPositions(selectedSourcingPositions.filter(id => id !== pos.id));
+                          }
+                        }}
+                      />
+                      <span>{pos.title}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="sourcing-filter-item">
+                <label>Last Outreach Status</label>
+                <div className="checkbox-list-container">
+                  {[
+                    { value: 'outreach_sent', label: 'Outreach Sent' },
+                    { value: 'reply_received', label: 'Reply Received' },
+                    { value: 'accepted', label: 'Accepted' },
+                    { value: 'call_scheduled', label: 'Call Scheduled' },
+                    { value: 'declined', label: 'Declined' },
+                    { value: 'ready_for_submission', label: 'Ready for Submission' },
+                    { value: 'gone_cold', label: 'Gone Cold' }
+                  ].map(status => (
+                    <label key={status.value} className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedSourcingStatuses.includes(status.value)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSourcingStatuses([...selectedSourcingStatuses, status.value]);
+                          } else {
+                            setSelectedSourcingStatuses(selectedSourcingStatuses.filter(s => s !== status.value));
+                          }
+                        }}
+                      />
+                      <span>{status.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="sourcing-filter-item">
+                <label>Star Rating</label>
+                <div className="checkbox-list-container">
+                  {[5, 4, 3, 2, 1].map(rating => (
+                    <label key={rating} className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedSourcingRatings.includes(rating)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSourcingRatings([...selectedSourcingRatings, rating]);
+                          } else {
+                            setSelectedSourcingRatings(selectedSourcingRatings.filter(r => r !== rating));
+                          }
+                        }}
+                      />
+                      <span>{rating}★</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="sourcing-filter-item">
+                <label>Sourced By Recruiter</label>
+                <div className="checkbox-list-container">
+                  {recruiters.map(rec => (
+                    <label key={rec.id} className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedSourcingRecruiters.includes(rec.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSourcingRecruiters([...selectedSourcingRecruiters, rec.id]);
+                          } else {
+                            setSelectedSourcingRecruiters(selectedSourcingRecruiters.filter(id => id !== rec.id));
+                          }
+                        }}
+                      />
+                      <span>{rec.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="sourcing-filter-item">
+                <label>Profile Type</label>
+                <div className="checkbox-list-container">
+                  <label className="checkbox-item">
                     <input
                       type="checkbox"
-                      checked={selectedSourcingPositions.includes(pos.id)}
+                      checked={selectedSourcingProfileTypes.includes('shell')}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedSourcingPositions([...selectedSourcingPositions, pos.id]);
+                          setSelectedSourcingProfileTypes([...selectedSourcingProfileTypes, 'shell']);
                         } else {
-                          setSelectedSourcingPositions(selectedSourcingPositions.filter(id => id !== pos.id));
+                          setSelectedSourcingProfileTypes(selectedSourcingProfileTypes.filter(t => t !== 'shell'));
                         }
                       }}
                     />
-                    <span>{pos.title}</span>
+                    <span>Shell Profile (LinkedIn Only)</span>
                   </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="sourcing-filter-item">
-              <label>Last Outreach Status</label>
-              <div className="checkbox-list-container">
-                {[
-                  { value: 'outreach_sent', label: 'Outreach Sent' },
-                  { value: 'reply_received', label: 'Reply Received' },
-                  { value: 'accepted', label: 'Accepted' },
-                  { value: 'call_scheduled', label: 'Call Scheduled' },
-                  { value: 'declined', label: 'Declined' },
-                  { value: 'ready_for_submission', label: 'Ready for Submission' },
-                  { value: 'gone_cold', label: 'Gone Cold' }
-                ].map(status => (
-                  <label key={status.value} className="checkbox-item">
+                  <label className="checkbox-item">
                     <input
                       type="checkbox"
-                      checked={selectedSourcingStatuses.includes(status.value)}
+                      checked={selectedSourcingProfileTypes.includes('full')}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedSourcingStatuses([...selectedSourcingStatuses, status.value]);
+                          setSelectedSourcingProfileTypes([...selectedSourcingProfileTypes, 'full']);
                         } else {
-                          setSelectedSourcingStatuses(selectedSourcingStatuses.filter(s => s !== status.value));
+                          setSelectedSourcingProfileTypes(selectedSourcingProfileTypes.filter(t => t !== 'full'));
                         }
                       }}
                     />
-                    <span>{status.label}</span>
+                    <span>Full Candidate Profile</span>
                   </label>
-                ))}
+                </div>
               </div>
             </div>
 
-            <div className="sourcing-filter-item">
-              <label>Star Rating</label>
-              <div className="checkbox-list-container">
-                {[5, 4, 3, 2, 1].map(rating => (
-                  <label key={rating} className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={selectedSourcingRatings.includes(rating)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedSourcingRatings([...selectedSourcingRatings, rating]);
-                        } else {
-                          setSelectedSourcingRatings(selectedSourcingRatings.filter(r => r !== rating));
-                        }
-                      }}
-                    />
-                    <span>{rating}★</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+            <button
+              className="btn-clear-filters"
+              onClick={() => {
+                setSelectedSourcingPositions([]);
+                setSelectedSourcingStatuses([]);
+                setSelectedSourcingRatings([]);
+                setSelectedSourcingRecruiters([]);
+              }}
+            >
+              Clear Sourcing Filters
+            </button>
+          </div>
+        )}
 
-            <div className="sourcing-filter-item">
-              <label>Sourced By Recruiter</label>
-              <div className="checkbox-list-container">
-                {recruiters.map(rec => (
-                  <label key={rec.id} className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={selectedSourcingRecruiters.includes(rec.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedSourcingRecruiters([...selectedSourcingRecruiters, rec.id]);
-                        } else {
-                          setSelectedSourcingRecruiters(selectedSourcingRecruiters.filter(id => id !== rec.id));
-                        }
-                      }}
-                    />
-                    <span>{rec.name}</span>
-                  </label>
-                ))}
+        <div className="candidates-list">
+          <div className="candidates-header"><div>Name & LinkedIn</div><div>Skills</div><div>Added By</div><div>Document</div><div>Actions</div></div>
+          {currentCandidates.map((candidate, index) => (
+            <React.Fragment key={candidate.id}>
+              <div
+                className="candidate-row stagger-item glow-on-hover"
+                style={{ animationDelay: `${index * 0.05}s` }}
+                onClick={() => setExpandedRow(expandedRow === candidate.id ? null : candidate.id)}
+              >
+                <div className="candidate-name-cell">
+                  {candidate.profile_type === 'shell' && (
+                    <span className="shell-profile-badge">📋 LinkedIn Profile</span>
+                  )}
+                  <div className="candidate-name">{candidate.name}</div>
+                  {candidate.linkedin_url && <a href={candidate.linkedin_url} target="_blank" rel="noopener noreferrer" className="candidate-linkedin" onClick={(e) => e.stopPropagation()}>LinkedIn</a>}
+                </div>
+                <div className="skills-cell">{candidate.skills && <div className="skill-tag-container">{candidate.skills.split(',').map(s => s.trim()).filter(Boolean).slice(0, 4).map((skill, i) => <span key={i} className="skill-tag">{skill}</span>)}{candidate.skills.split(',').length > 4 && <span className="skill-extra-count">+{candidate.skills.split(',').length - 4}</span>}</div>}</div>
+                <div>{candidate.created_by_recruiter || 'N/A'}</div>
+                <div>{candidate.resume_url ? <button className="btn-link" onClick={(e) => handleResumeClick(e, candidate)}>{candidate.document_type || 'View'}</button> : 'N/A'}</div>
+                <div className="actions-cell">
+                  <button className="btn-icon-action edit" onClick={(e) => { e.stopPropagation(); handleEdit(candidate); }} title="Edit Candidate">
+                    <Pen size={16} />
+                  </button>
+                  <button className="btn-icon-action pipeline" onClick={(e) => { e.stopPropagation(); openPipelineModal(candidate); }} title="Add to Pipeline">
+                    <UserPlus size={16} />
+                  </button>
+                  <button className="btn-icon-action comments" onClick={(e) => { e.stopPropagation(); openCommentsModal(candidate); }} title="View Comments">
+                    <MessageSquare size={16} />
+                  </button>
+                  <button className="btn-icon-action remove" onClick={(e) => { e.stopPropagation(); handleDelete(candidate.id); }} title="Delete Candidate">
+                    <Trash size={16} />
+                  </button>
+                </div>
               </div>
-            </div>
-
-            <div className="sourcing-filter-item">
-              <label>Profile Type</label>
-              <div className="checkbox-list-container">
-                <label className="checkbox-item">
+              {expandedRow === candidate.id && (
+                <div className="expanded-details">
+                  {candidate.profile_type === 'shell' && (
+                    <div className="shell-upgrade-banner">
+                      <p>📋 This is a LinkedIn profile from past outreach. Add full details to create a complete candidate profile.</p>
+                      <button className="btn-upgrade-shell" onClick={() => handleUpgradeShell(candidate)}>
+                        ➕ Add Full Profile
+                      </button>
+                    </div>
+                  )}
+                  <p><strong>Email:</strong> {candidate.email || 'N/A'}</p>
+                  <p><strong>Phone:</strong> {candidate.phone || 'N/A'}</p>
+                  <p><strong>Location:</strong> {candidate.location || 'N/A'}</p>
+                  <p><strong>Notes:</strong> {candidate.notes || 'N/A'}</p>
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+        <div className="pagination-controls"><button onClick={goToPreviousPage} disabled={currentPage === 1} className="btn-secondary">Previous</button><span>Page {currentPage} of {totalPages}</span><button onClick={goToNextPage} disabled={currentPage === totalPages} className="btn-secondary">Next</button></div>
+        <WordDocViewerModal isOpen={showWordDocModal} onClose={() => setShowWordDocModal(false)} resumeUrl={wordDocUrl} candidateName={wordDocCandidateName} />
+        {showAiModal && (
+          <div className="modal-overlay" onClick={() => setShowAiModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h2>AI Resume Parser</h2>
+              <p className="ai-modal-description">Upload a resume (PDF or DOCX) to automatically extract candidate information using AI.</p>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const fileInput = e.target.querySelector('input[type="file"]');
+                if (fileInput.files[0]) {
+                  handleAiParseSubmit(fileInput.files[0]);
+                }
+              }}>
+                <div className="form-group">
+                  <label>Select Resume File</label>
                   <input
-                    type="checkbox"
-                    checked={selectedSourcingProfileTypes.includes('shell')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedSourcingProfileTypes([...selectedSourcingProfileTypes, 'shell']);
-                      } else {
-                        setSelectedSourcingProfileTypes(selectedSourcingProfileTypes.filter(t => t !== 'shell'));
-                      }
-                    }}
+                    type="file"
+                    accept=".pdf,.docx"
+                    required
+                    disabled={loading}
                   />
-                  <span>Shell Profile (LinkedIn Only)</span>
-                </label>
-                <label className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={selectedSourcingProfileTypes.includes('full')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedSourcingProfileTypes([...selectedSourcingProfileTypes, 'full']);
-                      } else {
-                        setSelectedSourcingProfileTypes(selectedSourcingProfileTypes.filter(t => t !== 'full'));
-                      }
-                    }}
-                  />
-                  <span>Full Candidate Profile</span>
-                </label>
-              </div>
+                </div>
+                <div className="modal-actions">
+                  <button type="submit" className="btn-primary" disabled={loading}>
+                    {loading ? 'Processing...' : 'Parse Resume'}
+                  </button>
+                  <button type="button" className="btn-secondary" onClick={() => setShowAiModal(false)} disabled={loading}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
+        )}
+        {showPipelineModal && <div className="modal-overlay" onClick={closePipelineModal}><div className="modal-content" onClick={(e) => e.stopPropagation()}><h2>Add {selectedCandidate?.name} to Pipeline</h2><form onSubmit={handlePipelineSubmit}><div className="form-group"><label>Position *</label><select value={pipelineData.position_id} onChange={(e) => setPipelineData({ ...pipelineData, position_id: e.target.value })} required><option value="">Select...</option>{positions.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}</select></div><div className="form-group"><label>Stage</label><select value={pipelineData.stage} onChange={(e) => setPipelineData({ ...pipelineData, stage: e.target.value })}>{stages.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
 
-          <button
-            className="btn-clear-filters"
-            onClick={() => {
-              setSelectedSourcingPositions([]);
-              setSelectedSourcingStatuses([]);
-              setSelectedSourcingRatings([]);
-              setSelectedSourcingRecruiters([]);
-            }}
-          >
-            Clear Sourcing Filters
-          </button>
-        </div>
-      )}
-
-      <div className="candidates-list">
-        <div className="candidates-header"><div>Name & LinkedIn</div><div>Skills</div><div>Added By</div><div>Document</div><div>Actions</div></div>
-        {currentCandidates.map(candidate => (
-          <React.Fragment key={candidate.id}>
-            <div className="candidate-row" onClick={() => setExpandedRow(expandedRow === candidate.id ? null : candidate.id)}>
-              <div className="candidate-name-cell">
-                {candidate.profile_type === 'shell' && (
-                  <span className="shell-profile-badge">📋 LinkedIn Profile</span>
-                )}
-                <div className="candidate-name">{candidate.name}</div>
-                {candidate.linkedin_url && <a href={candidate.linkedin_url} target="_blank" rel="noopener noreferrer" className="candidate-linkedin" onClick={(e) => e.stopPropagation()}>LinkedIn</a>}
-              </div>
-              <div className="skills-cell">{candidate.skills && <div className="skill-tag-container">{candidate.skills.split(',').map(s => s.trim()).filter(Boolean).slice(0, 4).map((skill, i) => <span key={i} className="skill-tag">{skill}</span>)}{candidate.skills.split(',').length > 4 && <span className="skill-extra-count">+{candidate.skills.split(',').length - 4}</span>}</div>}</div>
-              <div>{candidate.created_by_recruiter || 'N/A'}</div>
-              <div>{candidate.resume_url ? <button className="btn-link" onClick={(e) => handleResumeClick(e, candidate)}>{candidate.document_type || 'View'}</button> : 'N/A'}</div>
-              <div className="actions-cell">
-                <button className="btn-edit" onClick={(e) => { e.stopPropagation(); handleEdit(candidate); }}>Edit</button>
-                <button className="btn-add-pipeline" onClick={(e) => { e.stopPropagation(); openPipelineModal(candidate); }}>Pipeline</button>
-                <button className="btn-comments" onClick={(e) => { e.stopPropagation(); openCommentsModal(candidate); }}>Comments</button>
-                <button className="btn-delete" onClick={(e) => { e.stopPropagation(); handleDelete(candidate.id); }}>Delete</button>
-              </div>
-            </div>
-            {expandedRow === candidate.id && (
-              <div className="expanded-details">
-                {candidate.profile_type === 'shell' && (
-                  <div className="shell-upgrade-banner">
-                    <p>📋 This is a LinkedIn profile from past outreach. Add full details to create a complete candidate profile.</p>
-                    <button className="btn-upgrade-shell" onClick={() => handleUpgradeShell(candidate)}>
-                      ➕ Add Full Profile
-                    </button>
-                  </div>
-                )}
-                <p><strong>Email:</strong> {candidate.email || 'N/A'}</p>
-                <p><strong>Phone:</strong> {candidate.phone || 'N/A'}</p>
-                <p><strong>Location:</strong> {candidate.location || 'N/A'}</p>
-                <p><strong>Notes:</strong> {candidate.notes || 'N/A'}</p>
-              </div>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-      <div className="pagination-controls"><button onClick={goToPreviousPage} disabled={currentPage === 1} className="btn-secondary">Previous</button><span>Page {currentPage} of {totalPages}</span><button onClick={goToNextPage} disabled={currentPage === totalPages} className="btn-secondary">Next</button></div>
-      <WordDocViewerModal isOpen={showWordDocModal} onClose={() => setShowWordDocModal(false)} resumeUrl={wordDocUrl} candidateName={wordDocCandidateName} />
-      {showAiModal && (
-        <div className="modal-overlay" onClick={() => setShowAiModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>AI Resume Parser</h2>
-            <p className="ai-modal-description">Upload a resume (PDF or DOCX) to automatically extract candidate information using AI.</p>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const fileInput = e.target.querySelector('input[type="file"]');
-              if (fileInput.files[0]) {
-                handleAiParseSubmit(fileInput.files[0]);
-              }
-            }}>
-              <div className="form-group">
-                <label>Select Resume File</label>
+          <div className="form-group" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Was this candidate Video Screened? *</label>
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
                 <input
-                  type="file"
-                  accept=".pdf,.docx"
+                  type="radio"
+                  name="videoScreened"
+                  checked={pipelineData.is_video_screened === true}
+                  onChange={() => setPipelineData({ ...pipelineData, is_video_screened: true, video_screen_reason: '' })}
+                />
+                Yes
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="videoScreened"
+                  checked={pipelineData.is_video_screened === false}
+                  onChange={() => setPipelineData({ ...pipelineData, is_video_screened: false })}
+                />
+                No
+              </label>
+            </div>
+
+            {pipelineData.is_video_screened === false && (
+              <div className="form-group">
+                <label>Reason for no video screen: *</label>
+                <textarea
+                  rows="2"
+                  value={pipelineData.video_screen_reason}
+                  onChange={(e) => setPipelineData({ ...pipelineData, video_screen_reason: e.target.value })}
+                  placeholder="e.g., Internal candidate, Fast track, etc."
                   required
-                  disabled={loading}
+                  style={{ width: '100%', padding: '8px', marginTop: '5px' }}
                 />
               </div>
-              <div className="modal-actions">
-                <button type="submit" className="btn-primary" disabled={loading}>
-                  {loading ? 'Processing...' : 'Parse Resume'}
-                </button>
-                <button type="button" className="btn-secondary" onClick={() => setShowAiModal(false)} disabled={loading}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {showPipelineModal && <div className="modal-overlay" onClick={closePipelineModal}><div className="modal-content" onClick={(e) => e.stopPropagation()}><h2>Add {selectedCandidate?.name} to Pipeline</h2><form onSubmit={handlePipelineSubmit}><div className="form-group"><label>Position *</label><select value={pipelineData.position_id} onChange={(e) => setPipelineData({ ...pipelineData, position_id: e.target.value })} required><option value="">Select...</option>{positions.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}</select></div><div className="form-group"><label>Stage</label><select value={pipelineData.stage} onChange={(e) => setPipelineData({ ...pipelineData, stage: e.target.value })}>{stages.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-
-        <div className="form-group" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-          <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Was this candidate Video Screened? *</label>
-          <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-              <input
-                type="radio"
-                name="videoScreened"
-                checked={pipelineData.is_video_screened === true}
-                onChange={() => setPipelineData({ ...pipelineData, is_video_screened: true, video_screen_reason: '' })}
-              />
-              Yes
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-              <input
-                type="radio"
-                name="videoScreened"
-                checked={pipelineData.is_video_screened === false}
-                onChange={() => setPipelineData({ ...pipelineData, is_video_screened: false })}
-              />
-              No
-            </label>
+            )}
           </div>
 
-          {pipelineData.is_video_screened === false && (
-            <div className="form-group">
-              <label>Reason for no video screen: *</label>
-              <textarea
-                rows="2"
-                value={pipelineData.video_screen_reason}
-                onChange={(e) => setPipelineData({ ...pipelineData, video_screen_reason: e.target.value })}
-                placeholder="e.g., Internal candidate, Fast track, etc."
-                required
-                style={{ width: '100%', padding: '8px', marginTop: '5px' }}
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="form-actions"><button type="submit" className="btn-primary">Add to Pipeline</button><button type="button" className="btn-secondary" onClick={closePipelineModal}>Cancel</button></div></form></div></div>}
-      {showCommentsModal && <div className="modal-overlay" onClick={closeCommentsModal}><div className="modal-content" onClick={(e) => e.stopPropagation()}><h2>Comments for {selectedCandidate?.name}</h2><form onSubmit={(e) => { e.preventDefault(); handleAddComment(e.target.commentText.value); e.target.reset(); }}><div className="form-group"><label>New Comment</label><textarea name="commentText" rows="3"></textarea></div><button type="submit" className="btn-primary">Add</button></form><div className="comments-list">{comments.length > 0 ? comments.map(c => <div key={c.id} className="comment-card">{editingCommentId === c.id ? (<div><textarea value={editingCommentText} onChange={e => setEditingCommentText(e.target.value)} /><button onClick={() => handleSaveEditComment(c.id)}>Save</button><button onClick={() => setEditingCommentId(null)}>Cancel</button></div>) : (<div><p><strong>{c.author_name}:</strong> {c.comment_text}</p><p className="comment-date">{new Date(c.created_at).toLocaleDateString()}</p><button onClick={() => handleEditComment(c)}><Pen size={14} /></button><button onClick={() => handleDeleteComment(c.id)}><Trash size={14} /></button></div>)}</div>) : <p>No comments.</p>}</div><button type="button" className="btn-secondary" onClick={closeCommentsModal}>Close</button></div></div>}
-    </div>
+          <div className="form-actions"><button type="submit" className="btn-primary">Add to Pipeline</button><button type="button" className="btn-secondary" onClick={closePipelineModal}>Cancel</button></div></form></div></div>}
+        {showCommentsModal && <div className="modal-overlay" onClick={closeCommentsModal}><div className="modal-content" onClick={(e) => e.stopPropagation()}><h2>Comments for {selectedCandidate?.name}</h2><form onSubmit={(e) => { e.preventDefault(); handleAddComment(e.target.commentText.value); e.target.reset(); }}><div className="form-group"><label>New Comment</label><textarea name="commentText" rows="3"></textarea></div><button type="submit" className="btn-primary">Add</button></form><div className="comments-list">{comments.length > 0 ? comments.map(c => <div key={c.id} className="comment-card">{editingCommentId === c.id ? (<div><textarea value={editingCommentText} onChange={e => setEditingCommentText(e.target.value)} /><button onClick={() => handleSaveEditComment(c.id)}>Save</button><button onClick={() => setEditingCommentId(null)}>Cancel</button></div>) : (<div><p><strong>{c.author_name}:</strong> {c.comment_text}</p><p className="comment-date">{new Date(c.created_at).toLocaleDateString()}</p><button onClick={() => handleEditComment(c)}><Pen size={14} /></button><button onClick={() => handleDeleteComment(c.id)}><Trash size={14} /></button></div>)}</div>) : <p>No comments.</p>}</div><button type="button" className="btn-secondary" onClick={closeCommentsModal}>Close</button></div></div>}
+      </div>
+    </PageTransition>
   );
 }
 

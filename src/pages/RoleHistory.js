@@ -71,14 +71,14 @@ function RoleHistory() {
           stats.candidates.push({ name: entry.candidates?.name || 'Unknown', stage: entry.stage });
           // --- START NEW LOGIC ---
           // Read from the new highest_stage_reached column.
-          
+
           if (entry.highest_stage_reached === 'Interview 1') {
-              stats.interview1Count++;
+            stats.interview1Count++;
           } else if (entry.highest_stage_reached === 'Interview 2') {
-              stats.interview2Count++;
+            stats.interview2Count++;
           } else if (['Interview 3', 'Offer', 'Hired'].includes(entry.highest_stage_reached)) {
-              // Group 'Interview 3', 'Offer', and 'Hired' together
-              stats.interview3Count++;
+            // Group 'Interview 3', 'Offer', and 'Hired' together
+            stats.interview3Count++;
           }
           // --- END NEW LOGIC ---
         });
@@ -88,23 +88,23 @@ function RoleHistory() {
           for (const recruiterId in recruiterBreakdown) {
             // --- START REPLACEMENT ---
             if (recruiterId !== hiringRecruiterId) {
-                const stats = recruiterBreakdown[recruiterId];
-            
-                // Base commission on the new, accurate discrete counts
-                if (stats.interview3Count > 0) {
-                    stats.commission = 3;
-                    stats.commissionReason = 'Candidate reached Interview 3+';
-                } else if (stats.interview2Count > 0) {
-                    stats.commission = 2;
-                    stats.commissionReason = 'Candidate reached Interview 2';
-                } else if (stats.interview1Count > 0) {
-                    stats.commission = 1;
-                    stats.commissionReason = 'Candidate reached Interview 1';
-                }
+              const stats = recruiterBreakdown[recruiterId];
+
+              // Base commission on the new, accurate discrete counts
+              if (stats.interview3Count > 0) {
+                stats.commission = 3;
+                stats.commissionReason = 'Candidate reached Interview 3+';
+              } else if (stats.interview2Count > 0) {
+                stats.commission = 2;
+                stats.commissionReason = 'Candidate reached Interview 2';
+              } else if (stats.interview1Count > 0) {
+                stats.commission = 1;
+                stats.commissionReason = 'Candidate reached Interview 1';
               }
+            }
           }
         }
-        
+
         return {
           ...position,
           totalCandidates,
@@ -143,7 +143,7 @@ function RoleHistory() {
       <div className="page-header">
         <div>
           <h1>Role History</h1>
-          <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
+
         </div>
       </div>
 
@@ -179,7 +179,7 @@ function RoleHistory() {
                 <h3>{position.title}</h3>
                 <span className="closed-badge">Closed</span>
               </div>
-              
+
               <div className="position-info">
                 <p><strong>Client:</strong> {position.clients?.company_name || 'N/A'}</p>
                 <p><strong>Closed:</strong> {new Date(position.created_at).toLocaleDateString()}</p>
@@ -203,13 +203,13 @@ function RoleHistory() {
         <div className="modal-overlay" onClick={closeDetailModal}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <h2>Role Closure Report: {selectedPosition.title}</h2>
-            
+
             <div className="report-section">
               <h3>Outcome Summary</h3>
               {selectedPosition.hiredCandidate ? (
                 <div className="outcome-success">
                   <p><strong>Hired Candidate:</strong> {selectedPosition.hiredCandidate.candidates?.name}</p>
-                   <p>This role was successfully filled. Commissions are now eligible.</p>
+                  <p>This role was successfully filled. Commissions are now eligible.</p>
                 </div>
               ) : (
                 <p>This role was closed without a hire. No commissions are eligible.</p>
@@ -244,15 +244,15 @@ function RoleHistory() {
                         <span className="stat-value-small">{data.commission}%</span>
                       </div>
                     </div>
-                     {data.commission > 0 && (
-                        <p className="commission-reason">
-                            <strong>Reason:</strong> {data.commissionReason}
-                        </p>
+                    {data.commission > 0 && (
+                      <p className="commission-reason">
+                        <strong>Reason:</strong> {data.commissionReason}
+                      </p>
                     )}
                   </div>
                 ))
               ) : (
-                 <p>No recruiter activity recorded for this role.</p>
+                <p>No recruiter activity recorded for this role.</p>
               )}
             </div>
 

@@ -47,7 +47,7 @@
 }
 
 .stat-card:nth-child(3) {
-  border-left-color: var(--accent-purple);
+  border-left-color: var(--sunset-orange);
 }
 
 .stat-card:nth-child(4) {
@@ -154,7 +154,7 @@
 
 .btn-view-report {
   width: 100%;
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--accent-pink));
   color: white;
   border: none;
   padding: 12px 20px;
@@ -216,7 +216,7 @@
 .modal-content h3 {
   margin-top: 0;
   margin-bottom: 15px;
-  color: var(--accent-purple);
+  color: var(--sunset-orange);
   font-size: 18px;
   text-transform: uppercase;
   letter-spacing: 0.5px;

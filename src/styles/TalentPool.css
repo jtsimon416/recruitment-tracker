@@ -34,7 +34,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  background: linear-gradient(135deg, var(--accent-blue), var(--sunset-orange));
   color: white;
   border: none;
   padding: 12px 24px;
@@ -132,7 +132,7 @@
 }
 
 .toggle-btn.active {
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--accent-blue));
   color: white;
   box-shadow: 0 2px 8px rgba(187, 154, 247, 0.3);
 }
@@ -430,7 +430,7 @@
 }
 
 .btn-link:hover {
-  color: var(--accent-purple);
+  color: var(--sunset-orange);
   text-decoration: underline;
 }
 
@@ -442,7 +442,7 @@
 }
 
 .btn-edit {
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--accent-pink));
   color: white;
   border: none;
   padding: 8px 12px;
@@ -480,7 +480,7 @@
 }
 
 .btn-comments {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  background: linear-gradient(135deg, var(--accent-blue), var(--sunset-orange));
   color: white;
   border: none;
   padding: 8px 12px;
@@ -607,7 +607,7 @@
 }
 
 .modal-candidate-name {
-  color: var(--accent-purple);
+  color: var(--sunset-orange);
   margin-bottom: 20px;
   font-size: 16px;
   font-weight: 600;
@@ -674,7 +674,7 @@
   padding: 18px;
   border-radius: 8px;
   margin-bottom: 12px;
-  border-left: 4px solid var(--accent-purple);
+  border-left: 4px solid var(--sunset-orange);
   transition: all 0.3s ease;
   border: 1px solid var(--border-color);
 }
@@ -689,7 +689,7 @@
   padding: 18px;
   border-radius: 8px;
   margin-bottom: 12px;
-  border-left: 4px solid var(--accent-purple);
+  border-left: 4px solid var(--sunset-orange);
   transition: all 0.3s ease;
   border: 1px solid var(--border-color);
 }
@@ -747,40 +747,6 @@
 }
 
 .pagination-info {
-  font-size: 16px;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.split-screen-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 25px;
-  margin-bottom: 30px;
-}
-
-.resume-viewer-panel {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow);
-}
-
-.resume-panel-header {
-  padding: 20px;
-  background: var(--secondary-bg);
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.resume-panel-header h3 {
-  margin: 0;
-  color: var(--accent-cyan);
   font-size: 16px;
   font-weight: 600;
 }
@@ -935,7 +901,7 @@
   display: inline-block;
   margin-top: 15px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  background: linear-gradient(135deg, var(--accent-blue), var(--sunset-orange));
   color: white;
   border-radius: 6px;
   text-decoration: none;
@@ -1038,7 +1004,7 @@
 
 .form-panel button[type="submit"] {
   flex: 1;
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  background: linear-gradient(135deg, var(--accent-blue), var(--sunset-orange));
   color: white;
   border: none;
   padding: 14px 24px;
@@ -1115,7 +1081,7 @@
 }
 
 .filter-count-badge {
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--accent-pink));
   color: white;
   padding: 4px 10px;
   border-radius: 12px;
@@ -1527,6 +1493,59 @@
 }
 
 .btn-paste-label:hover {
-  background: #f0f0f0;
-  color: #333;
+  justify-content: flex-end;
+}
+
+/* Resume Viewer Styles for Full Preview */
+.split-screen-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.resume-viewer-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow);
+  height: 800px;
+}
+
+.resume-viewer-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--secondary-bg);
+}
+
+.resume-panel-header {
+  padding: 20px;
+  background: var(--secondary-bg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resume-panel-header h3 {
+  margin: 0;
+  color: var(--accent-cyan);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@media (max-width: 1200px) {
+  .split-screen-container {
+    grid-template-columns: 1fr;
+  }
+
+  .resume-viewer-panel {
+    height: 600px;
+  }
 }

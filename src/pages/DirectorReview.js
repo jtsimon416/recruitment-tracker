@@ -794,7 +794,7 @@ function DirectorReview() {
             <div className="page-header">
                 <div className="header-content">
                     <h1>Director Review</h1>
-                    <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
+
                     {urgentCandidates.length > 0 && (
                         <div className="header-alert">
                             <AlertCircle size={18} />
@@ -805,38 +805,44 @@ function DirectorReview() {
             </div>
 
             <div className="tabs-container">
-                <div className="tabs-nav">
-                    <button
-                        className={`tab-button ${activeTab === 'needs-review' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('needs-review')}
-                    >
-                        <Check size={18} />
-                        Needs Review
-                        {needsReviewQueue.length > 0 && <span className="tab-badge">{needsReviewQueue.length}</span>}
-                    </button>
-                    <button
-                        className={`tab-button ${activeTab === 'on-hold' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('on-hold')}
-                    >
-                        <Archive size={18} />
-                        On Hold
-                        {onHoldQueue.length > 0 && <span className="tab-badge">{onHoldQueue.length}</span>}
-                    </button>
-                    <button
-                        className={`tab-button ${activeTab === 'recent-decisions' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('recent-decisions')}
-                    >
-                        <Clock size={18} />
-                        Recent Decisions
-                    </button>
-                    <button
-                        className={`tab-button ${activeTab === 'my-stats' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('my-stats')}
-                    >
-                        <TrendingUp size={18} />
-                        My Stats
-                    </button>
-                </div>
+                <motion.button
+                    className={`tab-button ${activeTab === 'needs-review' ? 'active' : ''} glow-on-hover`}
+                    onClick={() => setActiveTab('needs-review')}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                >
+                    <Check size={18} />
+                    Needs Review
+                    {needsReviewQueue.length > 0 && <span className="tab-badge">{needsReviewQueue.length}</span>}
+                </motion.button>
+                <motion.button
+                    className={`tab-button ${activeTab === 'on-hold' ? 'active' : ''} glow-on-hover`}
+                    onClick={() => setActiveTab('on-hold')}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                >
+                    <Archive size={18} />
+                    On Hold
+                    {onHoldQueue.length > 0 && <span className="tab-badge">{onHoldQueue.length}</span>}
+                </motion.button>
+                <motion.button
+                    className={`tab-button ${activeTab === 'recent-decisions' ? 'active' : ''} glow-on-hover`}
+                    onClick={() => setActiveTab('recent-decisions')}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                >
+                    <Clock size={18} />
+                    Recent Decisions
+                </motion.button>
+                <motion.button
+                    className={`tab-button ${activeTab === 'my-stats' ? 'active' : ''} glow-on-hover`}
+                    onClick={() => setActiveTab('my-stats')}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                >
+                    <TrendingUp size={18} />
+                    My Stats
+                </motion.button>
             </div>
 
             {renderTabContent()}

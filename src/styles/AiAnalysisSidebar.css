@@ -37,7 +37,7 @@
 
 .ai-analysis-sidebar .sidebar-header h2 {
     font-size: 1.8rem;
-    color: var(--rose-gold-main); /* CORRECTED */
+    color: var(--sunset-orange); /* CORRECTED */
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -53,7 +53,7 @@
 }
 
 .ai-analysis-sidebar .btn-close-sidebar:hover {
-    color: var(--rose-gold-main); /* CORRECTED */
+    color: var(--sunset-orange); /* CORRECTED */
 }
 
 .ai-analysis-sidebar .sidebar-content {
@@ -75,7 +75,7 @@
 
 .ai-loading-state svg {
     margin-bottom: 1rem;
-    color: var(--rose-gold-main); /* CORRECTED */
+    color: var(--sunset-orange); /* CORRECTED */
     animation: spin 1.5s linear infinite;
 }
 
@@ -109,7 +109,7 @@
     text-transform: uppercase;
 }
 
-.ai-grade.grade-a { background: var(--rose-gold-gradient); }
+.ai-grade.grade-a { background: var(--sunset-gradient); }
 .ai-grade.grade-b { background-color: #7AA2F7; } /* A contrasting blue */
 .ai-grade.grade-c { background-color: #F4C2A8; } /* A contrasting orange */
 .ai-grade.grade-d, .ai-grade.grade-f { background-color: #E8B4B8; } /* A contrasting red */

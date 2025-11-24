@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import AnimatedCounter from '../components/AnimatedCounter';
 import PipelineFunnel from '../components/PipelineFunnel';
+import WelcomeScreen from '../components/WelcomeScreen';
 import '../styles/Dashboard.css';
 
 const COLORS = ['#E8B4B8', '#B8D4D0', '#C5B9D6', '#F4C2A8', '#7AA2F7', '#F7A9BA'];
@@ -43,13 +44,13 @@ const TabNavigation = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <div className="dashboard-tabs">
+    <div className="tabs-container">
       {tabs.map(tab => {
         const Icon = tab.icon;
         return (
           <motion.button
             key={tab.id}
-            className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+            className={`tab-button ${activeTab === tab.id ? 'active' : ''} glow-on-hover`}
             onClick={() => setActiveTab(tab.id)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -400,7 +401,7 @@ const TeamMetricsTab = ({ recruiterStats }) => {
           {topPerformers.map((recruiter, index) => (
             <motion.div
               key={recruiter.id}
-              className={`podium-card rank-${index + 1}`}
+              className={`podium-card rank-${index + 1} ${index === 0 ? 'animated-gradient-border' : ''}`}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
@@ -537,8 +538,8 @@ const DailyOperationsTab = ({ callsData, interviewsData }) => {
             {callsData.today.length === 0 ? (
               <p className="empty-message">No calls scheduled for today</p>
             ) : (
-              callsData.today.map(call => (
-                <div key={call.id} className="operation-item">
+              callsData.today.map((call, index) => (
+                <div key={call.id} className="operation-item stagger-item" style={{ animationDelay: `${index * 0.1}s` }}>
                   <div className="operation-time">{formatTime(call.scheduled_call_date)}</div>
                   <div className="operation-details">
                     <strong>{call.candidate_name}</strong>
@@ -716,7 +717,7 @@ const PipelineDeepDiveTab = ({ pipelineMetrics, roleHealth, navigate }) => {
                     <MessageCircle size={16} />
                     <span>{health.replyRate}% reply rate</span>
                   </div>
-                  <div className={`health-indicator ${health.health}`}>
+                  <div className={`health-indicator ${health.health} ${health.health === 'critical' ? 'pulse' : ''}`}>
                     {health.health}
                   </div>
                 </div>
@@ -752,7 +753,7 @@ const PipelineDeepDiveTab = ({ pipelineMetrics, roleHealth, navigate }) => {
                     </div>
                     <div className="role-actions">
                       <button
-                        className="btn-primary"
+                        className="btn-primary premium-hover"
                         onClick={() => navigate('/active-tracker', { state: { positionId: posId } })}
                       >
                         <ExternalLink size={16} />
@@ -773,6 +774,8 @@ const PipelineDeepDiveTab = ({ pipelineMetrics, roleHealth, navigate }) => {
 // =========================================================================
 // MAIN DASHBOARD COMPONENT
 // =========================================================================
+
+
 function Dashboard() {
   const navigate = useNavigate();
   const {
@@ -783,7 +786,7 @@ function Dashboard() {
     recruiters = [],
     loading: dataContextLoading
   } = useData();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(null); // Default to null for Welcome Screen
   const [pipelineMetrics, setPipelineMetrics] = useState({});
   const [executiveStats, setExecutiveStats] = useState({});
   const [roleHealth, setRoleHealth] = useState({});
@@ -1365,16 +1368,16 @@ function Dashboard() {
     <div className="dashboard-container">
       {/* Header */}
       <motion.div
-        className="dashboard-header"
+        className="page-header"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="header-content">
           <h1>Command Center</h1>
-          <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
+
           <p>Welcome back, {userProfile?.name || 'Manager'}! Here's your recruitment empire.</p>
         </div>
-        <div className="header-stats">
+        <div className="header-actions">
           <div className="mini-stat">
             <Clock size={16} />
             <span>Live Data</span>
@@ -1384,6 +1387,9 @@ function Dashboard() {
 
       {/* Tab Navigation */}
       <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+
+      {/* Welcome Screen (Default State) */}
+      {!activeTab && <WelcomeScreen />}
 
       {/* Tab Content */}
       {activeTab === 'overview' && (

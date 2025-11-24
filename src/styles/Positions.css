@@ -23,7 +23,7 @@
 
 .page-header h1 {
   font-size: 2.5rem; /* Matched Dashboard h1 font-size */
-  background: var(--rose-gold-gradient);
+  background: var(--sunset-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0; /* Remove default margin */
@@ -56,7 +56,7 @@
 
 .form-card h2 {
   margin: 0 0 20px 0;
-  color: var(--rose-gold-main);
+  color: var(--sunset-orange);
   font-size: 20px;
 }
 
@@ -95,7 +95,7 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--rose-gold-main);
+  border-color: var(--sunset-orange);
   box-shadow: 0 0 0 3px rgba(235, 188, 186, 0.2);
 }
 
@@ -124,12 +124,12 @@
 }
 
 .filter-select:hover {
-  border-color: var(--rose-gold-main);
+  border-color: var(--sunset-orange);
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: var(--rose-gold-main);
+  border-color: var(--sunset-orange);
   box-shadow: 0 0 0 3px rgba(235, 188, 186, 0.2);
 }
 
@@ -163,7 +163,7 @@
 }
 
 .positions-table-header > div:hover {
-  color: var(--rose-gold-shine);
+  color: var(--sunset-yellow);
 }
 
 /* ========== TABLE BODY ========== */
@@ -313,8 +313,8 @@
 
 .btn-expand:hover {
   background: var(--border-color);
-  border-color: var(--rose-gold-main);
-  color: var(--rose-gold-main);
+  border-color: var(--sunset-orange);
+  color: var(--sunset-orange);
 }
 
 .btn-edit {
@@ -332,8 +332,8 @@
 
 .btn-edit:hover {
   background: var(--border-color);
-  border-color: var(--rose-gold-main);
-  color: var(--rose-gold-main);
+  border-color: var(--sunset-orange);
+  color: var(--sunset-orange);
 }
 
 .btn-delete {
@@ -360,7 +360,7 @@
   padding: 20px 40px;
   background: var(--primary-bg);
   border-bottom: 1px solid var(--border-color);
-  border-left: 4px solid var(--status-purple);
+  border-left: 4px solid var(--sunset-orange);
 }
 
 .expanded-section {
@@ -373,7 +373,7 @@
 
 .expanded-section h4 {
   margin: 0 0 12px 0;
-  color: var(--status-purple);
+  color: var(--sunset-orange);
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -473,14 +473,14 @@
 
 .tiptap-toolbar button:hover {
   background: var(--border-color);
-  color: var(--rose-gold-main);
-  border-color: var(--rose-gold-main);
+  color: var(--sunset-orange);
+  border-color: var(--sunset-orange);
 }
 
 .tiptap-toolbar button.is-active {
-  background: var(--rose-gold-gradient);
+  background: var(--sunset-gradient);
   color: white;
-  border-color: var(--rose-gold-main);
+  border-color: var(--sunset-orange);
 }
 
 .tiptap-editor-content {
@@ -515,7 +515,7 @@
 .tiptap-editor-content .ProseMirror h1,
 .tiptap-editor-content .ProseMirror h2,
 .tiptap-editor-content .ProseMirror h3 {
-  color: var(--rose-gold-main);
+  color: var(--sunset-orange);
   margin: 16px 0 8px 0;
   font-weight: 600;
   line-height: 1.3;
@@ -566,7 +566,7 @@
 }
 
 .tiptap-editor-content .ProseMirror a {
-  color: var(--rose-gold-main);
+  color: var(--sunset-orange);
   text-decoration: underline;
 }
 
@@ -579,7 +579,7 @@
 }
 
 .tiptap-editor-content .ProseMirror blockquote {
-  border-left: 3px solid var(--status-purple);
+  border-left: 3px solid var(--sunset-orange);
   padding-left: 16px;
   margin: 12px 0;
   color: var(--text-secondary);
@@ -614,7 +614,7 @@
 .job-description-content h1,
 .job-description-content h2,
 .job-description-content h3 {
-  color: var(--rose-gold-main);
+  color: var(--sunset-orange);
   margin: 16px 0 8px 0;
   font-weight: 600;
 }
@@ -653,12 +653,12 @@
 }
 
 .job-description-content a {
-  color: var(--rose-gold-main);
+  color: var(--sunset-orange);
   text-decoration: underline;
 }
 
 .job-description-content a:hover {
-  color: var(--rose-gold-shine);
+  color: var(--sunset-yellow);
 }
 
 /* Ensure bullets and numbering display properly */

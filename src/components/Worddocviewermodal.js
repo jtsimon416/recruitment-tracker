@@ -144,7 +144,7 @@ function WordDocViewerModal({ isOpen, onClose, resumeUrl, candidateName }) {
                 width: '40px',
                 height: '40px',
                 border: '3px solid #414868',
-                borderTop: '3px solid #BB9AF7',
+                borderTop: '3px solid #6b7280',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite'
               }}></div>
@@ -167,21 +167,21 @@ function WordDocViewerModal({ isOpen, onClose, resumeUrl, candidateName }) {
                 href={resumeUrl} 
                 download
                 style={{
-                  color: '#BB9AF7',
+                  color: '#6b7280',
                   textDecoration: 'none',
                   padding: '10px 20px',
-                  border: '1px solid #BB9AF7',
+                  border: '1px solid #6b7280',
                   borderRadius: '6px',
                   fontSize: '14px',
                   transition: 'all 0.2s'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = '#BB9AF7';
+                  e.target.style.background = '#6b7280';
                   e.target.style.color = '#1A1B26';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.background = 'transparent';
-                  e.target.style.color = '#BB9AF7';
+                  e.target.style.color = '#6b7280';
                 }}
               >
                 Download Document
@@ -218,10 +218,10 @@ function WordDocViewerModal({ isOpen, onClose, resumeUrl, candidateName }) {
               href={resumeUrl} 
               download
               style={{
-                color: '#BB9AF7',
+                color: '#6b7280',
                 textDecoration: 'none',
                 padding: '10px 20px',
-                border: '1px solid #BB9AF7',
+                border: '1px solid #6b7280',
                 borderRadius: '6px',
                 fontSize: '14px',
                 fontWeight: '500',
@@ -229,12 +229,12 @@ function WordDocViewerModal({ isOpen, onClose, resumeUrl, candidateName }) {
                 display: 'inline-block'
               }}
               onMouseEnter={(e) => {
-                e.target.style.background = '#BB9AF7';
+                e.target.style.background = '#6b7280';
                 e.target.style.color = '#1A1B26';
               }}
               onMouseLeave={(e) => {
                 e.target.style.background = 'transparent';
-                e.target.style.color = '#BB9AF7';
+                e.target.style.color = '#6b7280';
               }}
             >
               Download Original
@@ -273,7 +273,7 @@ function WordDocViewerModal({ isOpen, onClose, resumeUrl, candidateName }) {
         }
 
         .word-doc-content strong {
-          color: #BB9AF7;
+          color: #6b7280;
           font-weight: 600;
         }
 

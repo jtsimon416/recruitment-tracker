@@ -1,0 +1,267 @@
+/* Preview Trigger */
+.candidate-preview-trigger {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+}
+
+.candidate-preview-trigger:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent-cyan);
+    text-decoration-thickness: 2px;
+}
+
+/* Preview Card */
+.candidate-preview-card {
+    position: fixed;
+    width: 350px;
+    max-height: 500px;
+    overflow-y: auto;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    z-index: 10001;
+    /* Above everything */
+    animation: previewFadeIn 0.2s ease-out;
+    pointer-events: auto;
+}
+
+/* Header */
+.preview-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--card-bg);
+    border-radius: 12px 12px 0 0;
+}
+
+.preview-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* SUBMISSION DATE - BOLD AND PROMINENT */
+.preview-submission-date {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(122, 162, 247, 0.15), rgba(125, 207, 255, 0.15));
+    border: 2px solid var(--accent-cyan);
+    border-left: 4px solid var(--accent-cyan);
+    border-radius: 8px;
+    margin: 12px;
+}
+
+.preview-submission-date svg {
+    color: var(--accent-cyan);
+    flex-shrink: 0;
+}
+
+.submission-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.submission-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+}
+
+.submission-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.submission-ago {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Sections */
+.preview-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.preview-section:last-child {
+    border-bottom: none;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.preview-row {
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.preview-row:last-child {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.preview-row strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+    min-width: 80px;
+}
+
+.contact-row {
+    color: var(--text-secondary);
+}
+
+.contact-row svg {
+    color: var(--accent-cyan);
+    flex-shrink: 0;
+}
+
+/* LinkedIn Link */
+.linkedin-link {
+    color: var(--accent-cyan);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.linkedin-link:hover {
+    text-decoration: underline;
+    color: var(--accent-blue);
+}
+
+/* Comments */
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.comment-item {
+    padding: 8px 12px;
+    background: var(--card-bg);
+    border-left: 3px solid var(--accent-cyan);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.comment-more {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 4px;
+}
+
+/* Scrollbar Styling */
+.candidate-preview-card::-webkit-scrollbar {
+    width: 6px;
+}
+
+.candidate-preview-card::-webkit-scrollbar-track {
+    background: var(--card-bg);
+    border-radius: 0 12px 12px 0;
+}
+
+.candidate-preview-card::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.candidate-preview-card::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* Animation */
+@keyframes previewFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .candidate-preview-card {
+        width: 90vw;
+        max-width: 350px;
+    }
+}
+
+/* Stage Info - ORANGE OUTLINE */
+.preview-stage-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(251, 146, 60, 0.1));
+    border: 2px solid var(--accent-orange, #f97316);
+    border-left: 4px solid var(--accent-orange, #f97316);
+    border-radius: 8px;
+    margin: 12px;
+}
+
+.preview-stage-info svg {
+    color: var(--accent-orange, #f97316);
+    flex-shrink: 0;
+}
+
+.stage-info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stage-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--accent-orange, #f97316);
+}
+
+.stage-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.stage-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.time-highlight {
+    color: var(--accent-orange, #f97316);
+    font-weight: 700;
+}

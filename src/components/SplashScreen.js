@@ -61,14 +61,7 @@ const SplashScreen = ({ children }) => {
             exit="exit"
           >
             <div className="splash-content">
-              <motion.h1
-                className="splash-logo"
-                variants={glowVariants}
-                initial="initial"
-                animate="animate"
-              >
-                HIRE LOGIC
-              </motion.h1>
+              <img src={require('../assets/logo.png')} alt="Hire Logic Logo" className="splash-logo-img" />
               <motion.div
                 className="splash-tagline"
                 initial={{ opacity: 0, y: 20 }}

@@ -5,12 +5,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 // Imports removed for lazy loading
 import { STAGES, STATUSES, PIPELINE_STAGES_ORDER, PIPELINE_STATUSES_LIST } from '../constants/pipeline';
-import { ChevronUp, Eye, FileText, Sparkles, AlertCircle, Video, VideoOff, MessageSquare, Calendar, Trash2 } from 'lucide-react';
+import { ChevronUp, ChevronDown, Eye, FileText, Sparkles, AlertCircle, Video, VideoOff, MessageSquare, Calendar, Trash2, Filter } from 'lucide-react';
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import PageTransition from '../components/PageTransition';
 import WordDocViewerModal from '../components/Worddocviewermodal';
 import AiAnalysisSidebar from '../components/AiAnalysisSidebar'; // ADDED
+import CandidatePreviewCard from '../components/CandidatePreviewCard'; // ADDED
 import '../styles/ActiveTracker.css';
+import '../styles/ActiveTrackerFilters.css';
 
 // --- COMPONENT: Info Sidebar for Candidate Details ---
 const InfoSidebar = ({ candidate, pipelineEntry, onClose }) => {
@@ -53,7 +55,7 @@ const InfoSidebar = ({ candidate, pipelineEntry, onClose }) => {
 
   return (
     <div className="info-sidebar-overlay" onClick={onClose}>
-      <div className="info-sidebar" onClick={(e) => e.stopPropagation()}>
+      <div className="info-sidebar slide-in-right" onClick={(e) => e.stopPropagation()}>
         <div className="sidebar-header-custom">
           <h2>Candidate Deep Dive</h2>
           <button onClick={onClose} className="btn-close-sidebar" type="button">&times;</button>
@@ -169,6 +171,7 @@ function ActiveTracker() {
   const navigate = useNavigate();
   const [view, setView] = useState('list');
   const [expandedCard, setExpandedCard] = useState(null);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [selectedPipelineEntry, setSelectedPipelineEntry] = useState(null);
   const [comments, setComments] = useState([]);
@@ -182,6 +185,7 @@ function ActiveTracker() {
   const [showAiAnalysisSidebar, setShowAiAnalysisSidebar] = useState(false);
   const [aiAnalysisData, setAiAnalysisData] = useState(null);
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
+  const [highlightedCandidateIds, setHighlightedCandidateIds] = useState([]);
 
   // NEW: Word Doc Viewer Modal State
   const [showWordDocModal, setShowWordDocModal] = useState(false);
@@ -217,6 +221,11 @@ function ActiveTracker() {
       );
       if (matchingEntry) {
         setExpandedCard(matchingEntry.id);
+        // Also open the InfoSidebar to "view" the candidate
+        setSidebarCandidate(matchingEntry);
+        setShowInfoSidebar(true);
+        // Clear state to prevent reopening on refresh
+        window.history.replaceState({}, document.title);
       }
     }
   }, [location.state, pipeline]);
@@ -261,7 +270,8 @@ function ActiveTracker() {
   // THIS IS THE NEW, SAFER LOGIC
   async function updateCandidateStage(id, newStage, currentHighestStage) {
     const dataToUpdate = {
-      stage: newStage
+      stage: newStage,
+      updated_at: new Date().toISOString() // Explicitly update timestamp for "Time in Stage" calculation
     };
 
     // Determine new status based on newStage
@@ -351,7 +361,7 @@ function ActiveTracker() {
     const currentHighestStage = pipelineItem.highest_stage_reached; // Get the current highest stage
 
     setPipeline(prevPipeline =>
-      prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: newStage } : p))
+      prevPipeline.map(p => (p.id === pipelineId ? { ...p, stage: newStage, updated_at: new Date().toISOString() } : p))
     );
 
     // Pass the current highest stage into the pending move
@@ -843,10 +853,12 @@ function ActiveTracker() {
                 </div>
                 {groupedByPosition[posTitle].map(item => (
                   <React.Fragment key={item.id}>
-                    <div className={`pipeline-row ${getStatusClass(item)} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`} onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)}>
+                    <div className={`pipeline-row ${getStatusClass(item)} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''} ${highlightedCandidateIds.includes(item.id) ? 'highlighted-card' : ''}`} onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)}>
                       <div className="candidate-name-cell">
                         <div className="candidate-name-and-icons">
-                          <strong>{item.candidates?.name}</strong>
+                          <CandidatePreviewCard candidate={item.candidates} source="pipeline" pipelineData={item}>
+                            <strong>{item.candidates?.name}</strong>
+                          </CandidatePreviewCard>
                           <div className="candidate-icons">
                             <Eye
                               size={18}
@@ -949,7 +961,7 @@ function ActiveTracker() {
                 return (
                   <Droppable key={stage} droppableId={stage}>
                     {(provided, snapshot) => (
-                      <div className={`pipeline-column ${snapshot.isDraggingOver ? 'dragging-over' : ''}`} ref={provided.innerRef} {...provided.droppableProps}>
+                      <div className={`pipeline-column ${snapshot.isDraggingOver ? 'dragging-over' : ''} fade-in`} ref={provided.innerRef} {...provided.droppableProps}>
                         <div className="column-header">
                           <h3>{stage}</h3>
                           <span className="column-count">{stageItems.length}</span>
@@ -959,13 +971,15 @@ function ActiveTracker() {
                             <Draggable key={item.id} draggableId={item.id} index={index}>
                               {(provided, snapshot) => (
                                 <div
-                                  className={`pipeline-card ${snapshot.isDragging ? 'dragging' : ''} ${getStatusClass(item)} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''}`}
+                                  className={`pipeline-card ${snapshot.isDragging ? 'dragging' : ''} ${getStatusClass(item)} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''} glow-on-hover`}
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                 >
                                   <div className="card-header">
-                                    <strong>{item.candidates?.name}</strong>
+                                    <CandidatePreviewCard candidate={item.candidates} source="pipeline" pipelineData={item}>
+                                      <strong>{item.candidates?.name}</strong>
+                                    </CandidatePreviewCard>
                                     <div className="card-icons">
                                       <Eye
                                         size={16}
@@ -1070,7 +1084,6 @@ function ActiveTracker() {
         <div className="page-header">
           <div className="header-content">
             <h1>Active Tracker</h1>
-            <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
           </div>
           <div className="header-actions">
             <div className="view-toggle"><button className={`toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>List</button><button className={`toggle-btn ${view === 'pipeline' ? 'active' : ''}`} onClick={() => setView('pipeline')}>Pipeline</button></div>
@@ -1078,17 +1091,76 @@ function ActiveTracker() {
         </div>
         {urgentCandidates.length > 0 && (
           <div className="header-alert">
-            <AlertCircle size={20} />
-            <p>{urgentCandidates.length} urgent candidates need attention!</p>
+            <div className="alert-content">
+              <AlertCircle size={20} className="alert-icon" />
+              <div className="alert-text">
+                <strong>{urgentCandidates.length} Urgent Candidate{urgentCandidates.length !== 1 ? 's' : ''}:</strong>
+                <span className="urgent-names"> {urgentCandidates.map(c => c.candidates?.name).join(', ')}</span>
+                <div className="alert-subtext">In Screening for &gt; 3 days</div>
+              </div>
+            </div>
+            <button
+              className="btn-primary btn-sm"
+              onClick={() => {
+                // Highlight urgent candidates
+                const urgentIds = urgentCandidates.map(c => c.id);
+                setHighlightedCandidateIds(urgentIds);
+
+                // Clear highlight after 5 seconds
+                setTimeout(() => setHighlightedCandidateIds([]), 5000);
+
+                setView('list');
+              }}
+            >
+              View Urgent
+            </button>
           </div>
         )}
 
-        <div className="filter-section">
-          <div className="header-controls">
-            <select className="position-filter" value={selectedStage} onChange={(e) => setSelectedStage(e.target.value)}><option value="all">All Stages</option>{PIPELINE_STAGES_ORDER.map(stage => <option key={stage} value={stage}>{stage}</option>)}</select>          <select className="position-filter" value={selectedPosition} onChange={(e) => setSelectedPosition(e.target.value)}><option value="all">All Positions</option>{openPositions.map(pos => <option key={pos.id} value={pos.id}>{pos.title}</option>)}</select>
-            <select className="position-filter" value={selectedRecruiter} onChange={(e) => setSelectedRecruiter(e.target.value)}><option value="all">All Recruiters</option>{recruiters.map(rec => <option key={rec.id} value={rec.id}>{rec.name}</option>)}</select>
-            <select className="position-filter" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}><option value="all">All Statuses</option>{PIPELINE_STATUSES_LIST.map(status => <option key={status} value={status}>{status}</option>)}</select>
-          </div>
+        <div className="filter-section-container">
+          <button
+            className="filter-toggle-btn"
+            onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+          >
+            <Filter size={16} />
+            <span>Filters</span>
+            {isFiltersOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+
+          {isFiltersOpen && (
+            <div className="filter-section collapsible open">
+              <div className="header-controls">
+                <div className="filter-group">
+                  <label>Stage</label>
+                  <select className="position-filter" value={selectedStage} onChange={(e) => setSelectedStage(e.target.value)}>
+                    <option value="all">All Stages</option>
+                    {PIPELINE_STAGES_ORDER.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Position</label>
+                  <select className="position-filter" value={selectedPosition} onChange={(e) => setSelectedPosition(e.target.value)}>
+                    <option value="all">All Positions</option>
+                    {openPositions.map(pos => <option key={pos.id} value={pos.id}>{pos.title}</option>)}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Recruiter</label>
+                  <select className="position-filter" value={selectedRecruiter} onChange={(e) => setSelectedRecruiter(e.target.value)}>
+                    <option value="all">All Recruiters</option>
+                    {recruiters.map(rec => <option key={rec.id} value={rec.id}>{rec.name}</option>)}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Status</label>
+                  <select className="position-filter" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
+                    <option value="all">All Statuses</option>
+                    {PIPELINE_STATUSES_LIST.map(status => <option key={status} value={status}>{status}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {view === 'list' ? renderListView() : renderPipelineView()}

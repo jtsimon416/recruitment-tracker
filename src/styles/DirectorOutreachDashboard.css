@@ -63,7 +63,7 @@
 
 .filter-header-left svg {
   /* Using Rose Gold for filter icon highlight */
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
 }
 
 .filter-header-left h3 {
@@ -75,7 +75,7 @@
 
 .filter-count-badge {
   /* Using Rose Gold gradient for badge */
-  background: linear-gradient(135deg, var(--rose-gold), var(--peachy-rose));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--peachy-rose));
   color: var(--main-bg);
   padding: 4px 10px;
   border-radius: 12px;
@@ -120,7 +120,7 @@
 }
 
 .btn-toggle-panel:hover {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   transform: scale(1.1);
 }
 
@@ -169,7 +169,7 @@
 .filter-select:focus,
 .filter-date-input:focus {
   outline: none;
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   background: var(--hover-bg);
   box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
 }
@@ -215,7 +215,7 @@
   /* Using Rose Gold gradient for tags */
   display: inline-flex;
   align-items: center;
-  background: linear-gradient(135deg, var(--rose-gold), var(--peachy-rose));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--peachy-rose));
   color: var(--main-bg);
   padding: 6px 12px;
   border-radius: 6px;
@@ -311,7 +311,7 @@
 /* Use secondary background on hover to match app theme */
 .outreach-card:hover {
   background-color: var(--hover-bg);
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   transform: none; /* Removed the lift on hover for a cleaner look */
   box-shadow: none; 
 }
@@ -366,7 +366,7 @@
 .candidate-name {
   font-weight: 600; /* Slightly less bold than before */
   font-size: 1rem; /* Slightly smaller font */
-  color: var(--rose-gold); /* Highlight name with rose gold */
+  color: var(--sunset-orange); /* Highlight name with rose gold */
 }
 
 .recruiter-name-label {
@@ -483,8 +483,8 @@
 .action-buttons .btn-linkedin:hover,
 .action-buttons .btn-notes-toggle:hover {
   background-color: var(--hover-bg);
-  border-color: var(--rose-gold);
-  color: var(--rose-gold);
+  border-color: var(--sunset-orange);
+  color: var(--sunset-orange);
 }
 
 .expanded-notes-card-footer {
@@ -502,7 +502,7 @@
 }
 
 .expanded-notes-card-footer strong {
-    color: var(--rose-gold);
+    color: var(--sunset-orange);
 }
 
 
@@ -539,8 +539,8 @@
 }
 
 .pagination-controls-bar .btn-page:hover:not(:disabled) {
-  border-color: var(--rose-gold);
-  color: var(--rose-gold);
+  border-color: var(--sunset-orange);
+  color: var(--sunset-orange);
   background: var(--hover-bg);
 }
 
@@ -550,7 +550,7 @@
 }
 
 .pagination-controls-bar .btn-page.active {
-  background: linear-gradient(135deg, var(--rose-gold), var(--peachy-rose));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--peachy-rose));
   color: var(--main-bg);
   border-color: transparent;
 }
@@ -592,7 +592,7 @@
 }
 
 .view-tab.active {
-  background: linear-gradient(135deg, var(--rose-gold), var(--peachy-rose));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--peachy-rose));
   color: var(--main-bg);
   box-shadow: 0 2px 8px rgba(232, 180, 184, 0.3);
 }
@@ -627,7 +627,7 @@
 .kpi-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
 }
 
 .kpi-icon {

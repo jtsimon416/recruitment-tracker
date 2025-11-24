@@ -47,7 +47,7 @@ function Sidebar({ isCollapsed, setIsCollapsed }) {
   }
 
   return (
-    <div 
+    <div
       className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}
       onMouseEnter={() => setIsCollapsed(false)}
       onMouseLeave={() => setIsCollapsed(true)}
@@ -55,7 +55,7 @@ function Sidebar({ isCollapsed, setIsCollapsed }) {
     >
       <div className="sidebar-header">
         <div className="sidebar-logo-wrapper">
-          <h2 style={{ color: 'yellow' }}><span className="nav-link-text">HIRE LOGIC</span></h2>
+          <h2 className="shimmer-text"><span className="nav-link-text">HIRE LOGIC</span></h2>
         </div>
         <div className="sidebar-logo-collapsed">HL</div>
 
@@ -91,7 +91,7 @@ function Sidebar({ isCollapsed, setIsCollapsed }) {
               <Activity size={18} /> {/* Original Icon */}
               <span className="nav-link-text">Strategy Manager</span>
             </NavLink>
-             <NavLink to="/commissions" className="nav-link">
+            <NavLink to="/commissions" className="nav-link">
               <DollarSign size={18} />
               <span className="nav-link-text">Commissions</span>
             </NavLink>
@@ -125,14 +125,14 @@ function Sidebar({ isCollapsed, setIsCollapsed }) {
           </div>
           {/* Interviews */}
           <NavLink to="/interview-hub" className="nav-link">
-             <Handshake size={18} />
-             <span className="nav-link-text">Interview Hub</span>
+            <Handshake size={18} />
+            <span className="nav-link-text">Interview Hub</span>
           </NavLink>
-           {/* Documents */}
-           <NavLink to="/documents" className="nav-link">
-             <FileText size={18} />
-             <span className="nav-link-text">Documents</span>
-           </NavLink>
+          {/* Documents */}
+          <NavLink to="/documents" className="nav-link">
+            <FileText size={18} />
+            <span className="nav-link-text">Documents</span>
+          </NavLink>
         </div>
 
 
@@ -146,14 +146,14 @@ function Sidebar({ isCollapsed, setIsCollapsed }) {
           </NavLink>
           {/* Our Team */}
           <NavLink to="/our-team" className="nav-link">
-             {/* Corrected: Use imported User icon */}
-             <User size={18} />
-             <span className="nav-link-text">Our Team</span>
+            {/* Corrected: Use imported User icon */}
+            <User size={18} />
+            <span className="nav-link-text">Our Team</span>
           </NavLink>
           {/* Clients */}
           <NavLink to="/clients" className="nav-link">
-             <Building size={18} />
-             <span className="nav-link-text">Clients</span>
+            <Building size={18} />
+            <span className="nav-link-text">Clients</span>
           </NavLink>
           {/* Role Close */}
           <NavLink to="/role-history" className="nav-link">
@@ -166,8 +166,8 @@ function Sidebar({ isCollapsed, setIsCollapsed }) {
         <div className="nav-section">
           <h3><span className="nav-section-title">AI Tools</span></h3>
           <NavLink to="/rubric-generator" className="nav-link">
-             <Cpu size={18} />
-             <span className="nav-link-text">Rubric Generator</span>
+            <Cpu size={18} />
+            <span className="nav-link-text">Rubric Generator</span>
           </NavLink>
         </div>
       </nav>

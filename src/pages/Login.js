@@ -15,7 +15,7 @@ function Login() {
   // Redirect to dashboard if already logged in
   useEffect(() => {
     if (session) {
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [session, navigate]);
 
@@ -57,7 +57,7 @@ function Login() {
       <div className="login-container">
         <div className="branding-area">
           <div className="logo-container">
-            <h1>HIRE LOGIC</h1>
+            <img src={require('../assets/logo.png')} alt="Hire Logic" className="login-logo-img" />
           </div>
           <p className="tagline-p">recruitment excellence</p>
         </div>

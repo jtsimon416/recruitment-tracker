@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { motion } from 'framer-motion';
-import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, Plus, Trash2 } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useData } from '../contexts/DataContext';
@@ -55,7 +55,8 @@ function Positions() {
     title: '',
     status: 'Open',
     description: '',
-    salary_range: ''
+    salary_range: '',
+    questions: []
   });
 
   useEffect(() => {
@@ -208,12 +209,12 @@ function Positions() {
 
   function handleEdit(position) {
     setEditingPosition(position);
-    setFormData({ client_id: position.client_id, title: position.title, status: position.status, description: position.description || '', salary_range: position.salary_range || '' });
+    setFormData({ client_id: position.client_id, title: position.title, status: position.status, description: position.description || '', salary_range: position.salary_range || '', questions: position.questions || [] });
     setShowForm(true);
   }
 
   function resetForm() {
-    setFormData({ client_id: '', title: '', status: 'Open', description: '', salary_range: '' });
+    setFormData({ client_id: '', title: '', status: 'Open', description: '', salary_range: '', questions: [] });
     setEditingPosition(null);
     setShowForm(false);
   }
@@ -248,11 +249,11 @@ function Positions() {
       <motion.div className="page-header" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="header-content">
           <h1>Position Management</h1>
-          <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
+
         </div>
         <div className="header-actions">
           <a
-            href="/#/careers"
+            href="./#/careers"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-secondary"
@@ -283,6 +284,45 @@ function Positions() {
               <div className="form-group"><label>Salary Range</label><input type="text" placeholder="e.g., $80,000 - $100,000" value={formData.salary_range} onChange={(e) => setFormData({ ...formData, salary_range: e.target.value })} /></div>
             </div>
             <div className="form-group"><label>Job Description</label><RichTextEditor value={formData.description} onChange={(value) => setFormData({ ...formData, description: value })} /></div>
+
+            {/* Screening Questions Section */}
+            <div className="form-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <label>Screening Questions</label>
+                <button type="button" className="btn-secondary" onClick={() => setFormData({ ...formData, questions: [...(formData.questions || []), ''] })} style={{ padding: '4px 8px', fontSize: '0.8rem' }}>
+                  <Plus size={14} /> Add Question
+                </button>
+              </div>
+              <div className="questions-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {(formData.questions || []).map((question, index) => (
+                  <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', minWidth: '20px' }}>{index + 1}.</span>
+                    <input
+                      type="text"
+                      value={question}
+                      onChange={(e) => {
+                        const newQuestions = [...formData.questions];
+                        newQuestions[index] = e.target.value;
+                        setFormData({ ...formData, questions: newQuestions });
+                      }}
+                      placeholder="e.g., Do you have a valid driver's license?"
+                      style={{ flex: 1 }}
+                    />
+                    <button type="button" onClick={() => {
+                      const newQuestions = [...formData.questions];
+                      newQuestions.splice(index, 1);
+                      setFormData({ ...formData, questions: newQuestions });
+                    }} style={{ background: 'none', border: 'none', color: 'var(--accent-color)', cursor: 'pointer', padding: '4px' }}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+                {(!formData.questions || formData.questions.length === 0) && (
+                  <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', fontSize: '0.9rem' }}>No screening questions added.</p>
+                )}
+              </div>
+            </div>
+
             <button type="submit" className="btn-primary">{editingPosition ? 'Update Position' : 'Add Position'}</button>
           </form>
         </motion.div>

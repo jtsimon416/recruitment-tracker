@@ -301,10 +301,10 @@ function StrategyManager() {
 
   // Role instructions state
   const [roleInstructions, setRoleInstructions] = useState({});
-  
+
   // Store the list of all recruiters
   const [recruiters, setRecruiters] = useState([]);
-  
+
   // NEW: State to track the expanded card. Starts collapsed (null).
   const [expandedCardId, setExpandedCardId] = useState(null);
 
@@ -354,9 +354,9 @@ function StrategyManager() {
         }
       }
     } catch (error) {
-        console.error('❌ Error fetching open positions:', error);
+      console.error('❌ Error fetching open positions:', error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   }, []);
 
@@ -384,8 +384,7 @@ function StrategyManager() {
         });
       }
       setRoleInstructions(grouped);
-    } catch (error)
-    {
+    } catch (error) {
       console.error('❌ Error fetching role instructions:', error);
     }
   };
@@ -428,7 +427,7 @@ function StrategyManager() {
       });
       return;
     }
-    
+
     setUploadingFile(positionId);
 
     try {
@@ -448,8 +447,8 @@ function StrategyManager() {
       if (uploadError) {
         console.error('Supabase Storage Upload Error:', uploadError);
         let errorMessage = `Storage Error: ${uploadError.message || 'Unknown storage error.'}`;
-         if (uploadError.message.includes('Bucket not found')) {
-            errorMessage = 'Storage Error: The storage bucket "role-instructions" was not found.';
+        if (uploadError.message.includes('Bucket not found')) {
+          errorMessage = 'Storage Error: The storage bucket "role-instructions" was not found.';
         }
         throw new Error(errorMessage);
       }
@@ -462,7 +461,7 @@ function StrategyManager() {
       if (!urlData || !urlData.publicUrl) {
         throw new Error("Could not get public URL for the uploaded file.");
       }
-      
+
       console.log('✅ File uploaded to storage:', urlData.publicUrl);
 
       // 3. Insert metadata into table
@@ -482,9 +481,9 @@ function StrategyManager() {
         console.error('❌ Error inserting role instructions record:', insertError);
         let dbErrorMessage = `Database Error: ${insertError.message || 'Failed to save instruction details.'}`;
         if (insertError.code === '22P02') {
-             dbErrorMessage = `Database Error: There was an issue saving the instruction details, possibly related to data format. ${insertError.details || ''}`;
+          dbErrorMessage = `Database Error: There was an issue saving the instruction details, possibly related to data format. ${insertError.details || ''}`;
         } else if (insertError.code === '42501') {
-             dbErrorMessage = `Database Error: Permission denied. Please check your Row Level Security policies or disable RLS for 'role_instructions'. ${insertError.message}`;
+          dbErrorMessage = `Database Error: Permission denied. Please check your Row Level Security policies or disable RLS for 'role_instructions'. ${insertError.message}`;
         }
         throw new Error(dbErrorMessage);
       }
@@ -544,7 +543,7 @@ function StrategyManager() {
         .select('file_url')
         .eq('id', documentId)
         .single();
-      
+
       if (fetchError || !docData) {
         throw new Error(`Could not find document record: ${fetchError?.message || 'Not found'}`);
       }
@@ -556,12 +555,12 @@ function StrategyManager() {
         .eq('id', documentId);
 
       if (deleteError) {
-         console.error('❌ Error deleting role instructions record:', deleteError);
-         let delErrorMessage = `Database Error: ${deleteError.message || 'Failed to delete instruction details.'}`;
-         if (deleteError.code === '42501') {
-             delErrorMessage = `Database Error: Permission denied. Please check your Row Level Security policies for deleting from role_instructions. ${deleteError.message}`;
-         }
-         throw new Error(delErrorMessage);
+        console.error('❌ Error deleting role instructions record:', deleteError);
+        let delErrorMessage = `Database Error: ${deleteError.message || 'Failed to delete instruction details.'}`;
+        if (deleteError.code === '42501') {
+          delErrorMessage = `Database Error: Permission denied. Please check your Row Level Security policies for deleting from role_instructions. ${deleteError.message}`;
+        }
+        throw new Error(delErrorMessage);
       }
 
 
@@ -571,21 +570,21 @@ function StrategyManager() {
         const urlString = docData.file_url;
         const pathStartIndex = urlString.indexOf('/role-instructions/') + '/role-instructions/'.length;
         if (pathStartIndex > '/role-instructions/'.length - 1) {
-            filePath = decodeURIComponent(urlString.substring(pathStartIndex));
+          filePath = decodeURIComponent(urlString.substring(pathStartIndex));
         } else {
-             throw new Error("Path structure not recognized.");
+          throw new Error("Path structure not recognized.");
         }
         console.log(`Attempting to delete storage file at path: ${filePath}`);
       } catch (e) {
-         console.error("Error parsing or decoding file path:", e, `URL: ${docData.file_url}`);
-         filePath = '';
+        console.error("Error parsing or decoding file path:", e, `URL: ${docData.file_url}`);
+        filePath = '';
       }
 
       if (filePath) {
         const { error: storageError } = await supabase.storage
           .from('role-instructions')
           .remove([filePath]);
-        
+
         if (storageError) {
           console.warn(`Storage file deletion failed (path: ${filePath}), but DB record was removed: ${storageError.message}`);
           showConfirmation({
@@ -594,7 +593,7 @@ function StrategyManager() {
             message: `Document record removed, but there was an issue deleting the file from storage. Path: ${filePath}. Error: ${storageError.message}`
           });
         } else {
-           console.log(`✅ Storage file deleted: ${filePath}`);
+          console.log(`✅ Storage file deleted: ${filePath}`);
         }
       } else {
         console.warn(`Could not parse file path from URL for deletion: ${docData.file_url}`);
@@ -618,7 +617,7 @@ function StrategyManager() {
         });
 
       console.log('✅ Role instructions document removed from database.');
-      if (!filePath || (filePath && !supabase.storage.from('role-instructions').remove([filePath]).error) ) {
+      if (!filePath || (filePath && !supabase.storage.from('role-instructions').remove([filePath]).error)) {
         showConfirmation({
           type: 'success',
           title: 'Success!',
@@ -782,16 +781,16 @@ function StrategyManager() {
 
   if (!isDirectorOrManager) {
     return (
-        <div className="dashboard-container">
-          <div className="overview-header">
-            <h1 className="main-title" style={{ color: 'var(--accent-red)' }}>
-                <AlertTriangle size={32} /> Access Denied
-            </h1>
-            <p className="welcome-message">
-              This page is only accessible to users with Director or Manager roles.
-            </p>
-          </div>
+      <div className="dashboard-container">
+        <div className="overview-header">
+          <h1 className="main-title" style={{ color: 'var(--accent-red)' }}>
+            <AlertTriangle size={32} /> Access Denied
+          </h1>
+          <p className="welcome-message">
+            This page is only accessible to users with Director or Manager roles.
+          </p>
         </div>
+      </div>
     );
   }
 
@@ -803,7 +802,7 @@ function StrategyManager() {
           <p className="welcome-message">
             Upload role instructions for recruiters.
           </p>
-          <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
+
         </div>
       </div>
 
@@ -831,7 +830,7 @@ function StrategyManager() {
           <FileText size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
           Role Instructions
         </button>
-        
+
         {/* Placeholder for other tabs */}
         <button
           className={`tab-button ${activeTab === 'strategies' ? 'active' : ''}`}
@@ -876,7 +875,7 @@ function StrategyManager() {
       {activeTab === 'role_instructions' && (
         <div>
           {loading ? (
-             <div className="first-slate-sprint-card">
+            <div className="first-slate-sprint-card">
               <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
                 Loading open positions...
               </p>
@@ -890,19 +889,19 @@ function StrategyManager() {
           ) : (
             // NEW: Pass the state and setter to the card component
             positions.map((position) => (
-                <RoleInstructionCard
-                    key={position.id}
-                    position={position}
-                    instructions={roleInstructions[position.id] || []}
-                    recruiters={recruiters}
-                    uploadingFile={uploadingFile}
-                    onUpload={uploadRoleInstructions}
-                    onRemove={removeRoleInstructionsDocument}
-                    onPreview={handlePreviewDocument}
-                    expandedCardId={expandedCardId}
-                    setExpandedCardId={setExpandedCardId}
-                    showConfirmation={showConfirmation}
-                />
+              <RoleInstructionCard
+                key={position.id}
+                position={position}
+                instructions={roleInstructions[position.id] || []}
+                recruiters={recruiters}
+                uploadingFile={uploadingFile}
+                onUpload={uploadRoleInstructions}
+                onRemove={removeRoleInstructionsDocument}
+                onPreview={handlePreviewDocument}
+                expandedCardId={expandedCardId}
+                setExpandedCardId={setExpandedCardId}
+                showConfirmation={showConfirmation}
+              />
             ))
           )}
         </div>

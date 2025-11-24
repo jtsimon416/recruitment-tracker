@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import './styles/polish.css';
+import './styles/animations.css';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 // --- REMOVED: 'motion' and 'AnimatePresence' imports are no longer needed ---
 import { DataProvider, useData } from './contexts/DataContext';
@@ -23,6 +25,8 @@ import StrategyManager from './pages/StrategyManager';
 // --- ADDED: Import the new CompanyDocuments page ---
 import CompanyDocuments from './pages/CompanyDocuments';
 import PublicCareerPage from './pages/PublicCareerPage';
+import GlobalSearch from './components/GlobalSearch'; // ADDED
+import QuickAddPanel from './components/QuickAddPanel'; // ADDED
 // --------------------------------------------------
 import { usePageTransition } from './hooks/usePageTransition';
 import 'nprogress/nprogress.css';
@@ -56,6 +60,20 @@ const AppContent = ({ children }) => {
 
 function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+
+  // Keyboard shortcut for Quick Add (Cmd+J / Ctrl+J)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
+        e.preventDefault();
+        setIsQuickAddOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <SplashScreen>
@@ -75,6 +93,8 @@ function App() {
                 <Route path="*" element={
                   <ProtectedRoute>
                     <ConfirmationProvider> {/* Context for modals */}
+                      <GlobalSearch /> {/* ADDED: Global Search available everywhere */}
+                      <QuickAddPanel isOpen={isQuickAddOpen} onClose={() => setIsQuickAddOpen(false)} /> {/* ADDED: Quick Add Panel */}
                       {/* Sidebar is rendered inside protected area */}
                       <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
                       {/* Main content area takes remaining space */}

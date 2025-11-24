@@ -59,17 +59,17 @@ function Clients() {
   const clientsWithStats = useMemo(() => {
     return clients.map(client => {
       // 1. Calculate Open Positions
-      const openPositions = positions.filter(p => 
+      const openPositions = positions.filter(p =>
         p.client_id === client.id && p.status === 'Open'
       ).length;
 
       // 2. Calculate Total Hires
-      const totalHires = pipeline.filter(p => 
+      const totalHires = pipeline.filter(p =>
         p.positions?.client_id === client.id && p.stage === 'Hired'
       ).length;
 
       // 3. Calculate Active Candidates
-      const activeCandidates = pipeline.filter(p => 
+      const activeCandidates = pipeline.filter(p =>
         p.positions?.client_id === client.id && p.status === 'Active'
       ).length;
 
@@ -99,7 +99,7 @@ function Clients() {
           message: `Error updating client: ${error.message}`,
           confirmText: 'OK',
           cancelText: null,
-          onConfirm: () => {}
+          onConfirm: () => { }
         });
       } else {
         showConfirmation({
@@ -108,7 +108,7 @@ function Clients() {
           message: 'Client updated successfully!',
           confirmText: 'OK',
           cancelText: null,
-          onConfirm: () => {}
+          onConfirm: () => { }
         });
         resetForm();
         fetchAllClientData();
@@ -125,7 +125,7 @@ function Clients() {
           message: `Error adding client: ${error.message}`,
           confirmText: 'OK',
           cancelText: null,
-          onConfirm: () => {}
+          onConfirm: () => { }
         });
       } else {
         showConfirmation({
@@ -134,7 +134,7 @@ function Clients() {
           message: 'Client added successfully!',
           confirmText: 'OK',
           cancelText: null,
-          onConfirm: () => {}
+          onConfirm: () => { }
         });
         resetForm();
         fetchAllClientData();
@@ -166,7 +166,7 @@ function Clients() {
             message: `Error deleting client: ${error.message}`,
             confirmText: 'OK',
             cancelText: null,
-            onConfirm: () => {}
+            onConfirm: () => { }
           });
         } else {
           showConfirmation({
@@ -175,7 +175,7 @@ function Clients() {
             message: 'Client deleted successfully!',
             confirmText: 'OK',
             cancelText: null,
-            onConfirm: () => {}
+            onConfirm: () => { }
           });
           fetchAllClientData();
         }
@@ -210,7 +210,7 @@ function Clients() {
       <div className="page-header">
         <div className="header-content">
           <h1>Client Management</h1>
-          <p style={{ color: 'yellow', fontSize: '1rem', marginTop: '5px' }}>Now powered by Hire Logic AI</p>
+
         </div>
         <div className="header-actions">
           <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
@@ -230,7 +230,7 @@ function Clients() {
                   type="text"
                   required
                   value={formData.company_name}
-                  onChange={(e) => setFormData({...formData, company_name: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                 />
               </div>
               <div className="form-group">
@@ -239,7 +239,7 @@ function Clients() {
                   type="text"
                   required
                   value={formData.contact_name}
-                  onChange={(e) => setFormData({...formData, contact_name: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
                 />
               </div>
             </div>
@@ -250,7 +250,7 @@ function Clients() {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
               <div className="form-group">
@@ -258,7 +258,7 @@ function Clients() {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
               </div>
             </div>
@@ -285,7 +285,7 @@ function Clients() {
                 {client.email && <p><strong>Email:</strong> {client.email}</p>}
                 {client.phone && <p><strong>Phone:</strong> {client.phone}</p>}
               </div>
-              
+
               {/* --- NEW STATS BLOCK --- */}
               <div className="client-stats">
                 <div className="stat-item">

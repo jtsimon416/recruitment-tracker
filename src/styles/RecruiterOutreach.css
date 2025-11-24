@@ -13,39 +13,8 @@
 }
 
 /* Page Header */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  /* Changed from center to flex-start */
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid var(--border-color);
-}
-
-.page-header .header-content {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  /* Space between h1 and p */
-}
-
-.page-header .header-content h1 {
-  font-size: 2.5rem;
-  background: var(--rose-gold-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 0;
-  /* Remove default margin */
-  font-weight: 700;
-}
-
-.page-header .header-content p {
-  color: var(--text-secondary);
-  font-size: 1.05rem;
-  margin: 0;
-  /* Remove default margin */
-}
+/* Page Header */
+/* Header styles are now global in index.css */
 
 /* ===================================
    GONE COLD NOTIFICATION BANNER
@@ -166,7 +135,7 @@
 }
 
 .bulk-upload-card h3 {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
   display: flex;
@@ -190,7 +159,7 @@
 
 .bulk-upload-textarea:focus {
   outline: none;
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
 }
 
@@ -208,19 +177,19 @@
 
 .bulk-upload-position-select:focus {
   outline: none;
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
 }
 
 .bulk-upload-preview {
   background: rgba(232, 180, 184, 0.1);
-  border: 1px solid var(--rose-gold);
+  border: 1px solid var(--sunset-orange);
   border-radius: 8px;
   padding: 1rem;
   margin-top: 1rem;
 }
 
 .bulk-upload-preview h4 {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   margin: 0 0 0.75rem 0;
   font-size: 1rem;
 }
@@ -241,12 +210,12 @@
 
 .bulk-upload-preview li::before {
   content: '•';
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   font-size: 1.2rem;
 }
 
 .btn-process-bulk {
-  background: linear-gradient(135deg, var(--rose-gold), var(--peachy-rose));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--peachy-rose));
   color: var(--main-bg);
   border: none;
   padding: 0.75rem 1.5rem;
@@ -328,7 +297,7 @@
 }
 
 .filters-card h3 {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
   display: flex;
@@ -369,7 +338,7 @@
 
 .filter-select:focus {
   outline: none;
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
 }
 
@@ -385,7 +354,7 @@
 
 .filter-search-input:focus {
   outline: none;
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
 }
 
@@ -409,13 +378,13 @@
 }
 
 .quick-filter-btn:hover {
-  border-color: var(--rose-gold);
-  color: var(--rose-gold);
+  border-color: var(--sunset-orange);
+  color: var(--sunset-orange);
   background: rgba(232, 180, 184, 0.1);
 }
 
 .quick-filter-btn.active {
-  background: linear-gradient(135deg, var(--rose-gold), var(--peachy-rose));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--peachy-rose));
   color: var(--main-bg);
   border-color: transparent;
 }
@@ -442,7 +411,7 @@
 }
 
 .outreach-table-header h3 {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   margin: 0;
   font-size: 1.1rem;
   display: flex;
@@ -486,7 +455,7 @@
 }
 
 .outreach-table th:hover {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
 }
 
 .outreach-table th.sortable {
@@ -496,7 +465,7 @@
 .sort-indicator {
   margin-left: 0.5rem;
   font-size: 0.8rem;
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
 }
 
 .outreach-table tbody tr {
@@ -575,8 +544,8 @@
 
 .status-badge.ready-submission {
   background: rgba(187, 154, 247, 0.15);
-  color: #bb9af7;
-  border: 1px solid #bb9af7;
+  color: #6b7280;
+  border: 1px solid #6b7280;
 }
 
 .status-badge.gone-cold {
@@ -635,8 +604,8 @@
 }
 
 .btn-action:hover {
-  border-color: var(--rose-gold);
-  color: var(--rose-gold);
+  border-color: var(--sunset-orange);
+  color: var(--sunset-orange);
   background: rgba(232, 180, 184, 0.1);
 }
 
@@ -663,7 +632,7 @@
 }
 
 .detail-section h4 {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   font-size: 0.9rem;
   margin: 0 0 0.75rem 0;
   text-transform: uppercase;
@@ -689,7 +658,7 @@
 }
 
 .detail-value.link {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -721,7 +690,7 @@
 }
 
 .btn-edit-full {
-  background: linear-gradient(135deg, var(--rose-gold), var(--peachy-rose));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--peachy-rose));
   color: var(--main-bg);
   border: none;
   padding: 0.75rem 1.5rem;
@@ -774,8 +743,8 @@
 }
 
 .btn-page:hover:not(:disabled) {
-  border-color: var(--rose-gold);
-  color: var(--rose-gold);
+  border-color: var(--sunset-orange);
+  color: var(--sunset-orange);
   background: rgba(232, 180, 184, 0.1);
 }
 
@@ -785,7 +754,7 @@
 }
 
 .btn-page.active {
-  background: linear-gradient(135deg, var(--rose-gold), var(--peachy-rose));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--peachy-rose));
   color: var(--main-bg);
   border-color: transparent;
 }
@@ -855,7 +824,7 @@
 }
 
 .ai-interview-prep-card h3 {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   margin: 0 0 0.5rem 0;
   font-size: 1.25rem;
   display: flex;
@@ -890,12 +859,12 @@
 
 .ai-prep-select:focus {
   outline: none;
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
 }
 
 .btn-generate-questions {
-  background: linear-gradient(135deg, #7aa2f7, #bb9af7);
+  background: linear-gradient(135deg, #7aa2f7, #6b7280);
   /* Blue/Purple gradient for AI */
   color: #fff;
   border: none;
@@ -995,7 +964,7 @@
 .loading-state {
   text-align: center;
   padding: 3rem;
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
 }
 
 /* ===================================
@@ -1036,7 +1005,7 @@
 
 .modal-header h2 {
   margin: 0;
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   font-size: 1.5rem;
 }
 
@@ -1056,7 +1025,7 @@
 }
 
 .btn-close:hover {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
 }
 
 .modal-body {
@@ -1090,7 +1059,7 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
 }
 
@@ -1103,7 +1072,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--rose-gold), var(--peachy-rose));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--peachy-rose));
   color: var(--main-bg);
   border: none;
   padding: 0.75rem 1.5rem;
@@ -1130,8 +1099,8 @@
 }
 
 .btn-secondary:hover {
-  border-color: var(--rose-gold);
-  color: var(--rose-gold);
+  border-color: var(--sunset-orange);
+  color: var(--sunset-orange);
   background: rgba(232, 180, 184, 0.1);
 }
 
@@ -1192,7 +1161,7 @@
 }
 
 .duplicates-list::-webkit-scrollbar-thumb:hover {
-  background-color: var(--rose-gold);
+  background-color: var(--sunset-orange);
 }
 
 .duplicate-item {
@@ -1355,7 +1324,7 @@
 }
 
 .calls-dashboard-title {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   font-size: 1.1rem;
   margin: 0 0 1rem 0;
   display: flex;
@@ -1398,7 +1367,7 @@
 .call-time {
   font-size: 0.85rem;
   font-weight: bold;
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   background: rgba(232, 180, 184, 0.15);
   padding: 0.35rem 0.65rem;
   border-radius: 6px;
@@ -1444,7 +1413,7 @@
 }
 
 .btn-call-linkedin:hover {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   background: var(--hover-bg);
 }
 
@@ -1485,7 +1454,7 @@
 
 .btn-close-modal:hover {
   background: var(--hover-bg);
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
 }
 
 .form-input,
@@ -1505,7 +1474,7 @@
 .form-select:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.1);
 }
 
@@ -1556,8 +1525,8 @@
 }
 
 .btn-clear-rating:hover {
-  border-color: var(--rose-gold);
-  color: var(--rose-gold);
+  border-color: var(--sunset-orange);
+  color: var(--sunset-orange);
 }
 
 .modal-footer {
@@ -1602,7 +1571,7 @@
 }
 
 .quick-rating-item:hover {
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
   background: var(--hover-bg);
 }
 
@@ -1621,7 +1590,7 @@
 }
 
 .active-roles-title {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
   font-weight: 700;
@@ -1656,7 +1625,7 @@
 .active-role-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(232, 180, 184, 0.2);
-  border-color: var(--rose-gold);
+  border-color: var(--sunset-orange);
 }
 
 .active-role-header {
@@ -1734,7 +1703,7 @@
 }
 
 .role-instructions-header {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 1rem 0;
@@ -1780,7 +1749,7 @@
 /* Role Instructions Box (the individual doc item) */
 .role-instructions-box {
   background: rgba(232, 180, 184, 0.08);
-  border: 1px solid var(--rose-gold);
+  border: 1px solid var(--sunset-orange);
   border-radius: 8px;
   padding: 1rem;
   transition: all 0.3s;
@@ -1827,7 +1796,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  background: linear-gradient(135deg, var(--rose-gold), #F39C9C);
+  background: linear-gradient(135deg, var(--sunset-orange), #F39C9C);
   color: var(--main-bg);
   padding: 0.35rem 0.75rem;
   border-radius: 6px;
@@ -1853,11 +1822,11 @@
   padding: 0.75rem;
   background: var(--secondary-bg);
   border-radius: 6px;
-  border-left: 3px solid var(--rose-gold);
+  border-left: 3px solid var(--sunset-orange);
 }
 
 .instructions-notes strong {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   display: block;
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
@@ -1878,7 +1847,7 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.75rem;
-  background: linear-gradient(135deg, var(--rose-gold), #F39C9C);
+  background: linear-gradient(135deg, var(--sunset-orange), #F39C9C);
   color: var(--main-bg);
   border: none;
   border-radius: 8px;
@@ -1895,7 +1864,7 @@
 /* Phase 2 Strategy Box (existing) */
 .phase2-strategy-box {
   background: rgba(187, 154, 247, 0.08);
-  border: 1px solid #bb9af7;
+  border: 1px solid #6b7280;
   border-radius: 8px;
   padding: 1rem;
 }
@@ -1903,7 +1872,7 @@
 .strategy-available-badge {
   margin-bottom: 0.75rem;
   font-weight: 600;
-  color: #bb9af7;
+  color: #6b7280;
 }
 
 .btn-view-strategy {
@@ -1913,7 +1882,7 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.75rem;
-  background: linear-gradient(135deg, #bb9af7, #a78bfa);
+  background: linear-gradient(135deg, #6b7280, #6b7280);
   color: var(--main-bg);
   border: none;
   border-radius: 8px;
@@ -1948,7 +1917,7 @@
 
 .document-viewer-modal {
   background: var(--card-bg);
-  border: 2px solid var(--rose-gold);
+  border: 2px solid var(--sunset-orange);
   border-radius: 16px;
   width: 100%;
   max-width: 900px;
@@ -1968,7 +1937,7 @@
 }
 
 .document-viewer-header h2 {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
@@ -1989,7 +1958,7 @@
 
 .btn-close-viewer:hover {
   background: var(--hover-bg);
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   transform: rotate(90deg);
 }
 
@@ -2036,7 +2005,7 @@
 .document-viewer-content h4,
 .document-viewer-content h5,
 .document-viewer-content h6 {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   margin-top: 1.5rem;
   margin-bottom: 1rem;
 }
@@ -2058,7 +2027,7 @@
 }
 
 .document-viewer-content strong {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   font-weight: 600;
 }
 
@@ -2068,7 +2037,7 @@
 }
 
 .document-viewer-content a {
-  color: var(--rose-gold);
+  color: var(--sunset-orange);
   text-decoration: underline;
 }
 
@@ -2086,7 +2055,7 @@
 
 .btn-close-doc {
   padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, var(--rose-gold), #F39C9C);
+  background: linear-gradient(135deg, var(--sunset-orange), #F39C9C);
   color: var(--main-bg);
   border: none;
   border-radius: 8px;
@@ -2189,8 +2158,8 @@
 }
 
 .strategy-tabs button.active {
-  color: var(--rose-gold);
-  border-bottom: 4px solid var(--rose-gold);
+  color: var(--sunset-orange);
+  border-bottom: 4px solid var(--sunset-orange);
 }
 
 
@@ -2352,7 +2321,7 @@
 }
 
 .icon-wrapper {
-  background: linear-gradient(135deg, var(--rose-gold), var(--peachy-rose));
+  background: linear-gradient(135deg, var(--sunset-orange), var(--peachy-rose));
   padding: 0.75rem;
   border-radius: 12px;
   display: flex;
@@ -2401,7 +2370,7 @@
 }
 
 .btn-generate-ai {
-  background: linear-gradient(135deg, #7aa2f7, #bb9af7);
+  background: linear-gradient(135deg, #7aa2f7, #6b7280);
   color: #1a1b26;
   border: none;
   padding: 0.85rem 2rem;
@@ -2485,11 +2454,11 @@
 
 /* Tier Colors */
 .result-unicorn {
-  border-top: 4px solid #bb9af7;
+  border-top: 4px solid #6b7280;
 }
 
 .result-unicorn .header-title {
-  color: #bb9af7;
+  color: #6b7280;
 }
 
 .result-strong {
@@ -2594,4 +2563,109 @@
   .btn-generate-ai {
     justify-content: center;
   }
+}
+
+/* ===================================
+   CONVERSATION LOG CHAT BUBBLE STYLES
+   =================================== */
+
+.notes-section h4 {
+  margin-bottom: 15px;
+  color: var(--text-primary);
+  font-size: 1.1em;
+}
+
+.chat-bubble-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-bubble-recruiter,
+.chat-bubble-candidate {
+  max-width: 80%;
+  padding: 8px 12px;
+  border-radius: 18px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+/* Recruiter's Message (Right, Blue Background) */
+.chat-bubble-recruiter {
+  align-self: flex-end;
+  background-color: var(--accent-color-blue);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+
+/* Candidate's Message (Left, Gray Background) */
+.chat-bubble-candidate {
+  align-self: flex-start;
+  background-color: var(--secondary-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-bubble-timestamp {
+  display: block;
+  font-size: 0.7rem;
+  margin-top: 5px;
+  opacity: 0.7;
+  text-align: right;
+}
+
+.chat-bubble-recruiter .chat-bubble-timestamp {
+  color: #ffffff;
+}
+
+.chat-bubble-candidate .chat-bubble-timestamp {
+  color: var(--text-secondary);
+}
+
+/* Ensure the outer container allows proper alignment */
+.expanded-row-details .notes-section {
+  padding: 15px;
+}
+
+/* ===================================
+   DRAG AND DROP STYLES FOR MODAL NOTES
+   =================================== */
+
+.conversation-log-display {
+  position: relative;
+}
+
+.conversation-note-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px;
+  border: 1px solid var(--border-color-light);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: background-color 0.2s;
+}
+
+.drag-handle {
+  padding-right: 8px;
+  cursor: grab;
+  color: var(--text-secondary);
+  align-self: center;
+  display: flex;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Style when a note is being dragged */
+.conversation-note-item.is-dragging {
+  background-color: var(--secondary-bg-hover) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Style the inner content of the note for proper alignment next to the handle */
+.conversation-note-item>div:not(.drag-handle) {
+  flex-grow: 1;
 }
