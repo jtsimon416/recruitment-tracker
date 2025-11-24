@@ -807,68 +807,43 @@ function StrategyManager() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="strategy-tabs" style={{
-        display: 'flex',
-        gap: '1rem',
-        marginBottom: '2rem',
-        borderBottom: '2px solid var(--border-color)'
-      }}>
-        <button
-          className={`tab-button ${activeTab === 'role_instructions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('role_instructions')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: activeTab === 'role_instructions' ? 'linear-gradient(135deg, var(--rose-gold), #F39C9C)' : 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'role_instructions' ? '3px solid var(--rose-gold)' : '3px solid transparent',
-            color: activeTab === 'role_instructions' ? 'var(--main-bg)' : 'var(--text-secondary)',
-            cursor: 'pointer',
-            fontWeight: 600,
-            transition: 'all 0.3s'
-          }}
-        >
-          <FileText size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-          Role Instructions
-        </button>
+      {/* Tab Navigation */}
+      <div className="tabs-container" style={{ marginBottom: '2rem' }}>
+        <div className="tabs-nav">
+          <motion.button
+            className={`tab-button ${activeTab === 'role_instructions' ? 'active' : ''} glow-on-hover`}
+            onClick={() => setActiveTab('role_instructions')}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <FileText size={18} />
+            Role Instructions
+            {activeTab === 'role_instructions' && (
+              <motion.div
+                className="active-tab-indicator"
+                layoutId="activeTab"
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            )}
+          </motion.button>
 
-        {/* Placeholder for other tabs */}
-        <button
-          className={`tab-button ${activeTab === 'strategies' ? 'active' : ''}`}
-          onClick={() => setActiveTab('strategies')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: '3px solid transparent',
-            color: 'var(--text-muted)',
-            cursor: 'not-allowed',
-            fontWeight: 600,
-            transition: 'all 0.3s',
-            opacity: 0.5
-          }}
-          disabled
-          title="This feature has been removed."
-        >
-          <FileText size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-          Strategy Documents (Removed)
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'audit' ? 'active' : ''}`}
-          onClick={() => setActiveTab('audit')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: activeTab === 'audit' ? 'linear-gradient(135deg, var(--rose-gold), #F39C9C)' : 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'audit' ? '3px solid var(--rose-gold)' : '3px solid transparent',
-            color: activeTab === 'audit' ? 'var(--main-bg)' : 'var(--text-secondary)',
-            cursor: 'pointer',
-            fontWeight: 600,
-            transition: 'all 0.3s'
-          }}
-        >
-          <BarChart size={18} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-          Audit Trail
-        </button>
+          <motion.button
+            className={`tab-button ${activeTab === 'audit' ? 'active' : ''} glow-on-hover`}
+            onClick={() => setActiveTab('audit')}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <BarChart size={18} />
+            Audit Trail
+            {activeTab === 'audit' && (
+              <motion.div
+                className="active-tab-indicator"
+                layoutId="activeTab"
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            )}
+          </motion.button>
+        </div>
       </div>
 
       {/* Role Instructions Tab */}

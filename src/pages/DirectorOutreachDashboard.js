@@ -608,19 +608,41 @@ function DirectorOutreachDashboard() {
   return (
     <div className="page-container director-outreach-container">
       <div className="page-header"> <h1>Team Outreach Dashboard</h1> <p className="subtitle">Real-time visibility into recruiter LinkedIn activity</p>  </div>
-      <div className="strategy-tabs">
-        <button
-          className={activeTab === 'feed' ? 'active' : ''}
-          onClick={() => setActiveTab('feed')}
-        >
-          Live Feed
-        </button>
-        <button
-          className={activeTab === 'archive' ? 'active' : ''}
-          onClick={() => setActiveTab('archive')}
-        >
-          Archive Management
-        </button>
+      <div className="tabs-container" style={{ marginBottom: '2rem' }}>
+        <div className="tabs-nav">
+          <motion.button
+            className={`tab-button ${activeTab === 'feed' ? 'active' : ''} glow-on-hover`}
+            onClick={() => setActiveTab('feed')}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Users size={18} />
+            Live Feed
+            {activeTab === 'feed' && (
+              <motion.div
+                className="active-tab-indicator"
+                layoutId="activeTab"
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            )}
+          </motion.button>
+          <motion.button
+            className={`tab-button ${activeTab === 'archive' ? 'active' : ''} glow-on-hover`}
+            onClick={() => setActiveTab('archive')}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Archive size={18} />
+            Archive Management
+            {activeTab === 'archive' && (
+              <motion.div
+                className="active-tab-indicator"
+                layoutId="activeTab"
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            )}
+          </motion.button>
+        </div>
       </div>
 
       {activeTab === 'feed' && (
