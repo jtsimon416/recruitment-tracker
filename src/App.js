@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import './styles/polish.css';
 import './styles/animations.css';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-// --- REMOVED: 'motion' and 'AnimatePresence' imports are no longer needed ---
 import { DataProvider, useData } from './contexts/DataContext';
 import { ConfirmationProvider } from './contexts/ConfirmationContext';
 import SplashScreen from './components/SplashScreen';
@@ -22,29 +21,23 @@ import DirectorReview from './pages/DirectorReview';
 import RecruiterOutreach from './pages/RecruiterOutreach';
 import DirectorOutreachDashboard from './pages/DirectorOutreachDashboard';
 import StrategyManager from './pages/StrategyManager';
-// --- ADDED: Import the new CompanyDocuments page ---
 import CompanyDocuments from './pages/CompanyDocuments';
 import PublicCareerPage from './pages/PublicCareerPage';
-import GlobalSearch from './components/GlobalSearch'; // ADDED
-import QuickAddPanel from './components/QuickAddPanel'; // ADDED
-// --------------------------------------------------
+import GlobalSearch from './components/GlobalSearch';
+import QuickAddPanel from './components/QuickAddPanel';
+import FeatureBanner from './components/FeatureBanner';
 import { usePageTransition } from './hooks/usePageTransition';
 import 'nprogress/nprogress.css';
 import './styles/App.css';
-// import HireLogicChat from './components/HireLogicChat';
-
-// --- REMOVED: The entire 'TabReturnSplash' component that was here is now gone. ---
 
 // Component to protect application routes
 const ProtectedRoute = ({ children }) => {
   const { session, loadingSession } = useData();
 
   if (loadingSession) {
-    // Simple loading screen while checking session
     return <div className="loading-state">Loading application...</div>;
   }
 
-  // If no session, redirect to login
   if (!session) {
     return <Navigate to="/login" replace />;
   }
@@ -54,7 +47,7 @@ const ProtectedRoute = ({ children }) => {
 
 // Component to enable page transition loading bar
 const AppContent = ({ children }) => {
-  usePageTransition(); // Hook to show loading bar on route changes
+  usePageTransition();
   return children;
 };
 
@@ -80,26 +73,22 @@ function App() {
       <DataProvider>
         <Router>
           <AppContent>
-            <div className={`app ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}> {/* Main app container */}
+            <div className={`app ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
               <Routes>
                 {/* Public route for Login */}
                 <Route path="/login" element={<Login />} />
-                {/* --- ADD THIS NEW PUBLIC ROUTE HERE --- */}
                 <Route path="/careers" element={<PublicCareerPage />} />
-                {/* -------------------------------------- */}
 
-                {/* Protected Routes Wrapper: All other paths require login */}
-                {/* Using path="*" ensures this wrapper handles all non-login routes */}
+                {/* Protected Routes Wrapper */}
                 <Route path="*" element={
                   <ProtectedRoute>
-                    <ConfirmationProvider> {/* Context for modals */}
-                      <GlobalSearch /> {/* ADDED: Global Search available everywhere */}
-                      <QuickAddPanel isOpen={isQuickAddOpen} onClose={() => setIsQuickAddOpen(false)} /> {/* ADDED: Quick Add Panel */}
-                      {/* Sidebar is rendered inside protected area */}
+                    <ConfirmationProvider>
+                      <GlobalSearch />
+                      <QuickAddPanel isOpen={isQuickAddOpen} onClose={() => setIsQuickAddOpen(false)} />
                       <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
-                      {/* Main content area takes remaining space */}
+
                       <div className="main-content">
-                        {/* Nested Routes define the pages within the main content area */}
+                        <FeatureBanner />
                         <Routes>
                           <Route index element={<Dashboard />} />
                           <Route path="/director-review" element={<DirectorReview />} />
@@ -115,14 +104,9 @@ function App() {
                           <Route path="/commissions" element={<Commissions />} />
                           <Route path="/role-history" element={<RoleHistory />} />
                           <Route path="/rubric-generator" element={<RubricGenerator />} />
-                          {/* --- ADDED: Route for the new Company Documents page --- */}
                           <Route path="/documents" element={<CompanyDocuments />} />
-                          {/* -------------------------------------------------------- */}
-                          {/* Optional: Add a 404 Not Found route */}
-                          {/* <Route path="*" element={<div>Page Not Found</div>} /> */}
                         </Routes>
                       </div>
-                      {/* <HireLogicChat /> */}
                     </ConfirmationProvider>
                   </ProtectedRoute>
                 } />

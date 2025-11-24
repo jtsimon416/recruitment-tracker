@@ -81,3 +81,122 @@ body {
   mix-blend-mode: screen;
   /* Makes black background transparent */
 }
+
+/* --- Feature Banner --- */
+.feature-banner {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(247, 147, 30, 0.08) 100%);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  border-radius: 8px;
+  margin: 1rem 2rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.feature-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.feature-banner-header:hover {
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.feature-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.feature-icon {
+  color: var(--sunset-orange);
+}
+
+.feature-text {
+  color: var(--sunset-orange);
+  font-weight: 600;
+}
+
+.feature-banner-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.feature-banner-close:hover {
+  color: var(--text-primary);
+}
+
+.feature-banner-content {
+  padding: 0 1rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.feature-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 100px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.hotkey-key {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.feature-description {
+  flex: 1;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.feature-description strong {
+  color: var(--sunset-orange);
+  display: block;
+  margin-bottom: 0.2rem;
+}

@@ -745,6 +745,7 @@ function RecruiterOutreach() {
   const [newlyAddedContacts, setNewlyAddedContacts] = useState([]);
 
   // Filter State
+  const [filterPanelExpanded, setFilterPanelExpanded] = useState(true); // Default to true as requested
   const [filters, setFilters] = useState({
     positionId: '',
     status: '',
@@ -1567,9 +1568,8 @@ function RecruiterOutreach() {
     <div className="recruiter-outreach-page">
       {/* Page Header */}
       <div className="page-header">
-        <div className="header-content">
-          <h1>My Outreach</h1>
-        </div>
+        <h1>My Outreach</h1>
+        <p className="subtitle">Manage your candidate communications and pipeline</p>
       </div>
 
       <div className="tabs-container">
@@ -1939,9 +1939,9 @@ function RecruiterOutreach() {
                             </span>
                           )}
                         </th>
-                        <th className="sortable" onClick={() => handleSort('created_at')}>
+                        <th className="sortable" onClick={() => handleSort('last_activity')}>
                           Last Activity
-                          {sortConfig.key === 'created_at' && (
+                          {sortConfig.key === 'last_activity' && (
                             <span className="sort-indicator">
                               {sortConfig.direction === 'asc' ? '▲' : '▼'}
                             </span>
@@ -1976,7 +1976,7 @@ function RecruiterOutreach() {
                                 <StarRatingDisplay rating={activity.rating || 0} />
                               </td>
                               <td className="last-activity-cell">
-                                {getTimeAgo(activity.created_at)}
+                                {getTimeAgo(activity.last_activity || activity.created_at)}
                               </td>
                               <td onClick={(e) => e.stopPropagation()}>
                                 <div className="actions-cell">

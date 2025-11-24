@@ -180,7 +180,10 @@ const QuickAddPanel = ({ isOpen, onClose }) => {
         setProcessing(true);
 
         try {
-            let updates = { updated_at: new Date().toISOString() };
+            let updates = {
+                updated_at: new Date().toISOString(),
+                last_activity: new Date().toISOString() // ADDED: Update last activity timestamp
+            };
 
             if (actionType === 'note') {
                 if (!newNote.trim()) {

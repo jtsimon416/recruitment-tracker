@@ -985,13 +985,17 @@ function Dashboard() {
     const outreachCount = getCount(3);
     const replyStatuses = ['reply_received', 'accepted', 'call_scheduled', 'declined', 'ready_for_submission'];
 
-    const { data: outreachData } = await supabase
+    // Query for ALL outreach that has had activity (replies) this week
+    const { data: repliesThisWeek } = await supabase
       .from('recruiter_outreach')
       .select('activity_status')
-      .gte('created_at', startOfWeek.toISOString());
+      .in('activity_status', replyStatuses)
+      .gte('last_activity', startOfWeek.toISOString());
 
-    const replies = outreachData?.filter(o => replyStatuses.includes(o.activity_status)).length || 0;
-    const replyRate = outreachCount > 0 ? parseFloat(((replies / outreachCount) * 100).toFixed(1)) : 0;
+    const replies = repliesThisWeek?.length || 0;
+    // If no outreach sent this week, don't calculate percentage
+    const replyRate = outreachCount > 0 ? parseFloat(((replies / outreachCount) * 100).toFixed(1)) : null;
+    const repliesReceived = replies; // Store raw count for display
 
     const stats = {
       rolesNeedingAttention: 0, // Will be updated by calculateRoleHealth() based on critical/warning roles
@@ -1000,7 +1004,8 @@ function Dashboard() {
       submissionsThisWeek: getCount(1),
       activeCandidates: getCount(2),
       outreachThisWeek: outreachCount,
-      replyRate: replyRate
+      replyRate: replyRate,
+      repliesReceived: repliesReceived // NEW: Raw count of replies received
     };
 
     console.log('📈 Final Executive Stats:', stats);
@@ -1045,10 +1050,18 @@ function Dashboard() {
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - dayOfWeek);
 
+    // Outreach sent this week
     const { data: outreachData } = await supabase
       .from('recruiter_outreach')
-      .select('recruiter_id, activity_status, recruiters(name, role)')
+      .select('recruiter_id, recruiters(name, role)')
       .gte('created_at', startOfWeek.toISOString());
+
+    // Replies received this week (regardless of when outreach was sent)
+    const { data: repliesData } = await supabase
+      .from('recruiter_outreach')
+      .select('recruiter_id, activity_status')
+      .in('activity_status', ['reply_received', 'accepted', 'call_scheduled', 'declined', 'ready_for_submission'])
+      .gte('last_activity', startOfWeek.toISOString());
 
     const { data: pipelineData } = await supabase
       .from('pipeline')
@@ -1057,7 +1070,6 @@ function Dashboard() {
       .gte('created_at', startOfWeek.toISOString());
 
     const breakdownMap = {};
-    const replyStatuses = ['reply_received', 'accepted', 'call_scheduled', 'declined', 'ready_for_submission'];
 
     recruiters.forEach(r => {
       const role = r?.role?.toLowerCase() || '';
@@ -1069,9 +1081,12 @@ function Dashboard() {
     outreachData?.forEach(o => {
       if (breakdownMap[o.recruiter_id]) {
         breakdownMap[o.recruiter_id].totalOutreach++;
-        if (replyStatuses.includes(o.activity_status)) {
-          breakdownMap[o.recruiter_id].replies++;
-        }
+      }
+    });
+
+    repliesData?.forEach(o => {
+      if (breakdownMap[o.recruiter_id]) {
+        breakdownMap[o.recruiter_id].replies++;
       }
     });
 
@@ -1437,8 +1452,8 @@ function Dashboard() {
               value={executiveStats.outreachThisWeek || 0}
               label="Team Outreach"
               color="#7AA2F7"
-              trend={executiveStats.replyRate >= 35 ? 'up' : 'down'}
-              trendValue={`${executiveStats.replyRate || 0}% reply`}
+              trend={executiveStats.replyRate !== null && executiveStats.replyRate >= 35 ? 'up' : executiveStats.repliesReceived > 0 ? 'up' : 'down'}
+              trendValue={executiveStats.replyRate !== null ? `${executiveStats.replyRate}% reply` : `${executiveStats.repliesReceived || 0} replies`}
               tooltipItems={getTeamOutreachTooltip}
             />
             <AnimatedMetricCard
