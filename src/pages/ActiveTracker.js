@@ -450,6 +450,36 @@ function ActiveTracker() {
     });
   };
 
+  const handleToggleVideoScreened = (item) => {
+    const newStatus = !item.is_video_screened;
+    const actionText = newStatus ? 'Mark as Video Screened' : 'Mark as NOT Video Screened';
+
+    showConfirmation({
+      type: newStatus ? 'confirm' : 'warning',
+      title: `${actionText}?`,
+      message: `Are you sure you want to ${actionText.toLowerCase()} for ${item.candidates?.name}?`,
+      contextInfo: newStatus ? 'This will verify that the candidate has completed a video screening.' : 'This will remove the video screened verification.',
+      confirmText: 'Yes, Update',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        const { error } = await supabase
+          .from('pipeline')
+          .update({
+            is_video_screened: newStatus,
+            video_screen_reason: newStatus ? null : 'Status manually reverted by user'
+          })
+          .eq('id', item.id);
+
+        if (error) {
+          console.error('Error updating video screen status:', error);
+          // You might want to show an error toast here
+        } else {
+          await refreshData();
+        }
+      }
+    });
+  };
+
   const [sidebarPipelineEntry, setSidebarPipelineEntry] = useState(null);
 
   const handleOpenInfoSidebar = (candidate, pipelineItem) => {
@@ -923,6 +953,13 @@ function ActiveTracker() {
                           <Sparkles size={16} />
                         </button>
                         <button
+                          className={`btn-icon-action video-toggle ${item.is_video_screened ? 'screened' : ''}`}
+                          onClick={(e) => { e.stopPropagation(); handleToggleVideoScreened(item); }}
+                          title={item.is_video_screened ? "Mark as NOT Video Screened" : "Mark as Video Screened"}
+                        >
+                          {item.is_video_screened ? <Video size={16} color="#10b981" /> : <VideoOff size={16} />}
+                        </button>
+                        <button
                           className="btn-icon-action remove"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1049,6 +1086,13 @@ function ActiveTracker() {
                                       title="Hire Logic AI Analysis"
                                     >
                                       <Sparkles size={16} />
+                                    </button>
+                                    <button
+                                      className={`btn-icon-action video-toggle ${item.is_video_screened ? 'screened' : ''}`}
+                                      onClick={() => handleToggleVideoScreened(item)}
+                                      title={item.is_video_screened ? "Mark as NOT Video Screened" : "Mark as Video Screened"}
+                                    >
+                                      {item.is_video_screened ? <Video size={16} color="#10b981" /> : <VideoOff size={16} />}
                                     </button>
                                     <button
                                       className="btn-icon-action remove"
