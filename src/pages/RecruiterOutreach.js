@@ -90,10 +90,11 @@ function normalizeLinkedInURL(url) {
 // ===================================
 function ensureProtocol(url) {
   if (!url) return '';
-  if (!/^https?:\/\//i.test(url)) {
-    return `https://${url}`;
+  const trimmedUrl = url.trim();
+  if (!/^https?:\/\//i.test(trimmedUrl)) {
+    return `https://${trimmedUrl}`;
   }
-  return url;
+  return trimmedUrl;
 }
 
 // ===================================
