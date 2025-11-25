@@ -9,6 +9,7 @@ import { ChevronUp, ChevronDown, Eye, FileText, Sparkles, AlertCircle, Video, Vi
 import { useConfirmation } from '../contexts/ConfirmationContext';
 import PageTransition from '../components/PageTransition';
 import WordDocViewerModal from '../components/Worddocviewermodal';
+import InteractiveFunnelHeader from '../components/InteractiveFunnelHeader'; // NEW IMPORT
 import AiAnalysisSidebar from '../components/AiAnalysisSidebar'; // ADDED
 import CandidatePreviewCard from '../components/CandidatePreviewCard'; // ADDED
 import '../styles/ActiveTracker.css';
@@ -97,12 +98,14 @@ const InfoSidebar = ({ candidate, pipelineEntry, onClose }) => {
         </div>
 
         <div className="sidebar-section">
-          <h3>Recruiter Notes</h3>
-          {convertedNotesHtml ? (
-            <div className="notes-text-large" dangerouslySetInnerHTML={{ __html: convertedNotesHtml }} />
-          ) : (
-            <p className="notes-text-large">No detailed notes provided.</p>
-          )}
+          <h3><FileText size={16} style={{ marginRight: '8px', verticalAlign: 'text-bottom' }} />Recruiter Notes</h3>
+          <div className="notes-document-container">
+            {convertedNotesHtml ? (
+              <div className="notes-content" dangerouslySetInnerHTML={{ __html: convertedNotesHtml }} />
+            ) : (
+              <p className="notes-placeholder">No detailed notes provided for this candidate.</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -145,6 +148,18 @@ const NotesDisplay = ({ notes }) => {
       <div dangerouslySetInnerHTML={{ __html: convertedNotesHtml }} />
     </div>
   );
+
+};
+
+// Helper to get initials
+const getInitials = (name) => {
+  if (!name) return '';
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 };
 
 function ActiveTracker() {
@@ -200,6 +215,8 @@ function ActiveTracker() {
   const [sortConfig, setSortConfig] = useState({ key: 'candidates.name', direction: 'ascending' });
 
   const [pendingMove, setPendingMove] = useState(null);
+  const [isCompactMode, setIsCompactMode] = useState(false); // NEW: Compact Mode State
+  const [isFocusMode, setIsFocusMode] = useState(false); // NEW: Focus Mode State
 
   // DIRECTOR_EMAIL constant removed
   // stages and statuses arrays moved to constants/pipeline.js
@@ -777,7 +794,7 @@ function ActiveTracker() {
 
 
 
-  const filteredAndSortedPipeline = useMemo(() => {
+  const baseFilteredPipeline = useMemo(() => {
     let filtered = pipeline.filter(item => item.positions?.status === 'Open' && item.stage !== STAGES.ARCHIVED);
 
     if (selectedPosition !== 'all') {
@@ -804,9 +821,10 @@ function ActiveTracker() {
 
     // Apply stage filter ONLY if selectedStatus is NOT 'Active' or if selectedStage is 'all'
     // This ensures that if 'Active' status is chosen, stage doesn't override it.
-    if (selectedStage !== 'all' && selectedStatus.toLowerCase() !== 'active') {
-      filtered = filtered.filter(item => item.stage === selectedStage);
-    }
+    // REMOVED: Stage filtering is now done separately to allow the Funnel to see all stages.
+    // if (selectedStage !== 'all' && selectedStatus.toLowerCase() !== 'active') {
+    //   filtered = filtered.filter(item => item.stage === selectedStage);
+    // }
 
     const sorted = [...filtered].sort((a, b) => {
       let aValue, bValue;
@@ -828,7 +846,15 @@ function ActiveTracker() {
     });
 
     return sorted;
-  }, [pipeline, selectedPosition, selectedRecruiter, selectedStatus, selectedStage, sortConfig]);
+  }, [pipeline, selectedPosition, selectedRecruiter, selectedStatus, sortConfig]); // Removed selectedStage dependency
+
+  // NEW: Apply Stage Filter separately for the Views
+  const filteredAndSortedPipeline = useMemo(() => {
+    if (selectedStage === 'all') {
+      return baseFilteredPipeline;
+    }
+    return baseFilteredPipeline.filter(item => item.stage === selectedStage);
+  }, [baseFilteredPipeline, selectedStage]);
 
   const requestSort = (key) => {
     let direction = 'ascending';
@@ -883,7 +909,7 @@ function ActiveTracker() {
                 </div>
                 {groupedByPosition[posTitle].map(item => (
                   <React.Fragment key={item.id}>
-                    <div className={`pipeline-row ${getStatusClass(item)} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''} ${highlightedCandidateIds.includes(item.id) ? 'highlighted-card' : ''}`} onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)}>
+                    <div className={`pipeline-row ${getStatusClass(item)} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''} ${highlightedCandidateIds.includes(item.id) ? 'highlighted-card' : ''} ${isFocusMode && expandedCard === item.id ? 'focused' : ''}`} onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)}>
                       <div className="candidate-name-cell">
                         <div className="candidate-name-and-icons">
                           <CandidatePreviewCard candidate={item.candidates} source="pipeline" pipelineData={item}>
@@ -1008,102 +1034,139 @@ function ActiveTracker() {
                             <Draggable key={item.id} draggableId={item.id} index={index}>
                               {(provided, snapshot) => (
                                 <div
-                                  className={`pipeline-card ${snapshot.isDragging ? 'dragging' : ''} ${getStatusClass(item)} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''} glow-on-hover`}
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
+                                  className={`pipeline-card ${snapshot.isDragging ? 'dragging' : ''} ${getStatusClass(item)} ${isCompactMode ? 'compact' : ''} ${newCommentCandidateIds.includes(item.candidate_id) ? 'has-new-comment' : ''} ${highlightedCandidateIds.includes(item.id) ? 'highlighted-card' : ''} ${isFocusMode && expandedCard === item.id ? 'focused' : ''}`}
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                    marginBottom: '10px'
+                                  }}
+                                  onClick={() => setExpandedCard(expandedCard === item.id ? null : item.id)}
                                 >
-                                  <div className="card-header">
-                                    <CandidatePreviewCard candidate={item.candidates} source="pipeline" pipelineData={item}>
-                                      <strong>{item.candidates?.name}</strong>
+                                  {isCompactMode ? (
+                                    // COMPACT MODE CARD
+                                    <CandidatePreviewCard
+                                      candidate={item.candidates}
+                                      source="pipeline"
+                                      pipelineData={item}
+                                    >
+                                      <div className="compact-card-content">
+                                        <div className={`status-dot ${getStatusClass(item)}`}></div>
+                                        <span className="compact-name">{item.candidates?.name}</span>
+                                        <div className="compact-avatar" title={item.recruiters?.name}>
+                                          {getInitials(item.recruiters?.name)}
+                                        </div>
+                                      </div>
                                     </CandidatePreviewCard>
-                                    <div className="card-icons">
-                                      <Eye
-                                        size={16}
-                                        className="icon-view-details"
-                                        onClick={() => handleOpenInfoSidebar(item.candidates, item)}
-                                        title="View Full Details"
-                                      />
-                                      {item.candidates?.resume_url && (
-                                        <a
-                                          href="#!"
-                                          className="icon-view-resume"
-                                          onClick={(e) => handleResumeClick(e, item.candidates.resume_url, item.candidates.name)}
-                                          title="View Resume"
+                                  ) : (
+                                    // REGULAR MODE CARD
+                                    <>
+                                      <div className="card-header">
+                                        <div className="card-name-row">
+                                          <CandidatePreviewCard
+                                            candidate={item.candidates}
+                                            source="pipeline"
+                                            pipelineData={item}
+                                          >
+                                            <h4>{item.candidates?.name}</h4>
+                                          </CandidatePreviewCard>
+                                          <div className="card-icons">
+                                            {/* Video Screened Indicator */}
+                                            <div
+                                              className={`icon-video-screen ${item.is_video_screened ? 'screened' : 'not-screened'}`}
+                                              title={item.is_video_screened ? "Video Screened" : (item.video_screen_reason || "Not Video Screened")}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleToggleVideoScreened(item);
+                                              }}
+                                            >
+                                              {item.is_video_screened ? <Video size={14} /> : <VideoOff size={14} />}
+                                            </div>
+
+                                            {/* AI Analysis Trigger */}
+                                            <div
+                                              className="icon-ai-analyze"
+                                              title="Analyze Fit with AI"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleAnalyzeFit(item);
+                                              }}
+                                            >
+                                              <Sparkles size={14} />
+                                            </div>
+
+                                            {/* Resume Link */}
+                                            {item.candidates?.resume_url && (
+                                              <div
+                                                className="icon-view-details-kanban"
+                                                title="View Resume"
+                                                onClick={(e) => handleResumeClick(e, item.candidates.resume_url, item.candidates.name)}
+                                              >
+                                                <FileText size={14} />
+                                              </div>
+                                            )}
+
+                                            {/* Comments Trigger */}
+                                            <div
+                                              className="icon-view-details-kanban"
+                                              title="View Comments"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                openCommentsModal(item);
+                                              }}
+                                            >
+                                              <MessageSquare size={14} />
+                                              {newCommentCandidateIds.includes(item.candidate_id) && (
+                                                <span className="notification-dot-small"></span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="card-position">{item.positions?.title}</div>
+                                        <div className="card-recruiter">{item.recruiters?.name}</div>
+                                      </div>
+
+                                      <div className="card-body">
+                                        <select
+                                          className="card-status-select"
+                                          value={item.status || 'Active'}
+                                          onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                                          onClick={(e) => e.stopPropagation()}
                                         >
-                                          <FileText size={16} />
-                                        </a>
-                                      )}
-                                      {item.is_video_screened === true && (
-                                        <Video size={16} className="icon-video-screened" title="Video Screened: Yes" style={{ color: '#10b981', marginLeft: '5px', cursor: 'help' }} />
-                                      )}
-                                      {item.is_video_screened === false && (
-                                        <span title={`Not Video Screened: ${item.video_screen_reason || 'No reason provided'}`} style={{ cursor: 'help', display: 'inline-flex' }}>
-                                          <VideoOff size={16} className="icon-video-not-screened" style={{ color: '#ef4444', marginLeft: '5px' }} />
-                                        </span>
-                                      )}
-                                      {newCommentCandidateIds.includes(item.candidate_id) && <div className="indicator-dot-small" title="New feedback available"></div>}
-                                    </div>
-                                  </div>                                  <div className="card-body">
-                                    <div className="card-info-row">
-                                      <span className="card-label">Position:</span>
-                                      <span className="card-value">{item.positions?.title}</span>
-                                    </div>
-                                    <div className="card-info-row">
-                                      <span className="card-label">Recruiter:</span>
-                                      <span className="card-value">{item.recruiters?.name}</span>
-                                    </div>
-                                    <div className="card-info-row">
-                                      <span className="card-label">Phone:</span>
-                                      <span className="card-value">{item.candidates?.phone || 'N/A'}</span>
-                                    </div>
-                                    <div className="card-info-row">
-                                      <span className="card-label">Submitted:</span>
-                                      <span className="card-value">{new Date(item.created_at).toLocaleDateString()}</span>
-                                    </div>
-                                    <select className="status-select" value={item.status || 'Active'} onChange={(e) => handleStatusChange(item.id, e.target.value)}>
-                                      {PIPELINE_STATUSES_LIST.map(status => <option key={status} value={status}>{status}</option>)}
-                                    </select>
-                                  </div>
-                                  <div className="card-actions">
-                                    <button
-                                      className="btn-icon-action comments"
-                                      onClick={() => openCommentsModal(item)}
-                                      title="View Comments"
-                                    >
-                                      <MessageSquare size={16} />
-                                    </button>
-                                    <button
-                                      className="btn-icon-action schedule"
-                                      onClick={() => handleScheduleInterview(item.candidate_id, item.candidates.name, item.position_id, item.positions.title)}
-                                      title="Schedule Interview"
-                                    >
-                                      <Calendar size={16} />
-                                    </button>
-                                    <button
-                                      className="btn-icon-action analyze"
-                                      onClick={() => handleAnalyzeFit(item)}
-                                      title="Hire Logic AI Analysis"
-                                    >
-                                      <Sparkles size={16} />
-                                    </button>
-                                    <button
-                                      className={`btn-icon-action video-toggle ${item.is_video_screened ? 'screened' : ''}`}
-                                      onClick={() => handleToggleVideoScreened(item)}
-                                      title={item.is_video_screened ? "Mark as NOT Video Screened" : "Mark as Video Screened"}
-                                    >
-                                      {item.is_video_screened ? <Video size={16} color="#10b981" /> : <VideoOff size={16} />}
-                                    </button>
-                                    <button
-                                      className="btn-icon-action remove"
-                                      onClick={() => {
-                                        handleRemove(item.id, item.candidates?.name, item.positions?.title);
-                                      }}
-                                      title="Remove Candidate"
-                                    >
-                                      <Trash2 size={16} />
-                                    </button>
-                                  </div>
+                                          {PIPELINE_STATUSES_LIST.map(status => (
+                                            <option key={status} value={status}>{status}</option>
+                                          ))}
+                                        </select>
+                                      </div>
+
+                                      <div className="card-actions">
+                                        <button
+                                          className="btn-schedule"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleScheduleInterview(item.candidate_id, item.candidates?.name, item.position_id, item.positions?.title);
+                                          }}
+                                        >
+                                          <Calendar size={12} /> Schedule
+                                        </button>
+                                        <button
+                                          className="btn-remove-small"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRemove(item.id, item.candidates?.name, item.positions?.title);
+                                          }}
+                                        >
+                                          <Trash2 size={12} /> Remove
+                                        </button>
+                                      </div>
+                                      {/* Submission Date Display */}
+                                      <div className="card-footer-date" style={{ marginTop: '8px', fontSize: '10px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Calendar size={10} />
+                                        <span>Submitted: {new Date(item.created_at).toLocaleDateString()}</span>
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               )}
                             </Draggable>
@@ -1130,9 +1193,13 @@ function ActiveTracker() {
             <h1>Active Tracker</h1>
           </div>
           <div className="header-actions">
-            <div className="view-toggle"><button className={`toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>List</button><button className={`toggle-btn ${view === 'pipeline' ? 'active' : ''}`} onClick={() => setView('pipeline')}>Pipeline</button></div>
+            <div className="view-toggle">
+              <button className={`toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>List</button>
+              <button className={`toggle-btn ${view === 'pipeline' ? 'active' : ''}`} onClick={() => setView('pipeline')}>Pipeline</button>
+            </div>
           </div>
         </div>
+
         {urgentCandidates.length > 0 && (
           <div className="header-alert">
             <div className="alert-content">
@@ -1160,6 +1227,13 @@ function ActiveTracker() {
             </button>
           </div>
         )}
+
+        {/* NEW: Interactive Funnel Header */}
+        <InteractiveFunnelHeader
+          pipelineData={baseFilteredPipeline} // Use BASE data (unfiltered by stage) so counts show for all stages
+          selectedStage={selectedStage}
+          onStageSelect={setSelectedStage}
+        />
 
         <div className="filter-section-container">
           <button
@@ -1202,6 +1276,23 @@ function ActiveTracker() {
                     {PIPELINE_STATUSES_LIST.map(status => <option key={status} value={status}>{status}</option>)}
                   </select>
                 </div>
+                {/* NEW: Compact Mode Toggle */}
+                <button
+                  className={`toggle-btn ${isCompactMode ? 'active' : ''}`}
+                  onClick={() => setIsCompactMode(!isCompactMode)}
+                  style={{ width: '100%', justifyContent: 'center' }}
+                >
+                  {isCompactMode ? 'Expand Cards' : 'Compact Mode'}
+                </button>
+
+                {/* NEW: Focus Mode Toggle */}
+                <button
+                  className={`toggle-btn ${isFocusMode ? 'active' : ''}`}
+                  onClick={() => setIsFocusMode(!isFocusMode)}
+                  style={{ width: '100%', justifyContent: 'center', marginTop: '10px' }}
+                >
+                  {isFocusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+                </button>
               </div>
             </div>
           )}
@@ -1270,11 +1361,11 @@ function ActiveTracker() {
                   )}
                 </div>
               </div>
-              <button onClick={() => setShowCommentsModal(false)} className="btn-secondary modal-close-btn">Close</button>
             </div>
           </div>
         )}
 
+        {/* Notification Modal */}
         {notificationModal.isOpen && notificationModal.type === 'stage_change' && (
           <div className="modal-overlay" onClick={closeNotificationModal}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -1288,6 +1379,7 @@ function ActiveTracker() {
             </div>
           </div>
         )}
+
       </div>
     </PageTransition>
   );

@@ -35,11 +35,13 @@
 }
 
 .executive-card {
-  background: var(--card-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-radius: var(--border-radius-polished);
   padding: 1.75rem;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-polished);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
@@ -103,10 +105,13 @@
 
 /* ===== INTELLIGENT ALERTS ===== */
 .intelligent-alerts-section {
-  background: var(--secondary-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-radius: 12px;
   margin-bottom: 2.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
   overflow: hidden;
 }
 
@@ -195,10 +200,13 @@
 
 /* ===== ACTIVITY TIMELINE ===== */
 .activity-timeline-section {
-  background: var(--secondary-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-radius: 12px;
   margin-bottom: 2.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
   overflow: hidden;
 }
 
@@ -291,11 +299,14 @@
 
 /* ===== ENHANCED PIPELINE TABLE ===== */
 .hiring-pipeline-section {
-  background: var(--card-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   padding: 1.5rem;
   border-radius: 12px;
   margin-bottom: 2.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
 }
 
 .hiring-pipeline-section .section-title {
@@ -498,10 +509,13 @@
 }
 
 .calls-column {
-  background: var(--card-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   padding: 1.5rem;
   border-radius: 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
   display: flex;
   flex-direction: column;
 }
@@ -1020,11 +1034,13 @@
 }
 
 .metric-card {
-  background: var(--card-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-radius: 16px;
   padding: 1.75rem;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-polished);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   /* overflow: hidden; - REMOVED to allow tooltips to display outside card boundaries */
@@ -1075,11 +1091,13 @@
 
 /* Chart Cards */
 .chart-card {
-  background: var(--card-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-radius: 16px;
   padding: 2rem;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-polished);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
   margin-bottom: 2rem;
 }
 
@@ -1149,11 +1167,13 @@
 }
 
 .podium-card {
-  background: var(--card-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-radius: 16px;
   padding: 2rem;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-polished);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
   text-align: center;
   transition: all 0.3s ease;
 }
@@ -1202,11 +1222,13 @@
 
 /* Leaderboard */
 .leaderboard-section {
-  background: var(--card-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-radius: 16px;
   padding: 2rem;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-polished);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
 }
 
 .leaderboard-header {
@@ -1332,11 +1354,13 @@
 }
 
 .role-detail-card {
-  background: var(--card-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-radius: 16px;
   padding: 0;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-polished);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
   overflow: hidden;
   transition: all 0.3s ease;
 }
@@ -1549,10 +1573,12 @@
 }
 
 .operations-card {
-  background: var(--card-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
   border-radius: 16px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-polished);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
   overflow: hidden;
   transition: all 0.3s ease;
 }

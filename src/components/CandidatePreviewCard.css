@@ -3,43 +3,22 @@
     display: inline-block;
     position: relative;
     cursor: pointer;
+    z-index: 10;
+    /* Ensure trigger is above other elements */
+}
+
+/* Target the strong tag inside to override ActiveTracker.css */
+.candidate-preview-trigger:hover strong {
+    color: var(--accent-cyan) !important;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    transition: all 0.2s ease;
 }
 
 .candidate-preview-trigger:hover {
-    text-decoration: underline;
-    text-decoration-color: var(--accent-cyan);
-    text-decoration-thickness: 2px;
-}
-
-/* Preview Card */
-.candidate-preview-card {
-    position: fixed;
-    width: 350px;
-    max-height: 500px;
-    overflow-y: auto;
-    background: var(--secondary-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
-    z-index: 10001;
-    /* Above everything */
-    animation: previewFadeIn 0.2s ease-out;
-    pointer-events: auto;
-}
-
-/* Header */
-.preview-header {
-    padding: 16px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--card-bg);
-    border-radius: 12px 12px 0 0;
-}
-
-.preview-title {
-    display: flex;
-    align-items: center;
     gap: 8px;
-    font-size: 16px;
+    /* font-size increase removed to prevent layout shift, using scale instead if needed */
+    /* font-size: 16px; */
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -139,18 +118,6 @@
 .contact-row svg {
     color: var(--accent-cyan);
     flex-shrink: 0;
-}
-
-/* LinkedIn Link */
-.linkedin-link {
-    color: var(--accent-cyan);
-    text-decoration: none;
-    transition: all 0.2s;
-}
-
-.linkedin-link:hover {
-    text-decoration: underline;
-    color: var(--accent-blue);
 }
 
 /* Comments */
@@ -264,4 +231,62 @@
 .time-highlight {
     color: var(--accent-orange, #f97316);
     font-weight: 700;
+}
+
+/* Candidate Preview Card - CENTERED POPUP */
+.candidate-preview-card {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 450px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background-color: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.9), 0 30px 60px -30px rgba(0, 0, 0, 0.9);
+    z-index: 2147483647;
+    /* Max z-index */
+    animation: scaleIn 0.2s ease-out;
+    pointer-events: auto;
+    padding: 0;
+}
+
+/* Backdrop */
+.candidate-preview-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 2147483646;
+    /* Just below the card */
+    animation: fadeIn 0.2s ease-out;
+    pointer-events: none;
+}
+
+/* Animation Keyframes */
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }

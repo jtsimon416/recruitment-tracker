@@ -1,0 +1,218 @@
+/* InteractiveFunnelHeader.css */
+
+.funnel-container {
+    width: 100%;
+    margin-bottom: 25px;
+    padding: 24px;
+    background: linear-gradient(145deg, rgba(30, 30, 30, 0.7), rgba(20, 20, 20, 0.8));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle background glow */
+.funnel-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.funnel-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 1;
+}
+
+.funnel-track {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    height: 90px;
+    position: relative;
+    gap: 2px;
+    /* Tighter gap for connected feel */
+    z-index: 1;
+    padding: 0 10px;
+}
+
+.funnel-slice {
+    flex: 1;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* Refined funnel shape */
+    clip-path: polygon(0% 0%, 100% 0%, 92% 100%, 8% 100%);
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin: 0 -5px;
+    /* Negative margin to overlap slightly */
+}
+
+/* First slice */
+.funnel-slice:first-child {
+    clip-path: polygon(0% 0%, 100% 0%, 92% 100%, 0% 100%);
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    margin-left: 0;
+}
+
+/* Last slice */
+.funnel-slice:last-child {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 8% 100%);
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    margin-right: 0;
+}
+
+/* Glass reflection effect */
+.funnel-slice::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent);
+    pointer-events: none;
+}
+
+.funnel-slice:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-4px) scale(1.02);
+    z-index: 10;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.funnel-slice.active {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-top: 2px solid currentColor;
+    transform: translateY(-4px) scale(1.05);
+    z-index: 20;
+}
+
+.slice-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    z-index: 2;
+    text-align: center;
+}
+
+.slice-count {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(to bottom, #fff, #ccc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.funnel-slice.active .slice-count {
+    background: currentColor;
+    /* Use the stage color for the number when active */
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px currentColor);
+}
+
+.slice-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.8px;
+    transition: color 0.3s;
+}
+
+.funnel-slice.active .slice-label {
+    color: #fff;
+    text-shadow: 0 0 10px currentColor;
+}
+
+/* Connector Arrows */
+.funnel-connector {
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    color: rgba(255, 255, 255, 0.2);
+    pointer-events: none;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* Premium Glow Effects */
+.funnel-slice.active.screening-glow {
+    box-shadow: 0 0 30px rgba(167, 139, 250, 0.4), inset 0 0 20px rgba(167, 139, 250, 0.2);
+}
+
+.funnel-slice.active.submission-glow {
+    box-shadow: 0 0 30px rgba(251, 146, 60, 0.4), inset 0 0 20px rgba(251, 146, 60, 0.2);
+}
+
+.funnel-slice.active.interview-glow {
+    box-shadow: 0 0 30px rgba(244, 114, 182, 0.4), inset 0 0 20px rgba(244, 114, 182, 0.2);
+}
+
+.funnel-slice.active.offer-glow {
+    box-shadow: 0 0 30px rgba(52, 211, 153, 0.4), inset 0 0 20px rgba(52, 211, 153, 0.2);
+}
+
+.funnel-slice.active.hired-glow {
+    box-shadow: 0 0 30px rgba(96, 165, 250, 0.4), inset 0 0 20px rgba(96, 165, 250, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .funnel-track {
+        height: 80px;
+    }
+
+    .slice-count {
+        font-size: 24px;
+    }
+
+    .slice-label {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 768px) {
+    .funnel-container {
+        padding: 16px;
+        overflow-x: auto;
+    }
+
+    .funnel-track {
+        min-width: 600px;
+    }
+}

@@ -1,18 +1,17 @@
 .sidebar {
   width: 250px;
   height: 100vh;
-  background: var(--primary-bg);
-  color: white;
   position: fixed;
-  left: 0;
   top: 0;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  border-right: 1px solid var(--border-color);
+  left: 0;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  box-sizing: border-box;
-  /* ADDED */
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border-right: 1px solid var(--glass-border);
+  box-shadow: var(--premium-shadow);
+  z-index: 1000;
   transition: width 0.3s ease;
 }
 
@@ -76,11 +75,8 @@
   padding: 20px 0;
   flex-grow: 1;
   overflow-y: auto;
-  /* ADDED */
   overflow-x: hidden;
-  /* ADDED */
   box-sizing: border-box;
-  /* ADDED */
 }
 
 .nav-section {
@@ -93,7 +89,6 @@
   text-transform: uppercase;
   letter-spacing: 1.5px;
   color: #FFFFFF;
-  /* Changed to pure white for distinction */
   margin-bottom: 10px;
   font-weight: 600;
 }
@@ -139,26 +134,20 @@
 /* --- Collapsed Active Link Highlight --- */
 .sidebar.collapsed .nav-link.active {
   background: var(--secondary-bg);
-  /* Subtle background glow */
   border-left: 4px solid var(--sunset-orange);
-  /* Prominent left border */
 }
 
 .sidebar.collapsed .nav-link.active svg {
   color: var(--sunset-yellow);
-  /* Bright icon color */
 }
 
-/* Ensure the wrapper itself doesn't get odd spacing */
 .sidebar.collapsed .nav-link-wrapper {
   height: auto;
   margin: 5px 0;
 }
 
-/* Apply same highlight to the link within the wrapper */
 .sidebar.collapsed .nav-link-wrapper .nav-link.active {
   margin: 0;
-  /* Reset margin as wrapper handles it */
 }
 
 
@@ -206,12 +195,8 @@
 
 /* --- Collapse Styles --- */
 
-.sidebar {
-  transition: width 0.3s ease;
-}
-
 .sidebar.collapsed {
-  width: 80px;
+  width: 100px;
 }
 
 /* Hide all text content when collapsed */
@@ -225,7 +210,6 @@
 /* Style and reveal the collapsed logo */
 .sidebar-logo-collapsed {
   display: none;
-  /* Hidden by default */
 }
 
 .sidebar.collapsed .sidebar-logo-collapsed {
@@ -240,16 +224,13 @@
   font-weight: 700;
   color: var(--sunset-yellow);
   margin: 0 auto;
-  /* Center the block */
   box-shadow: 0 0 0 2px var(--primary-bg), 0 0 0 4px var(--sunset-orange);
 }
 
-/* Adjust header padding to prevent overflow */
 .sidebar.collapsed .sidebar-header {
   padding: 20px 0;
 }
 
-/* Universal centering for all links and buttons */
 .sidebar.collapsed .nav-link,
 .sidebar.collapsed .btn-logout {
   justify-content: center;
@@ -257,7 +238,6 @@
   padding-right: 0;
 }
 
-/* No special rule needed for the wrapper anymore */
 .sidebar.collapsed .nav-link-wrapper {
   justify-content: center;
 }
@@ -269,3 +249,48 @@
   height: 16px;
   font-size: 10px;
 }
+/* Polished Notes UI */
+.notes-document-container {
+  background: #fff;
+  color: #333; /* Dark text for readability on white 'paper' */
+  padding: 25px;
+  border-radius: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  font-family: 'Georgia', serif; /* Serif font for document feel */
+  line-height: 1.6;
+  font-size: 15px;
+  margin-top: 15px;
+  border-left: 4px solid var(--primary-color);
+  position: relative;
+  min-height: 150px;
+}
+
+.notes-document-container::before {
+  content: ''; /* Folded corner effect */
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-width: 0 16px 16px 0;
+  border-style: solid;
+  border-color: #f0f0f0 #fff;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.3), -1px 1px 1px rgba(0,0,0,0.2);
+  display: block;
+  width: 0;
+}
+
+.notes-content p {
+  margin-bottom: 1em;
+}
+
+.notes-content ul, .notes-content ol {
+  padding-left: 20px;
+  margin-bottom: 1em;
+}
+
+.notes-placeholder {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  margin-top: 40px;
+}
+
